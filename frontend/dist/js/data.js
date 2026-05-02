@@ -70,6 +70,19 @@ window.APPS=[
   {cat:'Comunicacion',icon:'🔒',id:'signal',n:{en:'Signal',es:'Signal'},d:{en:'Encrypted messaging',es:'Mensajeria encriptada'},w:'OpenWhisperSystems.Signal',c:'signal',u:'https://signal.org/'},
   {cat:'Seguridad',icon:'🔑',id:'bitwarden',n:{en:'Bitwarden',es:'Bitwarden'},d:{en:'Password manager',es:'Gestor de contrasenas'},w:'Bitwarden.Bitwarden',c:'bitwarden',u:'https://bitwarden.com/'},
   {cat:'Seguridad',icon:'🔐',id:'veracrypt',n:{en:'VeraCrypt',es:'VeraCrypt'},d:{en:'Disk encryption',es:'Encriptacion de discos'},w:'IDRIX.VeraCrypt',c:'veracrypt',u:'https://www.veracrypt.fr/'},
+  {cat:'AI',icon:'🧠',id:'aiaw',img:'/icons/AI/aiaw.ico',n:{en:'AI as Workspace',es:'AI as Workspace'},d:{en:'All-in-one AI client',es:'Cliente AI todo en uno'},w:'',c:'',u:'https://aiaw.app/'},
+  {cat:'AI',icon:'🧠',id:'claude',img:'/icons/AI/claude.svg',n:{en:'Claude',es:'Claude'},d:{en:'Anthropic AI assistant',es:'Asistente AI de Anthropic'},w:'Anthropic.Claude',c:'claude',u:'https://claude.ai/'},
+  {cat:'AI',icon:'🤖',id:'jan',img:'/icons/AI/jan.ico',n:{en:'Jan AI',es:'Jan AI'},d:{en:'Open-source offline AI',es:'AI offline de codigo abierto'},w:'',c:'',u:'https://www.jan.ai/'},
+  {cat:'AI',icon:'🦙',id:'ollama',img:'/icons/AI/ollama.svg',n:{en:'Ollama',es:'Ollama'},d:{en:'Local LLM runtime',es:'Motor LLM local'},w:'Ollama.Ollama',c:'ollama',u:'https://ollama.com/'},
+  {cat:'AI',icon:'📚',id:'anythingllm',img:'/icons/AI/anything-llm-light.svg',n:{en:'anythingLLM',es:'anythingLLM'},d:{en:'Local document AI chat',es:'Chat AI con documentos locales'},w:'MintplexLabs.AnythingLLM',c:'',u:'https://anythingllm.com/'},
+  {cat:'AI',icon:'🤖',id:'claudecode',img:'/icons/AI/clawd-code.png',n:{en:'Claude Code',es:'Claude Code'},d:{en:'AI coding agent (CLI)',es:'Agente de codigo AI (CLI)'},w:'',c:'',u:'https://github.com/anthropics/claude-code'},
+  {cat:'AI',icon:'🤖',id:'lmstudio',img:'/icons/AI/lmstudio.svg',n:{en:'LM Studio',es:'LM Studio'},d:{en:'Local LLM runner',es:'Ejecutor LLM local'},w:'ElementLabs.LMStudio',c:'lmstudio',u:'https://lmstudio.ai/'},
+  {cat:'AI',icon:'🤖',id:'autoit',img:'/icons/AI/AutoIt.webp',n:{en:'AutoIt',es:'AutoIt'},d:{en:'Desktop automation scripting',es:'Automatizacion de escritorio'},w:'Autoit.Autoit',c:'autoit',u:'https://www.autoitscript.com/'},
+  {cat:'AI',icon:'🌐',id:'deepl',img:'/icons/AI/deepl.svg',n:{en:'DeepL',es:'DeepL'},d:{en:'AI translation app',es:'Traductor con IA'},w:'DeepL.DeepL',c:'deepl',u:'https://www.deepl.com/en/windows-app'},
+  {cat:'AI',icon:'🤖',id:'copilotcli',img:'/icons/AI/github-copilot.svg',n:{en:'Copilot CLI',es:'Copilot CLI'},d:{en:'AI terminal helper',es:'Asistente AI para terminal'},w:'',c:'',u:'https://github.com/github/copilot-cli'},
+  {cat:'AI',icon:'🤖',id:'mscopilot',img:'/icons/AI/microsoft-copilot.svg',n:{en:'Microsoft Copilot',es:'Microsoft Copilot'},d:{en:'AI assistant for Windows',es:'Asistente AI para Windows'},w:'Microsoft.Copilot',c:'copilot',u:'https://apps.microsoft.com/detail/xp9cxngppj97xx'},
+  {cat:'AI',icon:'🤖',id:'chatgpt',img:'/icons/AI/chatgpt.svg',n:{en:'ChatGPT',es:'ChatGPT'},d:{en:'OpenAI desktop client',es:'Cliente de escritorio OpenAI'},w:'OpenAI.ChatGPT',c:'chatgpt',u:'https://chatgpt.com/features/desktop/'},
+  {cat:'AI',icon:'💎',id:'opencode',img:'/icons/AI/opencode.svg',n:{en:'OpenCode',es:'OpenCode'},d:{en:'AI coding CLI terminal',es:'Terminal CLI de codigo AI'},w:'',c:'',u:'https://opencode.ai/'},
 ];
 
 window.FEATURES=[
