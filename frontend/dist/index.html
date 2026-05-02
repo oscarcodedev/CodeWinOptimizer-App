@@ -27,18 +27,18 @@
     </div>
 
     <nav class="tabs">
-      <button class="tab active" data-tab="restore">🔧 <span id="tab-restore-label"></span></button>
-      <button class="tab" data-tab="apps">📦 <span id="tab-apps-label"></span></button>
-      <button class="tab" data-tab="tweaks">⚡ <span id="tab-tweaks-label"></span></button>
+      <button class="tab active" data-tab="restore"><span class="tab-icon">🔧</span><span id="tab-restore-label">Restore</span></button>
+      <button class="tab" data-tab="apps"><span class="tab-icon">📦</span><span id="tab-apps-label">Apps</span></button>
+      <button class="tab" data-tab="tweaks"><span class="tab-icon">⚡</span><span id="tab-tweaks-label">Tweaks</span></button>
     </nav>
 
     <div class="tab-content active" id="tab-restore">
       <div class="panel">
-        <div class="panel-icon">🔧</div>
-        <h2 id="restore-title"></h2>
-        <p id="restore-desc"></p>
+        <h2 id="restore-title">System Restore Point</h2>
+        <p id="restore-desc">Create a restore point before making changes to your system. This allows you to revert if something goes wrong.</p>
+        <input type="text" id="rp-name" class="rp-name-input" maxlength="64" placeholder="Restore point name">
         <button id="btn-restore" class="btn-primary">
-          <span id="btn-restore-text"></span>
+          <span id="btn-restore-text">Create Restore Point</span>
         </button>
       </div>
     </div>
@@ -46,14 +46,14 @@
     <div class="tab-content" id="tab-apps">
       <div class="actions-bar">
         <div class="actions-left">
-          <select id="pkg-mgr" class="pkg-select">
-            <option value="winget">WinGet</option>
-            <option value="choco">Chocolatey</option>
-          </select>
+          <div class="pkg-toggle" id="pkg-toggle">
+            <button class="pkg-btn active" data-pkg="winget">WinGet</button>
+            <button class="pkg-btn" data-pkg="choco">Chocolatey</button>
+          </div>
           <span id="apps-count-label"></span>
         </div>
         <button id="btn-install-apps" class="btn-primary">
-          <span id="btn-install-text"></span>
+          <span id="btn-install-text">Install Selected</span>
         </button>
       </div>
       <div id="apps-grid"></div>
@@ -63,7 +63,7 @@
       <div class="actions-bar">
         <span id="tweaks-count-label"></span>
         <button id="btn-apply-tweaks" class="btn-primary">
-          <span id="btn-apply-text"></span>
+          <span id="btn-apply-text">Select tweaks</span>
         </button>
       </div>
       <div id="tweaks-grid"></div>
@@ -79,6 +79,7 @@
         <span id="term-title"></span>
         <div class="term-actions">
           <span id="term-status"></span>
+          <button id="btn-copy" class="btn-clear">Copy</button>
           <button id="btn-clear" class="btn-clear">Clear</button>
         </div>
       </div>

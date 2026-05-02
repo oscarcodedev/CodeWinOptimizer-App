@@ -36,7 +36,7 @@ const APPS=[
 
 L.en={
   tabRestore:'Restore',tabApps:'Apps',tabTweaks:'Tweaks',
-  restoreTitle:'System Restore Point',restoreDesc:'Create a restore point before making changes to your system. This allows you to revert if something goes wrong.',restoreBtn:'Create Restore Point',
+  restoreTitle:'System Restore Point',restoreDesc:'Create a restore point before making changes to your system. This allows you to revert if something goes wrong.',restoreBtn:'Create Restore Point',rpPlaceholder:'Restore point name...',
   installBtn:'Install Selected',installCount:'{n} apps selected',
   applyBtn:'Apply Selected',applyCount:'{n} tweaks selected',selectFirst:'Select tweaks',
   terminal:'Terminal — Logs',clear:'Clear',idle:'Idle',
@@ -50,7 +50,7 @@ L.en={
 };
 L.es={
   tabRestore:'Restaurar',tabApps:'Apps',tabTweaks:'Tweaks',
-  restoreTitle:'Punto de Restauracion',restoreDesc:'Crea un punto de restauracion antes de hacer cambios en el sistema. Esto permite revertir si algo sale mal.',restoreBtn:'Crear Punto de Restauracion',
+  restoreTitle:'Punto de Restauracion',restoreDesc:'Crea un punto de restauracion antes de hacer cambios en el sistema. Esto permite revertir si algo sale mal.',restoreBtn:'Crear Punto de Restauracion',rpPlaceholder:'Nombre del punto...',
   installBtn:'Instalar Seleccionados',installCount:'{n} apps seleccionadas',
   applyBtn:'Aplicar Seleccionados',applyCount:'{n} tweaks seleccionados',selectFirst:'Selecciona tweaks',
   terminal:'Terminal — Registros',clear:'Limpiar',idle:'Inactivo',
@@ -77,7 +77,8 @@ async function boot(){
   document.getElementById('btn-install-apps').addEventListener('click',doInstall);
   document.getElementById('btn-apply-tweaks').addEventListener('click',doApply);
   document.getElementById('btn-clear').addEventListener('click',clearTerm);
-  document.getElementById('pkg-mgr').addEventListener('change',function(){pkgMgr=this.value;drawApps()});
+  document.getElementById('btn-copy').addEventListener('click',copyTerm);
+  document.querySelectorAll('.pkg-btn').forEach(b=>b.addEventListener('click',function(){pkgMgr=this.dataset.pkg;document.querySelectorAll('.pkg-btn').forEach(x=>x.classList.toggle('active',x===this));drawApps()}));
 
   if(window.go?.main?.App){window.go.main.App.EventsOn('log',function(d){appendLog(d)})}
   checkAdmin();
@@ -106,13 +107,15 @@ function drawRestore(){
   document.getElementById('restore-title').textContent=T('restoreTitle');
   document.getElementById('restore-desc').textContent=T('restoreDesc');
   document.getElementById('btn-restore-text').textContent=T('restoreBtn');
+  document.getElementById('rp-name').placeholder=T('rpPlaceholder');
 }
 
 async function doRestore(){
   if(busy)return;busy=true;refreshUI();
+  const name=document.getElementById('rp-name').value.trim()||'CodeWinOptimizer Restore';
   setTerm(T('restoreRunning'),'running');appendLog('=== '+T('restoreRunning')+' ===');
   try{
-    const r=await window.go.main.App.CreateRestorePoint(lang);
+    const r=await window.go.main.App.CreateRestorePoint(name);
     appendLog('[OK] '+T('restoreOk'));if(r)appendLog(r);
     setTerm(T('restoreOk'),'ok');
   }catch(e){appendLog('[ERR] '+T('restoreFail')+': '+e);setTerm(T('restoreFail'),'err')}
@@ -124,10 +127,10 @@ function drawApps(){
   document.getElementById('tab-apps-label').textContent=T('tabApps');
   const cats=[...new Set(APPS.map(a=>a.cat))];
   const grid=document.getElementById('apps-grid');
-  grid.innerHTML=cats.map(c=>{
+  grid.innerHTML=cats.map((c,ci)=>{
     const apps=APPS.filter(a=>a.cat===c);
     return `<div class="app-cat-section">
-      <div class="app-cat-title"><span class="app-cat-title-emoji">${apps[0].icon}</span>${c} <span style="font-weight:400;color:var(--tx3);margin-left:auto">${apps.length} apps</span></div>
+      <div class="app-cat-title">${c}<span class="app-cat-sel-all" data-ci="${ci}">${T('selectAll')}</span><span style="font-weight:400;color:var(--tx3);margin-left:auto">${apps.length} apps</span></div>
       <div class="app-cat-grid">${apps.map(a=>{
         const sel=pickedA.has(a.id)?' selected':'';
         const chk=pickedA.has(a.id)?'checked':'';
@@ -151,6 +154,9 @@ function drawApps(){
   });
   grid.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
     cb.addEventListener('change',function(e){e.stopPropagation();const id=this.dataset.aid;if(this.checked)pickedA.add(id);else pickedA.delete(id);this.closest('.app-card').classList.toggle('selected',this.checked);refreshUI()});
+  });
+  grid.querySelectorAll('.app-cat-sel-all').forEach(el=>{
+    el.addEventListener('click',function(e){e.stopPropagation();const ci=parseInt(this.dataset.ci);const c=cats[ci];if(!c)return;const apps=APPS.filter(a=>a.cat===c);const all=apps.every(a=>pickedA.has(a.id));apps.forEach(a=>all?pickedA.delete(a.id):pickedA.add(a.id));drawApps();refreshUI()});
   });
 }
 
@@ -178,7 +184,7 @@ function drawTweaks(){
 function catCard(c,ci){
   const n=LO(c.name);const w=c.tweaks.filter(t=>t.commands&&t.commands.length>0);
   return `<div class="cat-card" data-ci="${ci}">
-    <div class="cat-head"><div class="cat-head-left"><span class="cat-icon">${c.icon}</span><span class="cat-name">${n}</span></div><div style="display:flex;align-items:center;gap:10px"><span class="cat-badge">${w.length}</span><span class="cat-arrow">▼</span></div></div>
+    <div class="cat-head"><div class="cat-head-left"><span class="cat-name">${n}</span></div><div style="display:flex;align-items:center;gap:10px"><span class="cat-badge">${w.length}</span><span class="cat-arrow">▼</span></div></div>
     <div class="cat-body"><div class="cat-sel-all" data-ci="${ci}"><span>☐</span><span class="sel-lbl">${T('selectAll')}</span></div>${c.tweaks.map(t=>tweakRow(t)).join('')}</div>
   </div>`;
 }
@@ -247,6 +253,7 @@ function appendLog(m){
 }
 function setTerm(t,c){const el=document.getElementById('term-status');if(el){el.textContent=t;el.className=c}}
 function clearTerm(){const l=document.getElementById('term-log');if(l)l.innerHTML='';setTerm(T('idle'),'')}
+async function copyTerm(){const l=document.getElementById('term-log');if(!l)return;try{await navigator.clipboard.writeText(l.textContent);setTerm('Copied!','ok');setTimeout(()=>setTerm(T('idle'),''),1500)}catch(e){setTerm('Copy failed','err')}}
 
 async function checkAdmin(){
   try{const ok=await window.go.main.App.CheckAdmin();if(!ok){document.getElementById('warning-text').textContent=T('adminWarn');document.getElementById('admin-warning').classList.remove('hidden')}}catch(e){}

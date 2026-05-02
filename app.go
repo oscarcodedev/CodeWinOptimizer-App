@@ -61,30 +61,53 @@ func (a *App) GetCategories() []Category {
 	return a.categories
 }
 
-func (a *App) CreateRestorePoint(lang string) string {
-	description := "CodeWinOptimizer - Pre-Optimization"
-	if lang == "es" {
-		description = "CodeWinOptimizer - Pre-Optimizacion"
-	}
+func (a *App) CreateRestorePoint(description string) string {
+	// Sanitize description for PowerShell double-quoted string
+	desc := strings.NewReplacer(
+		"`", "``",
+		"$", "`$",
+		"\"", "\"\"",
+	).Replace(description)
 
-	// Use WMI to bypass the 1440-minute Windows limit
 	psCmd := fmt.Sprintf(`[Console]::OutputEncoding = [Text.Encoding]::UTF8
 $desc = "%s"
+
+# Enable System Restore if needed
+try { Enable-ComputerRestore -Drive "$env:SystemDrive\" -ErrorAction SilentlyContinue } catch {}
+
+# Bypass the 24h limit — use reg.exe (works on all Windows versions)
+$freqPath = "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore"
+$freqName = "SystemRestorePointCreationFrequency"
+
+# Save old value
+$oldVal = (reg query $freqPath /v $freqName 2>$null | Select-String "0x" | ForEach-Object { $_.Line.Split()[2] }) -replace "0x",""
+
+# Set to 0
+reg add "$freqPath" /v $freqName /t REG_DWORD /d 0 /f 2>$null | Out-Null
+
 try {
-    $result = Invoke-CimMethod -Namespace root/default -ClassName SystemRestore -MethodName CreateRestorePoint -Arguments @{ Description=$desc; RestorePointType=12; EventType=100 }
-    if ($result.ReturnValue -eq 0) {
+    Checkpoint-Computer -Description $desc -RestorePointType MODIFY_SETTINGS -ErrorAction Stop
+
+    $created = Get-ComputerRestorePoint | Where-Object { $_.Description -eq $desc } | Select-Object -First 1
+    if ($created) {
         Write-Host "OK - Restore point created: $desc"
     } else {
-        # Fallback to Checkpoint-Computer
-        Checkpoint-Computer -Description $desc -RestorePointType MODIFY_SETTINGS -ErrorAction Stop 2>$null
-        Write-Host "OK - Restore point created via Checkpoint-Computer"
+        Write-Host "ERR: created but not found in list"
+        exit 1
     }
 } catch {
     Write-Host "ERR: $($_.Exception.Message)"
     exit 1
-}`, description)
+} finally {
+    # Restore old frequency
+    if ($oldVal) {
+        reg add "$freqPath" /v $freqName /t REG_DWORD /d $oldVal /f 2>$null | Out-Null
+    } else {
+        reg delete "$freqPath" /v $freqName /f 2>$null | Out-Null
+    }
+}`, desc)
 
-	a.emitLog("[CMD] Creating restore point via WMI")
+	a.emitLog("[CMD] Creating restore point")
 	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCmd)
 	cmd.SysProcAttr = getSysProcAttr()
 	output, err := cmd.CombinedOutput()
