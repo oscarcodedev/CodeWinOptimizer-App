@@ -1,0 +1,18 @@
+{
+  "name": "codewinoptimizer",
+  "outputfilename": "codewinoptimizer",
+  "frontend:install": "",
+  "frontend:build": "powershell -Command \"Copy-Item -Recurse -Force frontend/wailsjs frontend/dist/wailsjs\"",
+  "frontend:dev:watcher": "",
+  "frontend:dev:serverUrl": "",
+  "author": {
+    "name": "CodeXtreme",
+    "email": ""
+  },
+  "info": {
+    "productName": "CodeWinOptimizer",
+    "productVersion": "1.0.0",
+    "copyright": "",
+    "comments": "Windows Gaming Optimization Tool"
+  }
+}

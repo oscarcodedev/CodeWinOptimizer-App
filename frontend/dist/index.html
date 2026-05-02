@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeWinOptimizer</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="header-left">
+        <div class="glow-dot"></div>
+        <h1>CodeWinOptimizer</h1>
+      </div>
+      <div class="header-right">
+        <select id="lang-select">
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+        </select>
+      </div>
+    </header>
+
+    <div id="admin-warning" class="hidden">
+      <span>⚠</span>
+      <span id="warning-text"></span>
+    </div>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="restore">🔧 <span id="tab-restore-label"></span></button>
+      <button class="tab" data-tab="apps">📦 <span id="tab-apps-label"></span></button>
+      <button class="tab" data-tab="tweaks">⚡ <span id="tab-tweaks-label"></span></button>
+    </nav>
+
+    <div class="tab-content active" id="tab-restore">
+      <div class="panel">
+        <div class="panel-icon">🔧</div>
+        <h2 id="restore-title"></h2>
+        <p id="restore-desc"></p>
+        <button id="btn-restore" class="btn-primary">
+          <span id="btn-restore-text"></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-apps">
+      <div class="actions-bar">
+        <div class="actions-left">
+          <select id="pkg-mgr" class="pkg-select">
+            <option value="winget">WinGet</option>
+            <option value="choco">Chocolatey</option>
+          </select>
+          <span id="apps-count-label"></span>
+        </div>
+        <button id="btn-install-apps" class="btn-primary">
+          <span id="btn-install-text"></span>
+        </button>
+      </div>
+      <div id="apps-grid"></div>
+    </div>
+
+    <div class="tab-content" id="tab-tweaks">
+      <div class="actions-bar">
+        <span id="tweaks-count-label"></span>
+        <button id="btn-apply-tweaks" class="btn-primary">
+          <span id="btn-apply-text"></span>
+        </button>
+      </div>
+      <div id="tweaks-grid"></div>
+    </div>
+
+    <div id="terminal">
+      <div class="term-header">
+        <div class="term-dots">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <span id="term-title"></span>
+        <div class="term-actions">
+          <span id="term-status"></span>
+          <button id="btn-clear" class="btn-clear">Clear</button>
+        </div>
+      </div>
+      <pre id="term-log"></pre>
+    </div>
+  </div>
+
+  <script src="/wailsjs/runtime/runtime.js" type="module"></script>
+  <script src="/main.js" type="module"></script>
+</body>
+</html>

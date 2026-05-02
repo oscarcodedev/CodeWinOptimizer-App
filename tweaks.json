@@ -1,0 +1,2168 @@
+[
+  {
+    "id": "network",
+    "icon": "🌐",
+    "name": {
+      "en": "Network",
+      "es": "Red"
+    },
+    "tweaks": [
+      {
+        "id": "congestion-provider",
+        "name": {
+          "en": "🎯 Congestion Provider",
+          "es": "🎯 Congestion Provider"
+        },
+        "description": {
+          "en": "Controls how your connection recovers from congestion, packet loss, and increased latency.",
+          "es": "Controla cómo tu conexión se recupera de congestión, pérdida de paquetes y aumento de latencia."
+        },
+        "benefit": {
+          "en": "Reduces latency and improves connection stability",
+          "es": "Reduce latencia y mejora la estabilidad de conexión"
+        },
+        "impact": "high",
+        "commands": [
+          "Get-NetTCPSetting | Select-Object SettingName, CongestionProvider",
+          "netsh int tcp set supplemental internet congestionprovider=ctcp",
+          "netsh int tcp set supplemental internet congestionprovider=newreno"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "ecn",
+        "name": {
+          "en": "⚡ ECN (Explicit Congestion Notification)",
+          "es": "⚡ ECN (Explicit Congestion Notification)"
+        },
+        "description": {
+          "en": "Allows routers to signal congestion without dropping packets, reducing retransmissions.",
+          "es": "Permite a los routers señalar congestión sin descartar paquetes, reduciendo retransmisiones."
+        },
+        "benefit": {
+          "en": "Reduces packet retransmissions in congested networks",
+          "es": "Reduce retransmisiones de paquetes en redes congestionadas"
+        },
+        "impact": "medium",
+        "commands": [
+          "netsh int tcp set global ecncapability=enabled"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "autotuning",
+        "name": {
+          "en": "🚀 AutoTuning",
+          "es": "🚀 AutoTuning"
+        },
+        "description": {
+          "en": "Automatically adjusts the receive buffer size to optimize throughput.",
+          "es": "Ajusta automáticamente el tamaño del buffer de recepción para optimizar el throughput."
+        },
+        "benefit": {
+          "en": "Automatically optimizes connection performance",
+          "es": "Optimiza automáticamente el rendimiento de la conexión"
+        },
+        "impact": "medium",
+        "commands": [
+          "netsh int tcp set global autotuninglevel=experimental"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "rsc",
+        "name": {
+          "en": "📡 RSC (Receive Segment Coalescing)",
+          "es": "📡 RSC (Receive Segment Coalescing)"
+        },
+        "description": {
+          "en": "Combines multiple TCP/IP packets into one to reduce CPU overhead, but may increase latency.",
+          "es": "Combina múltiples paquetes TCP/IP en uno solo para reducir overhead de CPU, pero puede aumentar latencia."
+        },
+        "benefit": {
+          "en": "Reduces CPU overhead",
+          "es": "Reduce overhead de CPU"
+        },
+        "impact": "high",
+        "commands": [
+          "netsh int tcp set global rsc=disabled"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "lso",
+        "name": {
+          "en": "📤 LSO (Large Send Offload)",
+          "es": "📤 LSO (Large Send Offload)"
+        },
+        "description": {
+          "en": "Allows the network adapter to complete data segmentation instead of the operating system.",
+          "es": "Permite que el adaptador de red complete la segmentación de datos en lugar del sistema operativo."
+        },
+        "benefit": {
+          "en": "Reduces CPU load",
+          "es": "Reduce carga del CPU"
+        },
+        "impact": "medium",
+        "commands": [
+          "Disable-NetAdapterLso -Name *",
+          "Get-NetAdapterLso -Name *"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "rss",
+        "name": {
+          "en": "🔄 RSS (Receive-Side Scaling)",
+          "es": "🔄 RSS (Receive-Side Scaling)"
+        },
+        "description": {
+          "en": "Distributes network processing across multiple CPU cores.",
+          "es": "Distribuye el procesamiento de red entre múltiples núcleos de CPU."
+        },
+        "benefit": {
+          "en": "Distributes network load across multiple cores",
+          "es": "Distribuye carga de red entre múltiples núcleos"
+        },
+        "impact": "low",
+        "commands": [
+          "netsh int tcp set global rss=disabled"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "udp",
+        "name": {
+          "en": "📶 UDP Offloading",
+          "es": "📶 UDP Offloading"
+        },
+        "description": {
+          "en": "Optimizes UDP packet processing for better performance.",
+          "es": "Optimiza el procesamiento de paquetes UDP para mejor rendimiento."
+        },
+        "benefit": {
+          "en": "Improves UDP performance",
+          "es": "Mejora el rendimiento de UDP"
+        },
+        "impact": "medium",
+        "commands": [
+          "netsh int udp set global uro=enabled"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "teredo",
+        "name": {
+          "en": "🌍 Teredo and 6to4",
+          "es": "🌍 Teredo y 6to4"
+        },
+        "description": {
+          "en": "Required for Xbox LIVE and some games on Windows 10/11.",
+          "es": "Necesarios para Xbox LIVE y algunos juegos en Windows 10/11."
+        },
+        "benefit": {
+          "en": "Enables support for online gaming and Xbox LIVE",
+          "es": "Habilita soporte para juegos online y Xbox LIVE"
+        },
+        "impact": "low",
+        "commands": [
+          "netsh int teredo set state natawareclient",
+          "netsh int 6to4 set state state=enabled"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "verificar",
+        "name": {
+          "en": "🔍 Verify Configuration",
+          "es": "🔍 Verificar Configuración"
+        },
+        "description": {
+          "en": "Check current TCP/IP and network adapter configuration.",
+          "es": "Comprueba la configuración actual de TCP/IP y adaptadores de red."
+        },
+        "benefit": {
+          "en": "Verifies that changes were applied correctly",
+          "es": "Verifica que los cambios se aplicaron correctamente"
+        },
+        "impact": "low",
+        "commands": [
+          "netsh int tcp show global",
+          "Get-NetAdapter | Select-Object Name, Status, LinkSpeed"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      }
+    ]
+  },
+  {
+    "id": "memory",
+    "icon": "🧠",
+    "name": {
+      "en": "Memory & CPU",
+      "es": "Memoria y CPU"
+    },
+    "tweaks": [
+      {
+        "id": "disable-compression",
+        "name": {
+          "en": "🗜️ Disable RAM Compression",
+          "es": "🗜️ Desactivar Compresión de RAM"
+        },
+        "description": {
+          "en": "Disables automatic memory compression that Windows performs.",
+          "es": "Desactiva la compresión de memoria que Windows realiza automáticamente."
+        },
+        "benefit": {
+          "en": "Reduces memory access latency",
+          "es": "Reduce latencia de acceso a memoria"
+        },
+        "impact": "medium",
+        "commands": [
+          "Disable-MMAgent -MemoryCompression"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "disable-meltdown-spectre",
+        "name": {
+          "en": "🔓 Disable Meltdown/Spectre",
+          "es": "🔓 Desactivar Meltdown/Spectre"
+        },
+        "description": {
+          "en": "Improves performance by disabling security mitigations (gaming only).",
+          "es": "Mejora rendimiento desactivando mitigaciones de seguridad (solo para gaming)."
+        },
+        "benefit": {
+          "en": "Increases CPU performance",
+          "es": "Aumenta rendimiento de CPU"
+        },
+        "impact": "high",
+        "commands": [
+          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\"",
+          "New-ItemProperty -Path $path -Name \"FeatureSettings\" -PropertyType DWord -Value 1 -Force",
+          "New-ItemProperty -Path $path -Name \"FeatureSettingsOverride\" -PropertyType DWord -Value 3 -Force",
+          "New-ItemProperty -Path $path -Name \"FeatureSettingsOverrideMask\" -PropertyType DWord -Value 3 -Force"
+        ],
+        "warnings": {
+          "en": [
+            "⚠️ IMPORTANT: Disabling Meltdown/Spectre significantly reduces your system's security. Only apply on PCs dedicated exclusively to gaming."
+          ],
+          "es": [
+            "⚠️ IMPORTANTE: Desactivar Meltdown/Spectre reduce significativamente la seguridad de tu sistema. Solo aplicar en PCs dedicados exclusivamente a gaming."
+          ]
+        }
+      },
+      {
+        "id": "disable-paging-executive",
+        "name": {
+          "en": "💾 DisablePagingExecutive",
+          "es": "💾 DisablePagingExecutive"
+        },
+        "description": {
+          "en": "Prevents drivers from being paged to virtual memory, keeping them in RAM.",
+          "es": "Evita que drivers se paginen a memoria virtual, manteniéndolos en RAM."
+        },
+        "benefit": {
+          "en": "Improves driver stability and performance",
+          "es": "Mejora estabilidad y rendimiento de drivers"
+        },
+        "impact": "medium",
+        "commands": [
+          "New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" -Name \"DisablePagingExecutive\" -PropertyType DWord -Value 1 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "large-system-cache",
+        "name": {
+          "en": "📊 LargeSystemCache",
+          "es": "📊 LargeSystemCache"
+        },
+        "description": {
+          "en": "Configures system cache size to optimize performance.",
+          "es": "Configura el tamaño del cache del sistema para optimizar rendimiento."
+        },
+        "benefit": {
+          "en": "Optimizes cache based on usage (gaming or LAN)",
+          "es": "Optimiza cache según uso (gaming o LAN)"
+        },
+        "impact": "medium",
+        "commands": [
+          "New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" -Name \"LargeSystemCache\" -PropertyType DWord -Value 0 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "page-file",
+        "name": {
+          "en": "📄 Configure Page File",
+          "es": "📄 Configurar Page File"
+        },
+        "description": {
+          "en": "A large page file (32GB) improves microstuttering in games.",
+          "es": "Un page file grande (32GB) mejora microstuttering en juegos."
+        },
+        "benefit": {
+          "en": "Reduces microstuttering and improves fluidity",
+          "es": "Reduce microstuttering y mejora fluidez"
+        },
+        "impact": "high",
+        "commands": [
+          "wmic computersystem where name=\"%computername%\" set AutomaticManagedPagefile=False",
+          "wmic pagefileset where name=\"C:\\\\pagefile.sys\" set InitialSize=32768,MaximumSize=32768"
+        ],
+        "warnings": {
+          "en": [
+            "⚠️ WARNING: System may become unstable if you don't have enough RAM. Restart Windows after applying this change."
+          ],
+          "es": [
+            "⚠️ ADVERTENCIA: El sistema puede volverse inestable si no tienes RAM suficiente. Reinicia Windows después de aplicar este cambio."
+          ]
+        }
+      },
+      {
+        "id": "ntfs-protection",
+        "name": {
+          "en": "🔐 NTFS/ReFS Protection",
+          "es": "🔐 Protección NTFS/ReFS"
+        },
+        "description": {
+          "en": "Disables additional filesystem protection mitigations.",
+          "es": "Desactiva mitigaciones adicionales de protección del sistema de archivos."
+        },
+        "benefit": {
+          "en": "Increases I/O performance",
+          "es": "Aumenta rendimiento de I/O"
+        },
+        "impact": "low",
+        "commands": [
+          "New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\" -Name \"ProtectionMode\" -PropertyType DWord -Value 0 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "csrss-realtime",
+        "name": {
+          "en": "⏱️ Realtime Priority for csrss.exe",
+          "es": "⏱️ Prioridad Realtime para csrss.exe"
+        },
+        "description": {
+          "en": "Sets maximum priority for the csrss.exe process (session manager).",
+          "es": "Configura la máxima prioridad para el proceso csrss.exe (gestor de sesiones)."
+        },
+        "benefit": {
+          "en": "Improves system responsiveness to critical events",
+          "es": "Mejora respuesta del sistema a eventos críticos"
+        },
+        "impact": "high",
+        "commands": [
+          "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\csrss.exe\\PerfOptions\"",
+          "New-Item -Path $path -Force | Out-Null",
+          "New-ItemProperty -Path $path -Name \"CpuPriorityClass\" -PropertyType DWord -Value 4 -Force",
+          "New-ItemProperty -Path $path -Name \"IoPriority\" -PropertyType DWord -Value 3 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "resumen",
+        "name": {
+          "en": "💡 Summary",
+          "es": "💡 Resumen"
+        },
+        "description": {
+          "en": "Important: these optimizations improve gaming performance but reduce security and stability.",
+          "es": "Importante: estas optimizaciones mejoran rendimiento en gaming pero reducen seguridad y estabilidad."
+        },
+        "benefit": {
+          "en": "Understanding the risks",
+          "es": "Comprensión de los riesgos"
+        },
+        "impact": "low",
+        "commands": [],
+        "warnings": {
+          "en": [
+            "These optimizations improve gaming performance but reduce system security and overall stability. Only apply on PCs dedicated exclusively to gaming and controlled environments."
+          ],
+          "es": [
+            "Estas optimizaciones mejoran rendimiento en gaming pero reducen seguridad y estabilidad general del sistema. Solo aplicar en PCs dedicados exclusivamente a gaming y entornos controlados."
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "gpu",
+    "icon": "🎮",
+    "name": {
+      "en": "GPU",
+      "es": "GPU"
+    },
+    "tweaks": [
+      {
+        "id": "gpu-scheduling",
+        "name": {
+          "en": "Hardware-Accelerated GPU Scheduling",
+          "es": "Planificación Acelerada de GPU (Hardware-Accelerated GPU Scheduling)"
+        },
+        "description": {
+          "en": "Reduces latency by allowing GPU to manage its own memory",
+          "es": "Reduce la latencia permitiendo que la GPU gestione su propia memoria"
+        },
+        "benefit": {
+          "en": "Lower GPU latency, improved frame times in games and 3D applications",
+          "es": "Menor latencia de GPU, mejora de tiempos de fotograma en juegos y aplicaciones 3D"
+        },
+        "impact": "high",
+        "commands": [
+          "New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" -Name \"HwSchMode\" -PropertyType DWord -Value 2 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "tdr-timeout",
+        "name": {
+          "en": "Timeout Detection and Recovery (TDR)",
+          "es": "Timeout Detection and Recovery (TDR)"
+        },
+        "description": {
+          "en": "TDR restarts GPU driver if it detects a timeout. Adjust for gaming performance",
+          "es": "TDR reinicia el controlador de GPU si detecta un timeout. Ajustar para rendimiento de juegos"
+        },
+        "benefit": {
+          "en": "Prevents driver timeouts during intensive GPU tasks",
+          "es": "Previene timeouts de controlador durante tareas intensivas de GPU"
+        },
+        "impact": "high",
+        "commands": [
+          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\"",
+          "New-ItemProperty -Path $path -Name \"TdrDelay\" -PropertyType DWord -Value 10 -Force",
+          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\"",
+          "New-ItemProperty -Path $path -Name \"TdrLevel\" -PropertyType DWord -Value 0 -Force"
+        ],
+        "warnings": {
+          "en": [
+            "Disabling TDR completely can cause permanent black screens if driver freezes. It is safer to increase timeout with TdrDelay instead."
+          ],
+          "es": [
+            "Desactivar TDR completamente puede causar pantallazos negros permanentes si el controlador se congela. Es más seguro aumentar el timeout con TdrDelay."
+          ]
+        }
+      },
+      {
+        "id": "nvidia-performance",
+        "name": {
+          "en": "Nvidia - Maximum Performance",
+          "es": "Nvidia - Máximo Rendimiento"
+        },
+        "description": {
+          "en": "Configure Nvidia GPU for maximum gaming performance",
+          "es": "Configura GPU Nvidia para máximo rendimiento de juegos"
+        },
+        "benefit": {
+          "en": "Improved GPU performance and reduced power management overhead",
+          "es": "Rendimiento mejorado de GPU y reducción de gestión de energía"
+        },
+        "impact": "high",
+        "commands": [
+          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\"",
+          "New-ItemProperty -Path $path -Name \"PerfLevelSrc\" -PropertyType DWord -Value 8738 -Force",
+          "New-ItemProperty -Path $path -Name \"PowerMizerEnable\" -PropertyType DWord -Value 0 -Force",
+          "New-ItemProperty -Path $path -Name \"PowerMizerLevel\" -PropertyType DWord -Value 1 -Force",
+          "New-ItemProperty -Path $path -Name \"PowerMizerLevelAC\" -PropertyType DWord -Value 1 -Force",
+          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\\Scheduler\"",
+          "New-ItemProperty -Path $path -Name \"EnablePreemption\" -PropertyType DWord -Value 0 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "amd-optimizations",
+        "name": {
+          "en": "AMD - Performance Optimizations",
+          "es": "AMD - Optimizaciones de Rendimiento"
+        },
+        "description": {
+          "en": "Configure AMD GPU for optimal gaming performance",
+          "es": "Configura GPU AMD para rendimiento óptimo de juegos"
+        },
+        "benefit": {
+          "en": "Improved GPU performance and reduced power state transitions",
+          "es": "Rendimiento mejorado de GPU y reducción de transiciones de estado de energía"
+        },
+        "impact": "high",
+        "commands": [
+          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\"",
+          "New-ItemProperty -Path $path -Name \"EnableUlps\" -PropertyType DWord -Value 0 -Force",
+          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\\UMD\"",
+          "New-Item -Path $path -Force | Out-Null",
+          "New-ItemProperty -Path $path -Name \"Main3D_DEF\" -PropertyType String -Value \"1\" -Force",
+          "New-ItemProperty -Path $path -Name \"Main3D\" -PropertyType String -Value \"1\" -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "mpo-overlay",
+        "name": {
+          "en": "Disable MPO (Multi-Plane Overlay)",
+          "es": "Desactivar MPO (Multi-Plane Overlay)"
+        },
+        "description": {
+          "en": "Disable Multi-Plane Overlay to prevent stuttering issues",
+          "es": "Desactiva Multi-Plane Overlay para prevenir problemas de stuttering"
+        },
+        "benefit": {
+          "en": "Improved frame rate stability and reduced stuttering",
+          "es": "Mejora de estabilidad de tasa de fotogramas y reducción de stuttering"
+        },
+        "impact": "medium",
+        "commands": [
+          "New-ItemProperty -Path \"HKLM:\\SOFTWARE\\Microsoft\\Windows\\Dwm\" -Name \"OverlayTestMode\" -PropertyType DWord -Value 5 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "fullscreen-optimizations",
+        "name": {
+          "en": "Disable Fullscreen Optimizations",
+          "es": "Desactivar Optimizaciones de Pantalla Completa"
+        },
+        "description": {
+          "en": "Disable Windows fullscreen optimizations for better performance",
+          "es": "Desactiva las optimizaciones de pantalla completa de Windows para mejor rendimiento"
+        },
+        "benefit": {
+          "en": "Better frame consistency and reduced input lag in fullscreen games",
+          "es": "Mejor consistencia de fotogramas y reducción de latencia de entrada en juegos en pantalla completa"
+        },
+        "impact": "medium",
+        "commands": [
+          "New-ItemProperty -Path \"HKCU:\\System\\GameConfigStore\" -Name \"GameDVR_DXGIHonorFSEWindowsCompatible\" -PropertyType DWord -Value 1 -Force",
+          "New-ItemProperty -Path \"HKCU:\\System\\GameConfigStore\" -Name \"GameDVR_FSEBehavior\" -PropertyType DWord -Value 2 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "driver-cleanup",
+        "name": {
+          "en": "GPU Driver Cleanup",
+          "es": "Limpieza de Controladores de GPU"
+        },
+        "description": {
+          "en": "Clean old GPU drivers before applying advanced optimizations",
+          "es": "Limpia controladores de GPU antiguos antes de aplicar optimizaciones avanzadas"
+        },
+        "benefit": {
+          "en": "Prevents driver conflicts and ensures clean driver installation",
+          "es": "Previene conflictos de controladores y asegura una instalación limpia de controladores"
+        },
+        "impact": "high",
+        "commands": [],
+        "warnings": {
+          "en": [
+            "Before applying advanced optimizations, clean old drivers using DDU (Display Driver Uninstaller) in Safe Mode to prevent conflicts."
+          ],
+          "es": [
+            "Antes de aplicar optimizaciones avanzadas, limpia los controladores antiguos usando DDU (Display Driver Uninstaller) en Modo Seguro para prevenir conflictos."
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "windows_features",
+    "icon": "⚙️",
+    "name": {
+      "en": "Windows Features",
+      "es": "Características de Windows"
+    },
+    "tweaks": [
+      {
+        "id": "virtualization-features",
+        "name": {
+          "en": "Disable Virtualization Features",
+          "es": "Desactivar Características de Virtualización"
+        },
+        "description": {
+          "en": "Disable Hyper-V, WSL, and virtualization-related features if not needed",
+          "es": "Desactiva Hyper-V, WSL y características relacionadas con virtualización si no se necesitan"
+        },
+        "benefit": {
+          "en": "Frees up system resources and improves performance if virtualization is not used",
+          "es": "Libera recursos del sistema y mejora el rendimiento si no se usa virtualización"
+        },
+        "impact": "medium",
+        "commands": [
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:HypervisorPlatform",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:VirtualMachinePlatform",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:Microsoft-Windows-Subsystem-Linux",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:Client-ProjFS"
+        ],
+        "warnings": {
+          "en": [
+            "Disabling these features will prevent running virtual machines, WSL, and Docker containers."
+          ],
+          "es": [
+            "Desactivar estas características impedirá ejecutar máquinas virtuales, WSL y contenedores Docker."
+          ]
+        }
+      },
+      {
+        "id": "iis-services",
+        "name": {
+          "en": "Disable IIS and Web Services",
+          "es": "Desactivar IIS y Servicios Web"
+        },
+        "description": {
+          "en": "Remove IIS and web server components if not running web services",
+          "es": "Remove IIS y componentes de servidor web si no ejecutas servicios web"
+        },
+        "benefit": {
+          "en": "Reduces system footprint and closes unnecessary network services",
+          "es": "Reduce la huella del sistema y cierra servicios de red innecesarios"
+        },
+        "impact": "medium",
+        "commands": [
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:IIS-WebServer",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:IIS-WebServerRole",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:IIS-WebServerManagementTools",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:IIS-ManagementConsole"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "legacy-components",
+        "name": {
+          "en": "Disable Legacy Components",
+          "es": "Desactivar Componentes Legacy"
+        },
+        "description": {
+          "en": "Remove outdated and rarely-used Windows components",
+          "es": "Elimina componentes de Windows antiguos y raramente usados"
+        },
+        "benefit": {
+          "en": "Reduces system bloat, improves startup time, and enhances security by removing old code",
+          "es": "Reduce la inflación del sistema, mejora el tiempo de inicio y enhances security al eliminar código antiguo"
+        },
+        "impact": "low",
+        "commands": [
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:Internet-Explorer-Optional-amd64",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:WindowsMediaPlayer",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:DirectPlay",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:LegacyComponents",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:MicrosoftWindowsPowerShellV2",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:MicrosoftWindowsPowerShellV2Root"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "smb1-protocol",
+        "name": {
+          "en": "Disable SMB1 Protocol",
+          "es": "Desactivar Protocolo SMB1"
+        },
+        "description": {
+          "en": "Remove the insecure SMB1 protocol which has known vulnerabilities",
+          "es": "Elimina el protocolo SMB1 inseguro que tiene vulnerabilidades conocidas"
+        },
+        "benefit": {
+          "en": "Significantly improves security by removing outdated and vulnerable network protocol",
+          "es": "Mejora significativamente la seguridad al eliminar el protocolo de red obsoleto y vulnerable"
+        },
+        "impact": "high",
+        "commands": [
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:SMB1Protocol",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:SMB1Protocol-Client",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:SMB1Protocol-Server"
+        ],
+        "warnings": {
+          "en": [
+            "SMB1 has been the target of multiple ransomware attacks (WannaCry, etc.). Disabling is strongly recommended."
+          ],
+          "es": [
+            "SMB1 ha sido objeto de múltiples ataques de ransomware (WannaCry, etc.). Se recomienda desactivar."
+          ]
+        }
+      },
+      {
+        "id": "unused-network-services",
+        "name": {
+          "en": "Disable Unused Network Services",
+          "es": "Desactivar Servicios de Red No Utilizados"
+        },
+        "description": {
+          "en": "Remove rarely-used network service features",
+          "es": "Elimina características de servicios de red raramente usados"
+        },
+        "benefit": {
+          "en": "Reduces attack surface and frees up resources by disabling obsolete protocols",
+          "es": "Reduce la superficie de ataque y libera recursos deshabilitando protocolos obsoletos"
+        },
+        "impact": "low",
+        "commands": [
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:TelnetClient",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:TFTP",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:SNMP",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:SimpleTCP"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "msmq-services",
+        "name": {
+          "en": "Disable MSMQ (Message Queuing)",
+          "es": "Desactivar MSMQ (Message Queuing)"
+        },
+        "description": {
+          "en": "Remove Message Queuing components if not used for enterprise messaging",
+          "es": "Elimina componentes de Message Queuing si no se utiliza para mensajería empresarial"
+        },
+        "benefit": {
+          "en": "Frees resources by removing unused enterprise messaging infrastructure",
+          "es": "Libera recursos eliminando infraestructura de mensajería empresarial no utilizada"
+        },
+        "impact": "low",
+        "commands": [
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:MSMQ-Container",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:MSMQ-Server",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:MSMQ-HTTP",
+          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:MSMQ-Triggers"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "enable-useful-features",
+        "name": {
+          "en": "Enable Useful Features",
+          "es": "Habilitar Características Útiles"
+        },
+        "description": {
+          "en": "Enable beneficial Windows features for system compatibility and functionality",
+          "es": "Habilita características de Windows beneficiosas para compatibilidad y funcionalidad del sistema"
+        },
+        "benefit": {
+          "en": "Ensures system has necessary components for optimal compatibility",
+          "es": "Asegura que el sistema tenga componentes necesarios para compatibilidad óptima"
+        },
+        "impact": "low",
+        "commands": [
+          "Dism.exe /Online /Enable-Feature /NoRestart /featurename:NetFx3",
+          "Dism.exe /Online /Enable-Feature /NoRestart /featurename:NetFx4-AdvSrvs",
+          "Dism.exe /Online /Enable-Feature /NoRestart /featurename:Printing-PrintToPDFServices-Features",
+          "Dism.exe /Online /Enable-Feature /NoRestart /featurename:SearchEngine-Client-Package",
+          "Dism.exe /Online /Enable-Feature /NoRestart /featurename:Windows-Defender-Default-Definitions"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "check-disabled-features",
+        "name": {
+          "en": "Check Disabled Features",
+          "es": "Verificar Características Desactivadas"
+        },
+        "description": {
+          "en": "Verify which Windows features are currently disabled",
+          "es": "Verifica qué características de Windows están actualmente desactivadas"
+        },
+        "benefit": {
+          "en": "Helps identify which features have been disabled and monitor system configuration",
+          "es": "Ayuda a identificar qué características han sido desactivadas y monitorear la configuración del sistema"
+        },
+        "impact": "low",
+        "commands": [
+          "Dism.exe /Online /Get-Features /Format:Table | Select-String 'Disabled'",
+          "Dism.exe /Online /Get-Features"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "dism-best-practices",
+        "name": {
+          "en": "DISM Best Practices",
+          "es": "Mejores Prácticas de DISM"
+        },
+        "description": {
+          "en": "Important guidelines for safely managing Windows features",
+          "es": "Directrices importantes para gestionar de forma segura las características de Windows"
+        },
+        "benefit": {
+          "en": "Prevents system instability and ensures safe feature management with proper backup",
+          "es": "Previene inestabilidad del sistema y asegura gestión segura de características con respaldo adecuado"
+        },
+        "impact": "high",
+        "commands": [],
+        "warnings": {
+          "en": [
+            "1. Create a system restore point\n2. Run all commands as Administrator\n3. Use /NoRestart flag to group changes\n4. Test on a non-critical system first"
+          ],
+          "es": [
+            "1. Crea un punto de restauración del sistema\n2. Ejecuta todos los comandos como Administrador\n3. Usa la bandera /NoRestart para agrupar cambios\n4. Prueba en un sistema no crítico primero"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "firewall_security",
+    "icon": "🛡️",
+    "name": {
+      "en": "Firewall & Security",
+      "es": "Firewall y Seguridad"
+    },
+    "tweaks": [
+      {
+        "id": "firewall-app-rules",
+        "name": {
+          "en": "Disable Unnecessary App Firewall Rules",
+          "es": "Desactivar Reglas de Firewall de Apps Innecesarias"
+        },
+        "description": {
+          "en": "Disable firewall rules for built-in Windows apps that may not be needed",
+          "es": "Desactiva reglas de firewall para aplicaciones integradas de Windows que pueden no ser necesarias"
+        },
+        "benefit": {
+          "en": "Reduces attack surface and network exposure for unused applications",
+          "es": "Reduce la superficie de ataque y la exposición de red para aplicaciones no utilizadas"
+        },
+        "impact": "medium",
+        "commands": [
+          "netsh advfirewall firewall set rule group=\"Connect\" new enable=no",
+          "netsh advfirewall firewall set rule group=\"Contact Support\" new enable=no",
+          "netsh advfirewall firewall set rule group=\"Cortana\" new enable=no",
+          "netsh advfirewall firewall set rule group=\"DiagTrack\" new enable=no",
+          "netsh advfirewall firewall set rule group=\"Feedback Hub\" new enable=no",
+          "netsh advfirewall firewall set rule group=\"Microsoft Photos\" new enable=no",
+          "netsh advfirewall firewall set rule group=\"OneNote\" new enable=no",
+          "netsh advfirewall firewall set rule group=\"Remote Assistance\" new enable=no",
+          "netsh advfirewall firewall set rule group=\"Windows Spotlight\" new enable=no"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "block-smb-port",
+        "name": {
+          "en": "Block SMB Port 445",
+          "es": "Bloquear Puerto SMB 445"
+        },
+        "description": {
+          "en": "Block incoming SMB traffic on port 445 to prevent ransomware attacks",
+          "es": "Bloquea tráfico SMB entrante en el puerto 445 para prevenir ataques de ransomware"
+        },
+        "benefit": {
+          "en": "Significantly improves security by blocking major attack vector for ransomware and worms",
+          "es": "Mejora significativamente la seguridad bloqueando el vector de ataque principal para ransomware y gusanos"
+        },
+        "impact": "high",
+        "commands": [
+          "netsh advfirewall firewall add rule name=deny445 dir=in action=block protocol=TCP localport=445"
+        ],
+        "warnings": {
+          "en": [
+            "Port 445 is the primary vector for ransomware propagation on Windows networks. Blocking is highly recommended unless you require SMB shares."
+          ],
+          "es": [
+            "El puerto 445 es el vector principal para la propagación de ransomware en redes Windows. Se recomienda bloquearlo a menos que requieras comparticiones SMB."
+          ]
+        }
+      },
+      {
+        "id": "firewall-profiles",
+        "name": {
+          "en": "Configure Firewall Profiles",
+          "es": "Configurar Perfiles de Firewall"
+        },
+        "description": {
+          "en": "Enable firewall on all profiles and restrict local firewall rules",
+          "es": "Habilita firewall en todos los perfiles y restringe reglas de firewall locales"
+        },
+        "benefit": {
+          "en": "Ensures consistent firewall protection across all network scenarios",
+          "es": "Asegura protección consistente del firewall en todos los escenarios de red"
+        },
+        "impact": "high",
+        "commands": [
+          "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True -AllowLocalFirewallRules False"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "disable-netbios",
+        "name": {
+          "en": "Disable NetBIOS and LMHOSTS",
+          "es": "Desactivar NetBIOS y LMHOSTS"
+        },
+        "description": {
+          "en": "Disable legacy NetBIOS protocol that can expose system information",
+          "es": "Desactiva el protocolo legacy NetBIOS que puede exponer información del sistema"
+        },
+        "benefit": {
+          "en": "Reduces exposure of computer names and network discovery attacks",
+          "es": "Reduce la exposición de nombres de equipo y ataques de descubrimiento de red"
+        },
+        "impact": "medium",
+        "commands": [
+          "New-ItemProperty -Force -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters\" -Name \"EnableLMHOSTS\" -PropertyType DWord -Value 0"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "disable-network-adapters",
+        "name": {
+          "en": "Disable Unnecessary Network Adapters",
+          "es": "Desactivar Adaptadores de Red Innecesarios"
+        },
+        "description": {
+          "en": "Disable unused network components like Pacer, SMB Server, LLDP, and LLTD",
+          "es": "Desactiva componentes de red no utilizados como Pacer, Servidor SMB, LLDP y LLTD"
+        },
+        "benefit": {
+          "en": "Reduces network exposure and removes potentially vulnerable network services",
+          "es": "Reduce la exposición de red y elimina servicios de red potencialmente vulnerables"
+        },
+        "impact": "medium",
+        "commands": [
+          "# Pacer (QoS)",
+          "Disable-NetAdapterBinding -Name \"*\" -ComponentID \"ms_pacer\"",
+          "# SMB Server",
+          "Disable-NetAdapterBinding -Name \"*\" -ComponentID \"ms_server\"",
+          "# LLDP",
+          "Disable-NetAdapterBinding -Name \"*\" -ComponentID \"ms_lldp\"",
+          "# LLTD",
+          "Disable-NetAdapterBinding -Name \"*\" -ComponentID \"ms_lltdio\"",
+          "Disable-NetAdapterBinding -Name \"*\" -ComponentID \"ms_rspndr\""
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "disable-ipv6",
+        "name": {
+          "en": "Disable IPv6",
+          "es": "Desactivar IPv6"
+        },
+        "description": {
+          "en": "Disable IPv6 protocol if you only use IPv4",
+          "es": "Desactiva protocolo IPv6 si solo usas IPv4"
+        },
+        "benefit": {
+          "en": "Reduces network complexity and potential security gaps from unused protocols",
+          "es": "Reduce la complejidad de red y brechas de seguridad potenciales de protocolos no utilizados"
+        },
+        "impact": "low",
+        "commands": [
+          "Disable-NetAdapterBinding -Name \"*\" -ComponentID \"ms_tcpip6\"",
+          "New-ItemProperty -Force -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\TCPIP6\\Parameters\" -Name \"DisabledComponents\" -PropertyType DWord -Value 0xFFFFFFFF"
+        ],
+        "warnings": {
+          "en": [
+            "Only disable if you exclusively use IPv4. Disabling IPv6 may break some applications or services that depend on it."
+          ],
+          "es": [
+            "Solo desactiva si usas exclusivamente IPv4. Desactivar IPv6 puede romper algunas aplicaciones o servicios que dependen de él."
+          ]
+        }
+      },
+      {
+        "id": "disable-smbv1",
+        "name": {
+          "en": "Disable SMBv1 Protocol",
+          "es": "Desactivar Protocolo SMBv1"
+        },
+        "description": {
+          "en": "Disable insecure SMBv1 file sharing protocol",
+          "es": "Desactiva el protocolo de compartición de archivos inseguro SMBv1"
+        },
+        "benefit": {
+          "en": "Eliminates WannaCry and Petya ransomware attack vector",
+          "es": "Elimina el vector de ataque de ransomware WannaCry y Petya"
+        },
+        "impact": "high",
+        "commands": [
+          "Set-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters\" -Name SMB1 -Value 0"
+        ],
+        "warnings": {
+          "en": [
+            "SMBv1 has been exploited by major ransomware attacks. Disabling is strongly recommended."
+          ],
+          "es": [
+            "SMBv1 ha sido explotado por ataques de ransomware mayores. Se recomienda desactivarlo."
+          ]
+        }
+      },
+      {
+        "id": "disable-file-printer-sharing",
+        "name": {
+          "en": "Disable File and Printer Sharing",
+          "es": "Desactivar Compartición de Archivos e Impresoras"
+        },
+        "description": {
+          "en": "Disable firewall rules for file and printer sharing if not needed",
+          "es": "Desactiva reglas de firewall para compartición de archivos e impresoras si no es necesaria"
+        },
+        "benefit": {
+          "en": "Prevents unauthorized access to shared files and printers on network",
+          "es": "Previene acceso no autorizado a archivos compartidos e impresoras en la red"
+        },
+        "impact": "medium",
+        "commands": [
+          "netsh advfirewall firewall set rule group=\"File and Printer Sharing\" new enable=no"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "credential-hardening",
+        "name": {
+          "en": "Credential Hardening",
+          "es": "Endurecimiento de Credenciales"
+        },
+        "description": {
+          "en": "Configure token and credential policies to prevent credential theft attacks",
+          "es": "Configura políticas de tokens y credenciales para prevenir ataques de robo de credenciales"
+        },
+        "benefit": {
+          "en": "Protects administrator tokens from local privilege escalation attacks",
+          "es": "Protege tokens de administrador de ataques de escalada de privilegios locales"
+        },
+        "impact": "high",
+        "commands": [
+          "Set-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System -Name LocalAccountTokenFilterPolicy -Value 0",
+          "Set-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System -Name FilterAdministratorToken -Value 1",
+          "Set-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System -Name EnableLUA -Value 1"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "cleartext-password-protection",
+        "name": {
+          "en": "Cleartext Password Protection",
+          "es": "Protección de Contraseñas en Texto Plano"
+        },
+        "description": {
+          "en": "Prevent storage of passwords in cleartext and enable token leak detection",
+          "es": "Previene el almacenamiento de contraseñas en texto plano y habilita detección de fuga de tokens"
+        },
+        "benefit": {
+          "en": "Prevents credential harvesting attacks that exploit cleartext password storage",
+          "es": "Previene ataques de recolección de credenciales que explotan almacenamiento de contraseñas en texto plano"
+        },
+        "impact": "high",
+        "commands": [
+          "Set-ItemProperty HKLM:\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -Name UseLogonCredential -Value 0",
+          "Set-ItemProperty HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Lsa -Name TokenLeakDetectDelaySecs -Value 30"
+        ],
+        "warnings": {
+          "en": [
+            "WDigest cleartext passwords allow attackers to harvest credentials using tools like Mimikatz after system compromise."
+          ],
+          "es": [
+            "Las contraseñas en texto plano de WDigest permiten atacantes recolectar credenciales usando herramientas como Mimikatz después de comprometer el sistema."
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "nagle_algorithm",
+    "icon": "🔧",
+    "name": {
+      "en": "Nagle Algorithm",
+      "es": "Algoritmo de Nagle"
+    },
+    "tweaks": [
+      {
+        "id": "nagle-overview",
+        "name": {
+          "en": "Understanding Nagle Algorithm",
+          "es": "Entendiendo el Algoritmo de Nagle"
+        },
+        "description": {
+          "en": "Learn what Nagle algorithm does and why disabling it helps gaming",
+          "es": "Aprende qué hace el algoritmo de Nagle y por qué desactivarlo ayuda a los juegos"
+        },
+        "benefit": {
+          "en": "Understanding helps determine if disabling Nagle is right for your use case",
+          "es": "Entender ayuda a determinar si desactivar Nagle es adecuado para tu caso de uso"
+        },
+        "impact": "low",
+        "commands": [],
+        "warnings": {
+          "en": [
+            "Disabling Nagle can reduce performance on large file transfers. Only recommended for gaming-focused systems."
+          ],
+          "es": [
+            "Desactivar Nagle puede reducir el rendimiento en transferencias de archivos grandes. Solo se recomienda para sistemas dedicados a juegos."
+          ]
+        }
+      },
+      {
+        "id": "find-nic-guid",
+        "name": {
+          "en": "Find Network Adapter GUID",
+          "es": "Encontrar GUID del Adaptador de Red"
+        },
+        "description": {
+          "en": "Locate your network adapter's GUID for registry configuration",
+          "es": "Localiza el GUID de tu adaptador de red para la configuración del registro"
+        },
+        "benefit": {
+          "en": "Required first step to apply Nagle algorithm tweaks to the correct NIC",
+          "es": "Paso requerido para aplicar optimizaciones del algoritmo de Nagle a la NIC correcta"
+        },
+        "impact": "low",
+        "commands": [
+          "Get-NetAdapter | Select-Object Name, InterfaceGuid"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "tcp-ack-frequency",
+        "name": {
+          "en": "Configure TcpAckFrequency",
+          "es": "Configurar TcpAckFrequency"
+        },
+        "description": {
+          "en": "Disable TCP acknowledgment delay to reduce latency",
+          "es": "Desactiva el retraso de reconocimiento TCP para reducir la latencia"
+        },
+        "benefit": {
+          "en": "Main setting for Nagle algorithm optimization",
+          "es": "Configuración principal para optimización del algoritmo de Nagle"
+        },
+        "impact": "high",
+        "commands": [
+          "$nicPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{NIC-GUID}\"",
+          "New-ItemProperty -Path $nicPath -Name \"TcpAckFrequency\" -PropertyType DWord -Value 1 -Force"
+        ],
+        "warnings": {
+          "en": [
+            "Replace {NIC-GUID} with your actual network adapter GUID. Get it from the previous step."
+          ],
+          "es": [
+            "Reemplaza {NIC-GUID} con el GUID real de tu adaptador de red. Obtenlo del paso anterior."
+          ]
+        }
+      },
+      {
+        "id": "tcp-no-delay",
+        "name": {
+          "en": "Enable TCPNoDelay",
+          "es": "Habilitar TCPNoDelay"
+        },
+        "description": {
+          "en": "Disable TCP Nagle algorithm at the protocol level",
+          "es": "Desactiva el algoritmo TCP Nagle a nivel de protocolo"
+        },
+        "benefit": {
+          "en": "Ensures immediate packet transmission without buffering",
+          "es": "Asegura transmisión inmediata de paquetes sin buffering"
+        },
+        "impact": "high",
+        "commands": [
+          "$nicPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{NIC-GUID}\"",
+          "New-ItemProperty -Path $nicPath -Name \"TCPNoDelay\" -PropertyType DWord -Value 1 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "tcp-del-ack-ticks",
+        "name": {
+          "en": "Configure TcpDelAckTicks (Optional)",
+          "es": "Configurar TcpDelAckTicks (Opcional)"
+        },
+        "description": {
+          "en": "Fine-tune TCP delayed acknowledgment timing",
+          "es": "Ajusta el tiempo de reconocimiento TCP retrasado"
+        },
+        "benefit": {
+          "en": "Further reduces acknowledgment delay for ultra-low latency",
+          "es": "Reduce aún más el retraso de reconocimiento para latencia ultra-baja"
+        },
+        "impact": "medium",
+        "commands": [
+          "$nicPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{NIC-GUID}\"",
+          "New-ItemProperty -Path $nicPath -Name \"TcpDelAckTicks\" -PropertyType DWord -Value 0 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "msmq-tcp-no-delay",
+        "name": {
+          "en": "Enable TCPNoDelay for MSMQ",
+          "es": "Habilitar TCPNoDelay para MSMQ"
+        },
+        "description": {
+          "en": "Apply TCPNoDelay to Message Queuing if you use MSMQ",
+          "es": "Aplica TCPNoDelay a Message Queuing si usas MSMQ"
+        },
+        "benefit": {
+          "en": "Ensures MSMQ uses low-latency TCP communication",
+          "es": "Asegura que MSMQ use comunicación TCP de baja latencia"
+        },
+        "impact": "low",
+        "commands": [
+          "$msmqPath = \"HKLM:\\SOFTWARE\\Microsoft\\MSMQ\\Parameters\"",
+          "New-ItemProperty -Path $msmqPath -Name \"TCPNoDelay\" -PropertyType DWord -Value 1 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "verify-settings",
+        "name": {
+          "en": "Verify Nagle Settings",
+          "es": "Verificar Configuración de Nagle"
+        },
+        "description": {
+          "en": "Check that your Nagle algorithm settings were applied correctly",
+          "es": "Verifica que tus configuraciones del algoritmo de Nagle se aplicaron correctamente"
+        },
+        "benefit": {
+          "en": "Confirms configuration changes took effect",
+          "es": "Confirma que los cambios de configuración tuvieron efecto"
+        },
+        "impact": "low",
+        "commands": [
+          "Get-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{NIC-GUID}\" | Select-Object TcpAckFrequency, TCPNoDelay, TcpDelAckTicks"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "revert-changes",
+        "name": {
+          "en": "Revert Nagle Changes",
+          "es": "Revertir Cambios de Nagle"
+        },
+        "description": {
+          "en": "Remove Nagle algorithm modifications to return to defaults",
+          "es": "Elimina las modificaciones del algoritmo de Nagle para volver a los valores por defecto"
+        },
+        "benefit": {
+          "en": "Allows reverting settings if they cause issues",
+          "es": "Permite revertir la configuración si causa problemas"
+        },
+        "impact": "medium",
+        "commands": [
+          "$nicPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{NIC-GUID}\"",
+          "Remove-ItemProperty -Path $nicPath -Name \"TcpAckFrequency\" -ErrorAction SilentlyContinue",
+          "Remove-ItemProperty -Path $nicPath -Name \"TCPNoDelay\" -ErrorAction SilentlyContinue",
+          "Remove-ItemProperty -Path $nicPath -Name \"TcpDelAckTicks\" -ErrorAction SilentlyContinue"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "nagle-best-practices",
+        "name": {
+          "en": "Nagle Algorithm Best Practices",
+          "es": "Mejores Prácticas del Algoritmo de Nagle"
+        },
+        "description": {
+          "en": "Important guidelines for safely applying Nagle optimizations",
+          "es": "Directrices importantes para aplicar de forma segura las optimizaciones de Nagle"
+        },
+        "benefit": {
+          "en": "Prevents issues and ensures optimal configuration",
+          "es": "Previene problemas y asegura configuración óptima"
+        },
+        "impact": "high",
+        "commands": [],
+        "warnings": {
+          "en": [
+            "1. Create a system restore point\n2. Run PowerShell as Administrator\n3. Note your NIC GUID before making changes\n4. Test on a non-critical network first\n5. Restart Windows after applying"
+          ],
+          "es": [
+            "1. Crea un punto de restauración del sistema\n2. Ejecuta PowerShell como Administrador\n3. Anota tu GUID de NIC antes de hacer cambios\n4. Prueba en una red no crítica primero\n5. Reinicia Windows después de aplicar"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "network_throttling",
+    "icon": "📊",
+    "name": {
+      "en": "Network Throttling",
+      "es": "Limitación de Red"
+    },
+    "tweaks": [
+      {
+        "id": "network-throttling-overview",
+        "name": {
+          "en": "Understanding Network Throttling",
+          "es": "Entendiendo el Throttling de Red"
+        },
+        "description": {
+          "en": "Learn about Windows network throttling and how it impacts gaming performance",
+          "es": "Aprende sobre el throttling de red de Windows y cómo impacta el rendimiento de juegos"
+        },
+        "benefit": {
+          "en": "Understanding throttling helps determine if disabling it will help your use case",
+          "es": "Entender el throttling ayuda a determinar si desactivarlo beneficiará tu uso"
+        },
+        "impact": "low",
+        "commands": [],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "check-current-throttling",
+        "name": {
+          "en": "Check Current Throttling Value",
+          "es": "Verificar Valor de Throttling Actual"
+        },
+        "description": {
+          "en": "View your current NetworkThrottlingIndex setting",
+          "es": "Ver tu configuración actual de NetworkThrottlingIndex"
+        },
+        "benefit": {
+          "en": "Verify your current network throttling configuration before making changes",
+          "es": "Verifica tu configuración actual de throttling de red antes de hacer cambios"
+        },
+        "impact": "low",
+        "commands": [
+          "Get-ItemProperty -Path \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" -Name \"NetworkThrottlingIndex\""
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "disable-network-throttling",
+        "name": {
+          "en": "Disable Network Throttling",
+          "es": "Desactivar Throttling de Red"
+        },
+        "description": {
+          "en": "Set NetworkThrottlingIndex to maximum for gaming performance",
+          "es": "Establece NetworkThrottlingIndex al máximo para rendimiento de gaming"
+        },
+        "benefit": {
+          "en": "Removes Windows packet processing limit for maximum throughput",
+          "es": "Elimina el límite de procesamiento de paquetes de Windows para máximo throughput"
+        },
+        "impact": "high",
+        "commands": [
+          "New-ItemProperty -Path \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" -Name \"NetworkThrottlingIndex\" -PropertyType DWord -Value 0xffffffff -Force"
+        ],
+        "warnings": {
+          "en": [
+            "This change requires administrator privileges and Windows restart to take effect."
+          ],
+          "es": [
+            "Este cambio requiere privilegios de administrador y reinicio de Windows para tomar efecto."
+          ]
+        }
+      },
+      {
+        "id": "verify-throttling-disabled",
+        "name": {
+          "en": "Verify Throttling is Disabled",
+          "es": "Verificar que Throttling está Desactivado"
+        },
+        "description": {
+          "en": "Confirm that network throttling has been successfully disabled",
+          "es": "Confirma que el throttling de red ha sido desactivado exitosamente"
+        },
+        "benefit": {
+          "en": "Ensures configuration changes took effect",
+          "es": "Asegura que los cambios de configuración tuvieron efecto"
+        },
+        "impact": "low",
+        "commands": [
+          "Get-ItemProperty -Path \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" -Name \"NetworkThrottlingIndex\""
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "network-throttling-when-to-use",
+        "name": {
+          "en": "When to Use Network Throttling Disable",
+          "es": "Cuándo Usar Desactivar Throttling de Red"
+        },
+        "description": {
+          "en": "Determine if disabling throttling is right for your setup",
+          "es": "Determina si desactivar el throttling es adecuado para tu configuración"
+        },
+        "benefit": {
+          "en": "Helps decide if this optimization applies to your gaming style",
+          "es": "Ayuda a decidir si esta optimización aplica a tu estilo de gaming"
+        },
+        "impact": "medium",
+        "commands": [],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "network-throttling-settings-reference",
+        "name": {
+          "en": "NetworkThrottlingIndex Values Reference",
+          "es": "Referencia de Valores NetworkThrottlingIndex"
+        },
+        "description": {
+          "en": "Understanding different NetworkThrottlingIndex values",
+          "es": "Entendiendo diferentes valores de NetworkThrottlingIndex"
+        },
+        "benefit": {
+          "en": "Reference guide for different throttling levels",
+          "es": "Guía de referencia para diferentes niveles de throttling"
+        },
+        "impact": "low",
+        "commands": [],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "revert-network-throttling",
+        "name": {
+          "en": "Revert Network Throttling",
+          "es": "Revertir Throttling de Red"
+        },
+        "description": {
+          "en": "Restore default network throttling settings",
+          "es": "Restaura la configuración de throttling de red por defecto"
+        },
+        "benefit": {
+          "en": "Allows reverting to default behavior if needed",
+          "es": "Permite revertir a comportamiento por defecto si es necesario"
+        },
+        "impact": "medium",
+        "commands": [
+          "Set-ItemProperty -Path \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" -Name \"NetworkThrottlingIndex\" -Value 10"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "network-throttling-best-practices",
+        "name": {
+          "en": "Network Throttling Best Practices",
+          "es": "Mejores Prácticas de Throttling de Red"
+        },
+        "description": {
+          "en": "Important guidelines for applying network throttling optimizations",
+          "es": "Directrices importantes para aplicar optimizaciones de throttling de red"
+        },
+        "benefit": {
+          "en": "Prevents issues and ensures optimal configuration",
+          "es": "Previene problemas y asegura configuración óptima"
+        },
+        "impact": "high",
+        "commands": [],
+        "warnings": {
+          "en": [
+            "1. Create a system restore point\n2. Run PowerShell as Administrator\n3. Check that you have a Gigabit network connection\n4. Verify your network speed: Run speed test before and after\n5. Test on non-critical network first"
+          ],
+          "es": [
+            "1. Crea un punto de restauración del sistema\n2. Ejecuta PowerShell como Administrador\n3. Verifica que tengas una conexión de red Gigabit\n4. Verifica tu velocidad de red: Ejecuta test de velocidad antes y después\n5. Prueba en una red no crítica primero"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "system_responsiveness",
+    "icon": "⚡",
+    "name": {
+      "en": "System Responsiveness",
+      "es": "Capacidad de Respuesta"
+    },
+    "tweaks": [
+      {
+        "id": "system-responsiveness-overview",
+        "name": {
+          "en": "Understanding System Responsiveness",
+          "es": "Entendiendo System Responsiveness"
+        },
+        "description": {
+          "en": "Learn how MMCSS CPU reservation impacts gaming performance",
+          "es": "Aprende cómo la reserva de CPU de MMCSS impacta el rendimiento de juegos"
+        },
+        "benefit": {
+          "en": "Understanding CPU reservation helps optimize gaming performance",
+          "es": "Entender la reserva de CPU ayuda a optimizar el rendimiento de juegos"
+        },
+        "impact": "low",
+        "commands": [],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "check-current-responsiveness",
+        "name": {
+          "en": "Check Current SystemResponsiveness",
+          "es": "Verificar SystemResponsiveness Actual"
+        },
+        "description": {
+          "en": "View your current MMCSS CPU reservation setting",
+          "es": "Ver tu configuración actual de reserva de CPU de MMCSS"
+        },
+        "benefit": {
+          "en": "Verify current CPU reservation before making changes",
+          "es": "Verifica la reserva de CPU actual antes de hacer cambios"
+        },
+        "impact": "low",
+        "commands": [
+          "Get-ItemProperty -Path \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" -Name \"SystemResponsiveness\""
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "set-system-responsiveness-zero",
+        "name": {
+          "en": "Set SystemResponsiveness to 0",
+          "es": "Establecer SystemResponsiveness a 0"
+        },
+        "description": {
+          "en": "Configure maximum CPU priority for gaming applications",
+          "es": "Configura máxima prioridad de CPU para aplicaciones de gaming"
+        },
+        "benefit": {
+          "en": "Frees all CPU resources for gaming, maximum performance",
+          "es": "Libera todos los recursos de CPU para gaming, rendimiento máximo"
+        },
+        "impact": "high",
+        "commands": [
+          "New-ItemProperty -Path \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" -Name \"SystemResponsiveness\" -PropertyType DWord -Value 0 -Force"
+        ],
+        "warnings": {
+          "en": [
+            "This change requires administrator privileges. Windows restart is recommended but not always required."
+          ],
+          "es": [
+            "Este cambio requiere privilegios de administrador. Se recomienda reinicio de Windows pero no siempre es requerido."
+          ]
+        }
+      },
+      {
+        "id": "configure-gpu-priority",
+        "name": {
+          "en": "Configure GPU Priority",
+          "es": "Configurar Prioridad de GPU"
+        },
+        "description": {
+          "en": "Set GPU scheduling priority for games task",
+          "es": "Establece la prioridad de planificación de GPU para la tarea de juegos"
+        },
+        "benefit": {
+          "en": "Ensures GPU prioritizes game rendering",
+          "es": "Asegura que la GPU priorice el renderizado de juegos"
+        },
+        "impact": "medium",
+        "commands": [
+          "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
+          "New-ItemProperty -Path $path -Name \"GPU Priority\" -PropertyType DWord -Value 8 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "configure-scheduling-category",
+        "name": {
+          "en": "Configure Scheduling Category",
+          "es": "Configurar Categoría de Planificación"
+        },
+        "description": {
+          "en": "Set scheduling priority category for games",
+          "es": "Establece la categoría de prioridad de planificación para juegos"
+        },
+        "benefit": {
+          "en": "Ensures games run in high-priority scheduling category",
+          "es": "Asegura que los juegos se ejecuten en categoría de planificación de alta prioridad"
+        },
+        "impact": "medium",
+        "commands": [
+          "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
+          "New-ItemProperty -Path $path -Name \"Scheduling Category\" -PropertyType String -Value \"High\" -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "configure-sfio-priority",
+        "name": {
+          "en": "Configure SFIO Priority",
+          "es": "Configurar Prioridad de SFIO"
+        },
+        "description": {
+          "en": "Set System File I/O priority for games",
+          "es": "Establece la prioridad de E/S de Archivos del Sistema para juegos"
+        },
+        "benefit": {
+          "en": "Prioritizes disk I/O for game asset loading",
+          "es": "Prioriza acceso a disco para carga de assets de juego"
+        },
+        "impact": "medium",
+        "commands": [
+          "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
+          "New-ItemProperty -Path $path -Name \"SFIO Priority\" -PropertyType String -Value \"High\" -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "configure-task-priority",
+        "name": {
+          "en": "Configure Task Priority",
+          "es": "Configurar Prioridad de Tarea"
+        },
+        "description": {
+          "en": "Set thread priority for games task",
+          "es": "Establece la prioridad de thread para la tarea de juegos"
+        },
+        "benefit": {
+          "en": "Ensures game threads get high priority",
+          "es": "Asegura que los threads del juego obtengan alta prioridad"
+        },
+        "impact": "medium",
+        "commands": [
+          "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
+          "New-ItemProperty -Path $path -Name \"Priority\" -PropertyType DWord -Value 6 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "complete-gaming-profile",
+        "name": {
+          "en": "Apply Complete Gaming Profile",
+          "es": "Aplicar Perfil de Gaming Completo"
+        },
+        "description": {
+          "en": "Apply all gaming optimization settings at once",
+          "es": "Aplica todas las configuraciones de optimización de gaming de una vez"
+        },
+        "benefit": {
+          "en": "Comprehensive gaming optimization in one script",
+          "es": "Optimización de gaming integral en un script"
+        },
+        "impact": "high",
+        "commands": [
+          "# Set SystemResponsiveness to 0",
+          "$profilePath = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\"",
+          "New-ItemProperty -Path $profilePath -Name \"SystemResponsiveness\" -PropertyType DWord -Value 0 -Force",
+          "# Configure Games task",
+          "$gamesPath = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
+          "New-ItemProperty -Path $gamesPath -Name \"GPU Priority\" -PropertyType DWord -Value 8 -Force",
+          "New-ItemProperty -Path $gamesPath -Name \"Scheduling Category\" -PropertyType String -Value \"High\" -Force",
+          "New-ItemProperty -Path $gamesPath -Name \"SFIO Priority\" -PropertyType String -Value \"High\" -Force",
+          "New-ItemProperty -Path $gamesPath -Name \"Priority\" -PropertyType DWord -Value 6 -Force",
+          "New-ItemProperty -Path $gamesPath -Name \"Affinity\" -PropertyType DWord -Value 0 -Force",
+          "New-ItemProperty -Path $gamesPath -Name \"Background Only\" -PropertyType String -Value \"False\" -Force",
+          "New-ItemProperty -Path $gamesPath -Name \"Clock Rate\" -PropertyType DWord -Value 2710 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "verify-gaming-settings",
+        "name": {
+          "en": "Verify Gaming Settings",
+          "es": "Verificar Configuración de Gaming"
+        },
+        "description": {
+          "en": "Check that all gaming optimization settings were applied",
+          "es": "Verifica que todas las configuraciones de optimización de gaming fueron aplicadas"
+        },
+        "benefit": {
+          "en": "Confirms configuration changes took effect",
+          "es": "Confirma que los cambios de configuración tuvieron efecto"
+        },
+        "impact": "low",
+        "commands": [
+          "Get-ItemProperty -Path \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" -Name \"SystemResponsiveness\"",
+          "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
+          "Get-ItemProperty -Path $path | Select-Object \"GPU Priority\", \"Priority\", \"Scheduling Category\", \"SFIO Priority\""
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "system-responsiveness-best-practices",
+        "name": {
+          "en": "System Responsiveness Best Practices",
+          "es": "Mejores Prácticas de System Responsiveness"
+        },
+        "description": {
+          "en": "Important guidelines for applying system responsiveness optimizations",
+          "es": "Directrices importantes para aplicar optimizaciones de system responsiveness"
+        },
+        "benefit": {
+          "en": "Prevents issues and ensures optimal configuration",
+          "es": "Previene problemas y asegura configuración óptima"
+        },
+        "impact": "high",
+        "commands": [],
+        "warnings": {
+          "en": [
+            "1. Create a system restore point\n2. Run PowerShell as Administrator\n3. Close all games and resource-intensive applications\n4. Note your current settings before making changes\n5. Test performance in your main games",
+            "On Windows Server, SystemResponsiveness defaults to 100, giving priority to background services over multimedia. Do not set to 0 on Server OS."
+          ],
+          "es": [
+            "1. Crea un punto de restauración del sistema\n2. Ejecuta PowerShell como Administrador\n3. Cierra todos los juegos y aplicaciones que usen muchos recursos\n4. Anota tu configuración actual antes de hacer cambios\n5. Prueba el rendimiento en tus juegos principales",
+            "En Windows Server, SystemResponsiveness tiene como valor por defecto 100, dando prioridad a servicios en segundo plano sobre multimedia. No establezcas a 0 en Server OS."
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "latency_timers",
+    "icon": "⏱️",
+    "name": {
+      "en": "Latency & Timers",
+      "es": "Latencia y Temporizadores"
+    },
+    "tweaks": [
+      {
+        "id": "latency-timers-overview",
+        "name": {
+          "en": "Understanding Latency and Timers",
+          "es": "Entendiendo Latencia y Timers"
+        },
+        "description": {
+          "en": "Learn about system latency factors: interrupts, DPC, timers, and message handling",
+          "es": "Aprende sobre factores de latencia del sistema: interrupciones, DPC, timers y manejo de mensajes"
+        },
+        "benefit": {
+          "en": "Understanding latency sources helps identify optimization opportunities",
+          "es": "Entender las fuentes de latencia ayuda a identificar oportunidades de optimización"
+        },
+        "impact": "low",
+        "commands": [],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "disable-dynamic-tick",
+        "name": {
+          "en": "Disable Dynamic Tick",
+          "es": "Desactivar Dynamic Tick"
+        },
+        "description": {
+          "en": "Configure interrupt priority and disable dynamic tick for consistent timing",
+          "es": "Configura prioridad de interrupciones y desactiva dynamic tick para timing consistente"
+        },
+        "benefit": {
+          "en": "Ensures consistent interrupt processing and reduces timing variations",
+          "es": "Asegura procesamiento consistente de interrupciones y reduce variaciones de timing"
+        },
+        "impact": "high",
+        "commands": [
+          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\KernelVelocity\"",
+          "New-Item -Path $path -Force | Out-Null",
+          "New-ItemProperty -Path $path -Name \"DisableDynamicTick\" -PropertyType DWord -Value 1 -Force"
+        ],
+        "warnings": {
+          "en": [
+            "Requires administrator privileges and Windows restart. Helps consistency in frame timing."
+          ],
+          "es": [
+            "Requiere privilegios de administrador y reinicio de Windows. Ayuda a consistencia en frame timing."
+          ]
+        }
+      },
+      {
+        "id": "configure-dpc-watchdog",
+        "name": {
+          "en": "Configure DPC Watchdog",
+          "es": "Configurar DPC Watchdog"
+        },
+        "description": {
+          "en": "Adjust DPC watchdog profile for lower latency",
+          "es": "Ajusta el perfil del watchdog de DPC para menor latencia"
+        },
+        "benefit": {
+          "en": "Prevents DPC timeout issues and improves interrupt response",
+          "es": "Previene problemas de timeout de DPC y mejora respuesta de interrupciones"
+        },
+        "impact": "medium",
+        "commands": [
+          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\"",
+          "New-ItemProperty -Path $path -Name \"DpcWatchdogProfileOffset\" -PropertyType DWord -Value 10000 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "set-timer-resolution-low",
+        "name": {
+          "en": "Set Low Timer Resolution",
+          "es": "Establecer Baja Resolución de Timer"
+        },
+        "description": {
+          "en": "Reduce Windows timer resolution from 15.625ms to 1ms or 0.5ms",
+          "es": "Reduce la resolución de timer de Windows de 15.625ms a 1ms o 0.5ms"
+        },
+        "benefit": {
+          "en": "Dramatically improves input responsiveness and frame consistency",
+          "es": "Mejora dramáticamente la responsividad de entrada y consistencia de frames"
+        },
+        "impact": "high",
+        "commands": [
+          "bcdedit /set disabledynamictick yes",
+          "bcdedit /set useplatformclock true"
+        ],
+        "warnings": {
+          "en": [
+            "These bcdedit commands require administrator privileges and Windows restart."
+          ],
+          "es": [
+            "Estos comandos bcdedit requieren privilegios de administrador y reinicio de Windows."
+          ]
+        }
+      },
+      {
+        "id": "timer-resolution-tools",
+        "name": {
+          "en": "Timer Resolution Tools",
+          "es": "Herramientas de Resolución de Timer"
+        },
+        "description": {
+          "en": "Use third-party tools to adjust timer resolution in real-time",
+          "es": "Usa herramientas de terceros para ajustar resolución de timer en tiempo real"
+        },
+        "benefit": {
+          "en": "Allows dynamic timer adjustment without system restart",
+          "es": "Permite ajuste dinámico de timer sin reinicio del sistema"
+        },
+        "impact": "medium",
+        "commands": [],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "disable-hpet",
+        "name": {
+          "en": "Disable HPET",
+          "es": "Desactivar HPET"
+        },
+        "description": {
+          "en": "Disable High Precision Event Timer which can introduce latency",
+          "es": "Desactiva High Precision Event Timer que puede introducir latencia"
+        },
+        "benefit": {
+          "en": "On most modern systems, HPET adds latency rather than helping",
+          "es": "En la mayoría de sistemas modernos, HPET añade latencia en lugar de ayudar"
+        },
+        "impact": "high",
+        "commands": [
+          "bcdedit /deletevalue useplatformclock",
+          "Get-PnpDevice | Where-Object {$_.FriendlyName -like \"*High Precision Event Timer*\"} | Disable-PnpDevice -Confirm:$false"
+        ],
+        "warnings": {
+          "en": [
+            "On very old systems or notebooks, HPET may be necessary. Test stability after disabling before making permanent."
+          ],
+          "es": [
+            "En sistemas muy antiguos o notebooks, HPET puede ser necesario. Prueba estabilidad después de desactivar antes de hacer permanente."
+          ]
+        }
+      },
+      {
+        "id": "configure-message-priority",
+        "name": {
+          "en": "Configure Windows Message Priority",
+          "es": "Configurar Prioridad de Mensajes de Windows"
+        },
+        "description": {
+          "en": "Reduce Windows message queue latency with Win32PrioritySeparation",
+          "es": "Reduce latencia de cola de mensajes de Windows con Win32PrioritySeparation"
+        },
+        "benefit": {
+          "en": "Improves window message processing speed for faster input response",
+          "es": "Mejora velocidad de procesamiento de mensajes de ventana para respuesta más rápida de entrada"
+        },
+        "impact": "medium",
+        "commands": [
+          "New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" -Name \"Win32PrioritySeparation\" -PropertyType DWord -Value 38 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "configure-irq-priority",
+        "name": {
+          "en": "Configure IRQ Priority",
+          "es": "Configurar Prioridad de IRQ"
+        },
+        "description": {
+          "en": "Set high priority for network and GPU interrupt handling",
+          "es": "Establece alta prioridad para manejo de interrupciones de red y GPU"
+        },
+        "benefit": {
+          "en": "Ensures network and GPU interrupts are handled quickly",
+          "es": "Asegura que interrupciones de red y GPU sean manejadas rápidamente"
+        },
+        "impact": "medium",
+        "commands": [
+          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\"",
+          "New-ItemProperty -Path $path -Name \"IRQ8Priority\" -PropertyType DWord -Value 1 -Force",
+          "New-ItemProperty -Path $path -Name \"IRQ16Priority\" -PropertyType DWord -Value 2 -Force"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "enable-msi-mode",
+        "name": {
+          "en": "Enable MSI Mode",
+          "es": "Habilitar Modo MSI"
+        },
+        "description": {
+          "en": "Enable Message Signaled Interrupts for PCIe devices",
+          "es": "Habilita Message Signaled Interrupts para dispositivos PCIe"
+        },
+        "benefit": {
+          "en": "Reduces latency by using message-based instead of pin-based interrupts",
+          "es": "Reduce latencia usando interrupciones basadas en mensaje en lugar de basadas en pin"
+        },
+        "impact": "medium",
+        "commands": [],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "verify-latency-settings",
+        "name": {
+          "en": "Verify Latency Settings",
+          "es": "Verificar Configuración de Latencia"
+        },
+        "description": {
+          "en": "Check that all latency optimizations were applied",
+          "es": "Verifica que todas las optimizaciones de latencia fueron aplicadas"
+        },
+        "benefit": {
+          "en": "Confirms configuration changes took effect",
+          "es": "Confirma que los cambios de configuración tuvieron efecto"
+        },
+        "impact": "low",
+        "commands": [
+          "Get-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\KernelVelocity\" -Name \"DisableDynamicTick\"",
+          "Get-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" -Name \"DpcWatchdogProfileOffset\"",
+          "bcdedit /enum | findstr /i timer"
+        ],
+        "warnings": {
+          "en": [],
+          "es": []
+        }
+      },
+      {
+        "id": "complete-latency-optimization",
+        "name": {
+          "en": "Complete Latency Optimization",
+          "es": "Optimización Completa de Latencia"
+        },
+        "description": {
+          "en": "Apply all latency and timer optimizations at once",
+          "es": "Aplica todas las optimizaciones de latencia y timer de una vez"
+        },
+        "benefit": {
+          "en": "Comprehensive latency reduction in one script",
+          "es": "Reducción integral de latencia en un script"
+        },
+        "impact": "high",
+        "commands": [
+          "# Disable Dynamic Tick",
+          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\KernelVelocity\"",
+          "New-Item -Path $path -Force | Out-Null",
+          "New-ItemProperty -Path $path -Name \"DisableDynamicTick\" -PropertyType DWord -Value 1 -Force",
+          "# Configure DPC Watchdog",
+          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\"",
+          "New-ItemProperty -Path $path -Name \"DpcWatchdogProfileOffset\" -PropertyType DWord -Value 10000 -Force",
+          "# Configure Win32PrioritySeparation for Gaming",
+          "New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" -Name \"Win32PrioritySeparation\" -PropertyType DWord -Value 38 -Force",
+          "# Configure IRQ Priorities",
+          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\"",
+          "New-ItemProperty -Path $path -Name \"IRQ8Priority\" -PropertyType DWord -Value 1 -Force",
+          "New-ItemProperty -Path $path -Name \"IRQ16Priority\" -PropertyType DWord -Value 2 -Force",
+          "# Set Timer Resolution via bcdedit",
+          "bcdedit /set disabledynamictick yes",
+          "bcdedit /set useplatformclock true",
+          "Write-Host \"All latency optimizations applied. Please restart Windows.\""
+        ],
+        "warnings": {
+          "en": [
+            "Restart Windows for all changes to take effect properly."
+          ],
+          "es": [
+            "Reinicia Windows para que todos los cambios tomen efecto apropiadamente."
+          ]
+        }
+      },
+      {
+        "id": "latency-best-practices",
+        "name": {
+          "en": "Latency and Timers Best Practices",
+          "es": "Mejores Prácticas de Latencia y Timers"
+        },
+        "description": {
+          "en": "Important guidelines for applying latency optimizations",
+          "es": "Directrices importantes para aplicar optimizaciones de latencia"
+        },
+        "benefit": {
+          "en": "Prevents issues and ensures optimal configuration",
+          "es": "Previene problemas y asegura configuración óptima"
+        },
+        "impact": "high",
+        "commands": [],
+        "warnings": {
+          "en": [
+            "1. Create a system restore point\n2. Run PowerShell as Administrator\n3. Test in safe mode first if concerned about stability\n4. Have driver CDs/downloads ready for GPU and network\n5. Note all original settings before changes",
+            "All these changes require a complete system restart to take effect. Plan accordingly."
+          ],
+          "es": [
+            "1. Crea un punto de restauración del sistema\n2. Ejecuta PowerShell como Administrador\n3. Prueba en modo seguro primero si te preocupa la estabilidad\n4. Ten CDs/descargas de drivers listos para GPU y red\n5. Anota todas las configuraciones originales antes de cambios",
+            "Todos estos cambios requieren un reinicio completo del sistema para tomar efecto. Planifica en consecuencia."
+          ]
+        }
+      }
+    ]
+  }
+]
