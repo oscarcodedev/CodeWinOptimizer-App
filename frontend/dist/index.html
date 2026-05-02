@@ -42,6 +42,7 @@
       <button class="tab" data-tab="apps"><span class="tab-icon">📦</span><span id="tab-apps-label">Apps</span></button>
       <button class="tab" data-tab="tweaks"><span class="tab-icon">⚡</span><span id="tab-tweaks-label">Tweaks</span></button>
       <button class="tab" data-tab="features"><span class="tab-icon">🛠</span><span id="tab-features-label">Features</span></button>
+      <button class="tab" data-tab="theme"><span class="tab-icon">🎨</span><span id="tab-theme-label">Appearance</span></button>
     </nav>
 
     <div class="tab-content active" id="tab-restore">
@@ -103,6 +104,41 @@
       </div>
     </div>
 
+    <div class="tab-content" id="tab-theme">
+      <div class="panel">
+        <h2 id="theme-title">Appearance</h2>
+        <p id="theme-desc">Customize the look and feel of CodeWinOptimizer.</p>
+        <div class="theme-grid">
+          <div class="theme-colors">
+            <h3 id="theme-colors-label">Accent Color</h3>
+            <div class="color-options" id="color-options">
+              <button class="color-btn active" data-color="#39ff14" style="background:#39ff14" title="Neon Green"></button>
+              <button class="color-btn" data-color="#00ffff" style="background:#00ffff" title="Cyan"></button>
+              <button class="color-btn" data-color="#bf5af2" style="background:#bf5af2" title="Purple"></button>
+              <button class="color-btn" data-color="#ff6b35" style="background:#ff6b35" title="Orange"></button>
+              <button class="color-btn" data-color="#ff2d55" style="background:#ff2d55" title="Pink"></button>
+              <button class="color-btn" data-color="#d4ff00" style="background:#d4ff00" title="Yellow"></button>
+            </div>
+          </div>
+          <div class="theme-fonts">
+            <h3 id="theme-fonts-label">Font</h3>
+            <select id="theme-font-select" class="theme-select">
+              <option value="'Segoe UI',system-ui,sans-serif">Segoe UI (Default)</option>
+              <option value="'Cascadia Code','Consolas',monospace">Cascadia Code</option>
+              <option value="'Inter',system-ui,sans-serif">Inter</option>
+              <option value="'JetBrains Mono',monospace">JetBrains Mono</option>
+              <option value="Arial,sans-serif">Arial</option>
+              <option value="'Trebuchet MS',sans-serif">Trebuchet MS</option>
+            </select>
+          </div>
+        </div>
+        <div class="theme-actions">
+          <button id="btn-theme-apply" class="btn-primary"><span id="btn-theme-apply-text">Apply</span></button>
+          <button id="btn-theme-reset" class="btn-secondary"><span id="btn-theme-reset-text">Reset Defaults</span></button>
+        </div>
+      </div>
+    </div>
+
     <div id="terminal">
       <div class="term-header">
         <div class="term-dots">
@@ -128,6 +164,9 @@
   </div>
 
   <script src="/wailsjs/runtime/runtime.js" type="module"></script>
+  <script src="/js/data.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/terminal.js"></script>
   <script src="/main.js" type="module"></script>
 </body>
 </html>

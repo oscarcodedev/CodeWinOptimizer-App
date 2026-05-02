@@ -6,6 +6,8 @@ Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend r
 
 > **IMPORTANT:** Run as Administrator. Most features (registry, DISM, bcdedit, WinGet) require admin privileges.
 
+> **Antivirus notice:** This tool uses PowerShell, DISM, WMI, and registry commands. Some antivirus may flag the .exe as suspicious (heuristic/AI false positives). All code is open source — [review the source](https://github.com/kirii86/CodeWinOptimizer) or build it yourself with `wails build`.
+
 ---
 
 ## Features
@@ -96,9 +98,9 @@ Output: `build/bin/codewinoptimizer.exe`
 - [x] Custom frameless titlebar with min/max/close
 - [x] Toggle switches UI, language selector ES/EN
 - [x] Per-category Select All / Deselect All
+- [x] Custom theme editor (colors, fonts)
 
 ### Planned
-- [ ] Custom theme editor (colors, fonts)
 - [ ] Save/Load tweak profiles (export selections as JSON)
 - [ ] System monitoring dashboard (CPU, GPU, RAM, temps)
 - [ ] Startup program manager
