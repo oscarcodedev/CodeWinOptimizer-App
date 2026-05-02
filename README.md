@@ -115,9 +115,6 @@ Output: `build/bin/codewinoptimizer.exe`
 - [ ] Scheduled maintenance (auto-clean, auto-backup registry)
 - [ ] Process/service manager (stop bloatware)
 
-## Developer
-
-**OscarDev** — v1.0.0
 
 ## License
 

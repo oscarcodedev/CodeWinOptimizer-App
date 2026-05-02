@@ -18,10 +18,10 @@ func main() {
 
 	err := wails.Run(&options.App{
 		Title:     "CodeWinOptimizer",
-		Width:     900,
-		Height:    700,
-		MinWidth:  700,
-		MinHeight: 500,
+		Width:     960,
+		Height:    720,
+		MinWidth:  800,
+		MinHeight: 550,
 		Frameless: true,
 		Windows: &windows.Options{
 			WebviewIsTransparent: false,
