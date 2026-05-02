@@ -49,7 +49,7 @@ Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend r
 
 ## Preview
 
-| Restaurar | Apps |
+| Restore | Apps |
 |-----------|------|
 | ![Restore](https://i.imgur.com/1ZVIUVs.png) | ![Apps](https://i.imgur.com/rJqpplf.png) |
 
@@ -57,9 +57,9 @@ Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend r
 |--------|----------|
 | ![Tweaks](https://i.imgur.com/dGvBRuB.png) | ![Features](https://i.imgur.com/CIAySy3.png) |
 
-| Apariencia |
+| Appearance |
 |-----------|
-| ![Apariencia](https://i.imgur.com/exoZMYs.png) |
+| ![Appearance](https://i.imgur.com/exoZMYs.png) |
 
 ---
 
