@@ -30,4 +30,4 @@ El ejecutable se generará en la carpeta `build/bin/`.
 
 ## 📜 Licencia
 
-[Seleccionar o definir la licencia que aplique].
+Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
