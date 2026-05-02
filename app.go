@@ -67,20 +67,39 @@ func (a *App) CreateRestorePoint(lang string) string {
 		description = "CodeWinOptimizer - Pre-Optimizacion"
 	}
 
-	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command",
-		fmt.Sprintf(`Checkpoint-Computer -Description "%s" -RestorePointType MODIFY_SETTINGS`, description))
+	// Use WMI to bypass the 1440-minute Windows limit
+	psCmd := fmt.Sprintf(`[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$desc = "%s"
+try {
+    $result = Invoke-CimMethod -Namespace root/default -ClassName SystemRestore -MethodName CreateRestorePoint -Arguments @{ Description=$desc; RestorePointType=12; EventType=100 }
+    if ($result.ReturnValue -eq 0) {
+        Write-Host "OK - Restore point created: $desc"
+    } else {
+        # Fallback to Checkpoint-Computer
+        Checkpoint-Computer -Description $desc -RestorePointType MODIFY_SETTINGS -ErrorAction Stop 2>$null
+        Write-Host "OK - Restore point created via Checkpoint-Computer"
+    }
+} catch {
+    Write-Host "ERR: $($_.Exception.Message)"
+    exit 1
+}`, description)
 
-	a.emitLog("[CMD] Checkpoint-Computer -RestorePointType MODIFY_SETTINGS")
+	a.emitLog("[CMD] Creating restore point via WMI")
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCmd)
+	cmd.SysProcAttr = getSysProcAttr()
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {
 		msg := fmt.Sprintf("[ERR] Restore point failed: %v", err)
 		a.emitLog(msg)
+		if len(output) > 0 {
+			a.emitLog(strings.TrimSpace(string(output)))
+		}
 		return string(output)
 	}
 
 	a.emitLog("[OK] Restore point created")
-	return string(output)
+	return strings.TrimSpace(string(output))
 }
 
 func (a *App) RunCommands(tweakIDs []string, lang string) string {
@@ -99,7 +118,7 @@ func (a *App) RunCommands(tweakIDs []string, lang string) string {
 
 		a.emitLog(fmt.Sprintf("--- [%d/%d] %s ---", i+1, total, name))
 
-		joinedCmd := strings.Join(tweak.Commands, "; ")
+		joinedCmd := "[Console]::OutputEncoding = [Text.Encoding]::UTF8; " + strings.Join(tweak.Commands, "; ")
 		cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", joinedCmd)
 		cmd.SysProcAttr = getSysProcAttr()
 		output, err := cmd.CombinedOutput()
@@ -113,6 +132,40 @@ func (a *App) RunCommands(tweakIDs []string, lang string) string {
 				a.emitLog(out)
 			} else {
 				a.emitLog("[OK] Applied successfully")
+			}
+		}
+	}
+
+	a.emitLog("=== Complete ===")
+	return ""
+}
+
+func (a *App) InstallApps(ids []string, lang string, pkgMgr string) string {
+	total := len(ids)
+
+	for i, id := range ids {
+		a.emitLog(fmt.Sprintf("--- [%d/%d] Installing: %s ---", i+1, total, id))
+
+		var psCmd string
+		if pkgMgr == "choco" {
+			psCmd = fmt.Sprintf("[Console]::OutputEncoding = [Text.Encoding]::UTF8; choco install %s -y --limit-output", id)
+		} else {
+			psCmd = fmt.Sprintf("[Console]::OutputEncoding = [Text.Encoding]::UTF8; winget install --id %s --silent --accept-package-agreements --accept-source-agreements", id)
+		}
+
+		cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCmd)
+		cmd.SysProcAttr = getSysProcAttr()
+		output, err := cmd.CombinedOutput()
+
+		if err != nil {
+			a.emitLog(fmt.Sprintf("[ERR] %v", err))
+			a.emitLog(strings.TrimSpace(string(output)))
+		} else {
+			out := strings.TrimSpace(string(output))
+			if out != "" {
+				a.emitLog(out)
+			} else {
+				a.emitLog("[OK] Installed successfully")
 			}
 		}
 	}
@@ -144,32 +197,4 @@ func (a *App) CheckAdmin() bool {
 		return false
 	}
 	return strings.TrimSpace(string(output)) == "True"
-}
-
-func (a *App) InstallApps(wingetIDs []string, lang string) string {
-	total := len(wingetIDs)
-
-	for i, wingetID := range wingetIDs {
-		a.emitLog(fmt.Sprintf("--- [%d/%d] Installing: %s ---", i+1, total, wingetID))
-
-		cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command",
-			fmt.Sprintf("winget install --id %s --silent --accept-package-agreements --accept-source-agreements", wingetID))
-		cmd.SysProcAttr = getSysProcAttr()
-		output, err := cmd.CombinedOutput()
-
-		if err != nil {
-			a.emitLog(fmt.Sprintf("[ERR] %v", err))
-			a.emitLog(strings.TrimSpace(string(output)))
-		} else {
-			out := strings.TrimSpace(string(output))
-			if out != "" {
-				a.emitLog(out)
-			} else {
-				a.emitLog("[OK] Installed successfully")
-			}
-		}
-	}
-
-	a.emitLog("=== Complete ===")
-	return ""
 }
