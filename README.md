@@ -82,6 +82,37 @@ Output: `build/bin/codewinoptimizer.exe`
 
 ---
 
+## Roadmap
+
+### Completed
+- [x] System Restore Point creation (registry bypass for 24h cooldown)
+- [x] Full registry backup to .reg files (5 hives)
+- [x] App manager — install/uninstall via WinGet & Chocolatey (70+ apps)
+- [x] 105+ system tweaks across 12 categories (network, GPU, memory, privacy, performance...)
+- [x] Windows Features manager — .NET, Hyper-V, WSL, Sandbox, NFS, etc.
+- [x] Quick Fixes — network reset, NTP sync, SFC/DISM scan, Windows Update reset, WinGet reinstall, autologin
+- [x] Portable mode — no installation required, single .exe
+- [x] Terminal with real-time logs, copy to clipboard
+- [x] Custom frameless titlebar with min/max/close
+- [x] Toggle switches UI, language selector ES/EN
+- [x] Per-category Select All / Deselect All
+
+### Planned
+- [ ] Custom theme editor (colors, fonts)
+- [ ] Save/Load tweak profiles (export selections as JSON)
+- [ ] System monitoring dashboard (CPU, GPU, RAM, temps)
+- [ ] Startup program manager
+- [ ] Context menu (right-click) editor
+- [ ] Disk cleanup & temp files removal
+- [ ] Driver backup & restore
+- [ ] Auto-update mechanism
+- [ ] More apps: Docker, Wireshark, VirtualBox, VS 2022 Build Tools, CMake, .NET SDK
+- [ ] System benchmark (CPU/GPU/disk scores)
+- [ ] Network speed test & latency monitor
+- [ ] Registry defrag & optimization
+- [ ] Scheduled maintenance (auto-clean, auto-backup registry)
+- [ ] Process/service manager (stop bloatware)
+
 ## Developer
 
 **OscarDev** — v1.0.0
