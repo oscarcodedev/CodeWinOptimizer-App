@@ -79,8 +79,8 @@ const APPS=[
 ];
 
 L.en={
-  tabRestore:'Restore',tabApps:'Apps',tabTweaks:'Tweaks',
-  restoreTitle:'System Restore Point',restoreDesc:'Create a restore point before making changes to your system. This allows you to revert if something goes wrong.',restoreBtn:'Create Restore Point',rpPlaceholder:'Restore point name...',
+  tabRestore:'Restore',tabApps:'Apps',tabTweaks:'Tweaks',tabFeatures:'Features',
+  restoreTitle:'System Restore Point',restoreDesc:'Create a restore point before making changes to your system. This allows you to revert if something goes wrong.',restoreBtn:'Create Restore Point',rpPlaceholder:'Restore point name...',regBackup:'Backup Registry',regBackupRunning:'Backing up registry...',regBackupOk:'Registry backup complete',
   installBtn:'Install Selected',installCount:'{n} apps selected',
   applyBtn:'Apply Selected',applyCount:'{n} tweaks selected',selectFirst:'Select tweaks',
   terminal:'Terminal — Logs',clear:'Clear',idle:'Idle',
@@ -92,10 +92,11 @@ L.en={
   adminWarn:'Run as Administrator — registry, DISM, bcdedit, and WinGet commands require admin privileges',
   viaWinget:'winget:',viaChoco:'choco:',
   uninstall:'Uninstall',website:'Website',
+  ftFeaturesTitle:'Windows Features',ftFixesTitle:'Quick Fixes',runFeatures:'Run Features',ftRunning:'Running features...',ftDone:'Done.',
 };
 L.es={
-  tabRestore:'Restaurar',tabApps:'Apps',tabTweaks:'Tweaks',
-  restoreTitle:'Punto de Restauracion',restoreDesc:'Crea un punto de restauracion antes de hacer cambios en el sistema. Esto permite revertir si algo sale mal.',restoreBtn:'Crear Punto de Restauracion',rpPlaceholder:'Nombre del punto...',
+  tabRestore:'Restaurar',tabApps:'Apps',tabTweaks:'Tweaks',tabFeatures:'Funciones',
+  restoreTitle:'Punto de Restauracion',restoreDesc:'Crea un punto de restauracion antes de hacer cambios en el sistema. Esto permite revertir si algo sale mal.',restoreBtn:'Crear Punto de Restauracion',rpPlaceholder:'Nombre del punto...',regBackup:'Respaldar Registro',regBackupRunning:'Respaldando registro...',regBackupOk:'Respaldo del registro completo',
   installBtn:'Instalar Seleccionados',installCount:'{n} apps seleccionadas',
   applyBtn:'Aplicar Seleccionados',applyCount:'{n} tweaks seleccionados',selectFirst:'Selecciona tweaks',
   terminal:'Terminal — Registros',clear:'Limpiar',idle:'Inactivo',
@@ -107,7 +108,39 @@ L.es={
   adminWarn:'Ejecutar como Administrador — comandos de registro, DISM, bcdedit y WinGet requieren privilegios de admin',
   viaWinget:'winget:',viaChoco:'choco:',
   uninstall:'Desinstalar',website:'Web',
+  ftFeaturesTitle:'Caracteristicas de Windows',ftFixesTitle:'Arreglos Rapidos',runFeatures:'Ejecutar',ftRunning:'Ejecutando...',ftDone:'Completado.',
 };
+
+const FEATURES=[
+  {id:'netfx',n:{en:'.NET Framework 2/3/4 — Enable',es:'.NET Framework 2/3/4 — Activar'},enable:'DISM /Online /Enable-Feature /FeatureName:NetFx3 /All /NoRestart; if($LASTEXITCODE -ne 0){Write-Host "DISM failed. .NET 3.5 requires Windows installation media or Windows Update as source"}'},
+  {id:'hyperv',n:{en:'Hyper-V — Enable',es:'Hyper-V — Activar'},enable:'DISM /Online /Enable-Feature /FeatureName:Microsoft-Hyper-V-All /NoRestart'},
+  {id:'f8off',n:{en:'Legacy F8 Boot Recovery — Disable',es:'Recuperacion F8 — Desactivar'},enable:'bcdedit /set {default} bootmenupolicy standard'},
+  {id:'f8on',n:{en:'Legacy F8 Boot Recovery — Enable',es:'Recuperacion F8 — Activar'},enable:'bcdedit /set {default} bootmenupolicy legacy'},
+  {id:'media',n:{en:'Legacy Media (WMP, DirectPlay) — Enable',es:'Media Legacy (WMP, DirectPlay) — Activar'},enable:'DISM /Online /Enable-Feature /FeatureName:MediaPlayback /NoRestart; DISM /Online /Enable-Feature /FeatureName:DirectPlay /NoRestart'},
+  {id:'nfs',n:{en:'Network File System (NFS) — Enable',es:'NFS — Activar'},enable:'DISM /Online /Enable-Feature /FeatureName:ServicesForNFS-ClientOnly /NoRestart'},
+  {id:'regtask',n:{en:'Registry Backup (Daily 12:30am) — Enable',es:'Backup Registro (Diario 12:30) — Activar'},enable:`
+$action = New-ScheduledTaskAction -Execute "reg" -Argument "export HKLM $env:USERPROFILE\\CodeWinOptimizer\\registry-backups\\daily_HKLM.reg /y"
+$trigger = New-ScheduledTaskTrigger -Daily -At "00:30"
+$principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+Register-ScheduledTask -TaskName "CodeWinOptimizer_RegistryBackup" -Action $action -Trigger $trigger -Principal $principal -Force -ErrorAction SilentlyContinue`},
+  {id:'sandbox',n:{en:'Windows Sandbox — Enable',es:'Windows Sandbox — Activar'},enable:'DISM /Online /Enable-Feature /FeatureName:Containers-DisposableClientVM /NoRestart'},
+  {id:'wsl',n:{en:'WSL — Enable',es:'WSL — Activar'},enable:'DISM /Online /Enable-Feature /FeatureName:Microsoft-Windows-Subsystem-Linux /NoRestart'},
+];
+
+const FIXES=[
+  {id:'autologin',n:{en:'Autologin — Enable',es:'Autologin — Activar'},cmd:`
+$regPath = "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"
+$user = (Get-CimInstance -Class Win32_ComputerSystem | Select-Object -ExpandProperty Username)
+Set-ItemProperty -Path $regPath -Name "AutoAdminLogon" -Value "1" -Force
+Set-ItemProperty -Path $regPath -Name "DefaultUserName" -Value $user -Force
+Set-ItemProperty -Path $regPath -Name "DefaultPassword" -Value "" -Force
+Write-Host "Autologin enabled for $user"`},
+  {id:'netreset',n:{en:'Network — Reset',es:'Red — Reiniciar'},cmd:'netsh int ip reset; netsh winsock reset; ipconfig /flushdns; Write-Host "Network stack reset complete"'},
+  {id:'ntp',n:{en:'NTP Server — Enable',es:'Servidor NTP — Activar'},cmd:'w32tm /config /syncfromflags:manual /manualpeerlist:"time.windows.com" /reliable:YES /update; net stop w32time; net start w32time; w32tm /resync /force; Write-Host "NTP sync enabled"'},
+  {id:'sfc',n:{en:'System Corruption Scan — Run',es:'Escaneo Corrupcion — Ejecutar'},cmd:'DISM /Online /Cleanup-Image /RestoreHealth; sfc /scannow; Write-Host "System scan complete"'},
+  {id:'wureset',n:{en:'Windows Update — Reset',es:'Windows Update — Reiniciar'},cmd:'net stop wuauserv; net stop cryptSvc; net stop bits; net stop msiserver; Remove-Item -Recurse -Force "$env:windir\\SoftwareDistribution" -ErrorAction SilentlyContinue; net start wuauserv; net start cryptSvc; net start bits; net start msiserver; Write-Host "Windows Update cache reset"'},
+  {id:'wingetre',n:{en:'WinGet — Reinstall',es:'WinGet — Reinstalar'},cmd:'Write-Host "Reinstalling WinGet..."; try{Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe -ErrorAction Stop; Write-Host "WinGet reinstalled successfully"}catch{Write-Host "ERR: WinGet reinstall failed — $($_.Exception.Message)"}'},
+];
 
 /* ========= INIT ========= */
 async function boot(){
@@ -119,8 +152,11 @@ async function boot(){
 
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){switchTab(this.dataset.tab)}));
   document.getElementById('btn-restore').addEventListener('click',doRestore);
+  document.getElementById('btn-regbackup').addEventListener('click',doRegBackup);
+  document.getElementById('open-backups-link').addEventListener('click',function(e){e.preventDefault();window.go.main.App.OpenFolder()});
   document.getElementById('btn-install-apps').addEventListener('click',doInstall);
   document.getElementById('btn-apply-tweaks').addEventListener('click',doApply);
+  document.getElementById('btn-run-features').addEventListener('click',doRunFeatures);
   document.getElementById('btn-clear').addEventListener('click',clearTerm);
   document.getElementById('btn-copy').addEventListener('click',copyTerm);
   document.querySelectorAll('.pkg-btn').forEach(b=>b.addEventListener('click',function(){pkgMgr=this.dataset.pkg;document.querySelectorAll('.pkg-btn').forEach(x=>x.classList.toggle('active',x===this));drawApps()}));
@@ -145,10 +181,11 @@ function switchTab(tab){
   if(tab==='tweaks')drawTweaks();
   if(tab==='apps')drawApps();
   if(tab==='restore')drawRestore();
+  if(tab==='features')drawFeatures();
   refreshUI();
 }
 
-function drawAll(){drawRestore();drawApps();drawTweaks();refreshUI()}
+function drawAll(){drawRestore();drawApps();drawTweaks();drawFeatures();refreshUI()}
 
 /* ========= TAB: RESTORE ========= */
 function drawRestore(){
@@ -156,6 +193,7 @@ function drawRestore(){
   document.getElementById('restore-title').textContent=T('restoreTitle');
   document.getElementById('restore-desc').textContent=T('restoreDesc');
   document.getElementById('btn-restore-text').textContent=T('restoreBtn');
+  document.getElementById('btn-regbackup-text').textContent=T('regBackup');
   document.getElementById('rp-name').placeholder=T('rpPlaceholder');
 }
 
@@ -168,6 +206,17 @@ async function doRestore(){
     appendLog('[OK] '+T('restoreOk'));if(r)appendLog(r);
     setTerm(T('restoreOk'),'ok');
   }catch(e){appendLog('[ERR] '+T('restoreFail')+': '+e);setTerm(T('restoreFail'),'err')}
+  busy=false;refreshUI();
+}
+
+async function doRegBackup(){
+  if(busy)return;busy=true;refreshUI();
+  setTerm(T('regBackupRunning'),'running');appendLog('=== '+T('regBackupRunning')+' ===');
+  try{
+    const r=await window.go.main.App.BackupRegistry();
+    if(r)appendLog(r);
+    appendLog('[OK] '+T('regBackupOk'));setTerm(T('regBackupOk'),'ok');
+  }catch(e){appendLog('[ERR] '+e);setTerm('Backup failed','err')}
   busy=false;refreshUI();
 }
 
@@ -269,10 +318,11 @@ function tweakRow(t){
   const n=LO(t.name);const d=LO(t.description);const cmds=(t.commands||[]).length;
   const hasW=(t.warnings?.[lang]||t.warnings?.['en']||[]).length>0;
   const chk=pickedT.has(t.id)?'checked':'';
-  return `<div class="tweak-row" data-tid="${t.id}">
-    <input type="checkbox" data-tid="${t.id}" ${chk} ${cmds===0?'disabled':''}>
+  const disabled=cmds===0?'disabled':'';
+  return `<label class="tweak-row" data-tid="${t.id}">
+    <label class="toggle"><input type="checkbox" data-tid="${t.id}" ${chk} ${disabled}><span class="toggle-slider"></span></label>
     <div class="tweak-inf"><div class="tweak-inf-name"><span>${n}</span>${hasW?'<span class="warn-dot">●</span>':''}</div><div class="tweak-inf-desc">${d}</div><div class="tweak-inf-meta"><span class="badge badge-${t.impact}">${t.impact}</span>${cmds>0?`<span>${cmds} ${T('cmds')}</span>`:'<span>info</span>'}</div></div>
-  </div>`;
+  </label>`;
 }
 
 function bindTweakEv(){
@@ -301,14 +351,66 @@ async function doApply(){
   busy=false;refreshUI();
 }
 
+/* ========= TAB: FEATURES ========= */
+const pickedF=new Set();
+function drawFeatures(){
+  document.getElementById('tab-features-label').textContent=T('tabFeatures');
+  document.getElementById('ft-features-title').textContent=T('ftFeaturesTitle');
+  document.getElementById('ft-fixes-title').textContent=T('ftFixesTitle');
+  document.getElementById('btn-features-text').textContent=pickedF.size>0?T('runFeatures')+' ('+pickedF.size+')':T('runFeatures');
+
+  document.getElementById('ft-features-grid').innerHTML=FEATURES.map(f=>{
+    const chk=pickedF.has(f.id)?'checked':'';
+    return `<label class="ft-row"><label class="toggle"><input type="checkbox" data-fid="${f.id}" ${chk}><span class="toggle-slider"></span></label><span>${LO(f.n)}</span></label>`;
+  }).join('');
+
+  document.getElementById('ft-fixes-grid').innerHTML=FIXES.map(f=>
+    `<button class="ft-fix-btn" data-fix="${f.id}">${LO(f.n)}</button>`
+  ).join('');
+
+  document.querySelectorAll('#ft-features-grid input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change',function(){const id=this.dataset.fid;if(this.checked)pickedF.add(id);else pickedF.delete(id);drawFeatures()});
+  });
+  document.querySelectorAll('.ft-fix-btn').forEach(btn=>{
+    btn.addEventListener('click',function(){doRunFix(this.dataset.fix)});
+  });
+}
+
+async function doRunFeatures(){
+  if(busy||pickedF.size===0)return;busy=true;refreshUI();
+  setTerm(T('ftRunning'),'running');
+  const fts=FEATURES.filter(f=>pickedF.has(f.id));
+  appendLog('--- '+T('ftRunning')+' ('+fts.length+' features) ---');
+  for(const f of fts){
+    appendLog('[CMD] '+LO(f.n));
+    await window.go.main.App.ExecPowerShell(f.enable);
+  }
+  appendLog('[OK] '+T('ftDone'));setTerm(T('ftDone'),'ok');
+  busy=false;refreshUI();
+}
+
+async function doRunFix(fixId){
+  if(busy)return;busy=true;refreshUI();
+  const f=FIXES.find(x=>x.id===fixId);if(!f)return;
+  setTerm(T('ftRunning'),'running');
+  appendLog('--- '+LO(f.n)+' ---');
+  try{
+    await window.go.main.App.ExecPowerShell(f.cmd);
+    appendLog('[OK] '+T('ftDone'));setTerm(T('ftDone'),'ok');
+  }catch(e){appendLog('[ERR] '+e);setTerm('Error','err')}
+  busy=false;refreshUI();
+}
+
 /* ========= UI ========= */
 function refreshUI(){
   document.getElementById('term-title').textContent=T('terminal');
   const ab=document.getElementById('btn-apply-tweaks'),at=document.getElementById('btn-apply-text');
   const ib=document.getElementById('btn-install-apps'),it=document.getElementById('btn-install-text');
   const rb=document.getElementById('btn-restore'),rt=document.getElementById('btn-restore-text');
+  const rbb=document.getElementById('btn-regbackup'),rbt=document.getElementById('btn-regbackup-text');
 
   rb.disabled=busy;rt.textContent=busy?'...':T('restoreBtn');
+  rbb.disabled=busy;rbt.textContent=busy?'...':T('regBackup');
 
   const tc=pickedT.size;ab.disabled=busy||tc===0;
   at.textContent=busy?'...':tc>0?T('applyCount').replace('{n}',tc):T('selectFirst');

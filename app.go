@@ -5,8 +5,10 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -228,8 +230,72 @@ func (a *App) OpenURL(url string) {
 	wailsRuntime.BrowserOpenURL(a.ctx, url)
 }
 
+func (a *App) OpenFolder() {
+	backupDir := fmt.Sprintf("%s\\CodeWinOptimizer\\registry-backups", os.Getenv("USERPROFILE"))
+	os.MkdirAll(backupDir, 0755)
+	exec.Command("explorer", backupDir).Start()
+}
+
+func (a *App) ExecPowerShell(script string) string {
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script)
+	cmd.SysProcAttr = getSysProcAttr()
+	output, err := cmd.CombinedOutput()
+	out := strings.TrimSpace(string(output))
+
+	if err != nil {
+		if out != "" {
+			a.emitLog(out)
+		}
+		a.emitLog(fmt.Sprintf("[ERR] %v", err))
+	} else if out != "" {
+		a.emitLog(out)
+	} else {
+		a.emitLog("[OK] Command completed")
+	}
+
+	return out
+}
+
 func (a *App) Quit() {
 	wailsRuntime.Quit(a.ctx)
+}
+
+func (a *App) BackupRegistry() string {
+	backupDir := fmt.Sprintf("%s\\CodeWinOptimizer\\registry-backups", os.Getenv("USERPROFILE"))
+	ts := time.Now().Format("2006-01-02_150405")
+	dir := fmt.Sprintf("%s\\%s", backupDir, ts)
+
+	psCmd := fmt.Sprintf(`[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$dir = "%s"
+New-Item -ItemType Directory -Path $dir -Force | Out-Null
+$hives = @("HKLM","HKCU","HKCR","HKU","HKCC")
+$total = $hives.Count; $ok = 0
+foreach ($h in $hives) {
+    try {
+        $out = Join-Path $dir "$h.reg"
+        reg export $h $out /y 2>$null
+        if ($LASTEXITCODE -eq 0) { $ok++; Write-Host "OK: $h exported" }
+        else { Write-Host "WARN: $h had warnings (partial export)" }
+    } catch {
+        Write-Host "ERR: $h - $($_.Exception.Message)"
+    }
+}
+Write-Host "--- Full registry backup: $ok/$total hives -> $dir ---"
+# Open folder in Explorer
+Start-Process explorer.exe -ArgumentList $dir`, dir)
+
+	a.emitLog("[CMD] Backing up full registry (5 hives: HKLM, HKCU, HKCR, HKU, HKCC)...")
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCmd)
+	cmd.SysProcAttr = getSysProcAttr()
+	output, err := cmd.CombinedOutput()
+
+	if err != nil {
+		a.emitLog(fmt.Sprintf("[ERR] Registry backup failed: %v", err))
+	} else {
+		a.emitLog(fmt.Sprintf("[OK] Full registry backup saved to: %s", dir))
+	}
+
+	return strings.TrimSpace(string(output))
 }
 
 func (a *App) findTweak(id string) *Tweak {

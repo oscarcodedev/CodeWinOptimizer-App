@@ -2164,5 +2164,206 @@
         }
       }
     ]
+  },
+  {
+    "id": "privacy",
+    "icon": "🔒",
+    "name": {
+      "en": "Privacy",
+      "es": "Privacidad"
+    },
+    "tweaks": [
+      {
+        "id": "disable-telemetry",
+        "name": { "en": "📡 Disable Telemetry", "es": "📡 Desactivar Telemetria" },
+        "description": { "en": "Prevents Windows from sending diagnostic and usage data to Microsoft.", "es": "Evita que Windows envie datos de diagnostico y uso a Microsoft." },
+        "benefit": { "en": "Increased privacy, reduced background network activity", "es": "Mayor privacidad, menos actividad de red en segundo plano" },
+        "impact": "high",
+        "commands": [
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection\" /v AllowTelemetry /t REG_DWORD /d 0 /f",
+          "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection\" /v AllowTelemetry /t REG_DWORD /d 0 /f",
+          "reg add \"HKLM\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection\" /v AllowTelemetry /t REG_DWORD /d 0 /f"
+        ],
+        "warnings": { "en": ["May affect Windows Update delivery optimization"], "es": ["Puede afectar la optimizacion de entrega de Windows Update"] }
+      },
+      {
+        "id": "disable-cortana",
+        "name": { "en": "🗣 Disable Cortana", "es": "🗣 Desactivar Cortana" },
+        "description": { "en": "Disables Cortana voice assistant and web search integration in taskbar.", "es": "Desactiva el asistente de voz Cortana y la integracion de busqueda web." },
+        "benefit": { "en": "Reduces resource usage and prevents data collection", "es": "Reduce uso de recursos y previene recoleccion de datos" },
+        "impact": "medium",
+        "commands": [
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v AllowCortana /t REG_DWORD /d 0 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v AllowSearchToUseLocation /t REG_DWORD /d 0 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v DisableWebSearch /t REG_DWORD /d 1 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v ConnectedSearchUseWeb /t REG_DWORD /d 0 /f",
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Search\" /v BingSearchEnabled /t REG_DWORD /d 0 /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "disable-advertising-id",
+        "name": { "en": "🪪 Disable Advertising ID", "es": "🪪 Desactivar ID de Publicidad" },
+        "description": { "en": "Stops Windows from using an advertising ID to track your app usage across devices.", "es": "Evita que Windows use un ID de publicidad para rastrear tu uso de apps." },
+        "benefit": { "en": "Prevents cross-device tracking for ad targeting", "es": "Previene el rastreo entre dispositivos para anuncios" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo\" /v Enabled /t REG_DWORD /d 0 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AdvertisingInfo\" /v DisabledByGroupPolicy /t REG_DWORD /d 1 /f",
+          "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo\" /v Enabled /t REG_DWORD /d 0 /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "disable-activity-history",
+        "name": { "en": "📋 Disable Activity History", "es": "📋 Desactivar Historial de Actividad" },
+        "description": { "en": "Prevents Windows from collecting and syncing your activity timeline across devices.", "es": "Evita que Windows recopile y sincronice tu historial de actividad." },
+        "benefit": { "en": "Increased privacy, no timeline tracking", "es": "Mayor privacidad, sin seguimiento de actividad" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v EnableActivityFeed /t REG_DWORD /d 0 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v PublishUserActivities /t REG_DWORD /d 0 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v UploadUserActivities /t REG_DWORD /d 0 /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      }
+    ]
+  },
+  {
+    "id": "performance",
+    "icon": "🚀",
+    "name": {
+      "en": "Performance",
+      "es": "Rendimiento"
+    },
+    "tweaks": [
+      {
+        "id": "ultimate-power-plan",
+        "name": { "en": "⚡ Ultimate Performance Power Plan", "es": "⚡ Plan de Energia Maximo Rendimiento" },
+        "description": { "en": "Enables the hidden Ultimate Performance power plan for minimum latency.", "es": "Activa el plan de energia oculto de maximo rendimiento." },
+        "benefit": { "en": "Eliminates micro-latencies from power management", "es": "Elimina micro-latencias de la gestion de energia" },
+        "impact": "medium",
+        "commands": [
+          "powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61",
+          "powercfg /setactive e9a42b02-d5df-448d-aa00-03f14749eb61"
+        ],
+        "warnings": { "en": ["Increases power consumption on laptops"], "es": ["Aumenta el consumo de energia en portatiles"] }
+      },
+      {
+        "id": "disable-hibernation",
+        "name": { "en": "💤 Disable Hibernation", "es": "💤 Desactivar Hibernacion" },
+        "description": { "en": "Disables hibernation to free up disk space (equal to RAM size).", "es": "Desactiva la hibernacion para liberar espacio en disco (igual a la RAM)." },
+        "benefit": { "en": "Frees GBs of disk space, reduces SSD writes", "es": "Libera GBs de espacio, reduce escrituras en SSD" },
+        "impact": "medium",
+        "commands": [
+          "powercfg /hibernate off"
+        ],
+        "warnings": { "en": ["Fast startup will also be disabled", "Laptops will not save state when battery dies"], "es": ["El inicio rapido tambien se desactivara", "Portatiles no guardaran estado al agotar bateria"] }
+      },
+      {
+        "id": "optimize-visual-effects",
+        "name": { "en": "🎨 Optimize Visual Effects", "es": "🎨 Optimizar Efectos Visuales" },
+        "description": { "en": "Disables animations, transparency, shadows and other visual effects for performance.", "es": "Desactiva animaciones, transparencias, sombras y otros efectos visuales." },
+        "benefit": { "en": "Reduces GPU and CPU overhead, snappier UI", "es": "Reduce carga de GPU y CPU, interfaz mas rapida" },
+        "impact": "medium",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects\" /v VisualFXSetting /t REG_DWORD /d 2 /f"
+        ],
+        "warnings": { "en": ["Removes transparency and animations"], "es": ["Elimina transparencias y animaciones"] }
+      },
+      {
+        "id": "disable-startup-delay",
+        "name": { "en": "⏩ Disable Startup Delay", "es": "⏩ Desactivar Retraso de Inicio" },
+        "description": { "en": "Removes the 10-second delay before startup programs launch.", "es": "Elimina el retraso de 10 segundos antes de iniciar programas." },
+        "benefit": { "en": "Faster login to desktop experience", "es": "Inicio de sesion mas rapido" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Serialize\" /v StartupDelayInMSec /t REG_DWORD /d 0 /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "disable-background-apps",
+        "name": { "en": "📱 Disable Background Apps", "es": "📱 Desactivar Apps en Segundo Plano" },
+        "description": { "en": "Prevents UWP apps from running in the background.", "es": "Evita que las apps UWP se ejecuten en segundo plano." },
+        "benefit": { "en": "Saves CPU, RAM and network bandwidth", "es": "Ahorra CPU, RAM y ancho de banda" },
+        "impact": "medium",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications\" /v GlobalUserDisabled /t REG_DWORD /d 1 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy\" /v LetAppsRunInBackground /t REG_DWORD /d 2 /f"
+        ],
+        "warnings": { "en": ["May prevent notifications from UWP apps"], "es": ["Puede evitar notificaciones de apps UWP"] }
+      }
+    ]
+  },
+  {
+    "id": "ui_tweaks",
+    "icon": "🖥",
+    "name": {
+      "en": "UI & Bloat Removal",
+      "es": "Interfaz y Limpieza"
+    },
+    "tweaks": [
+      {
+        "id": "disable-xbox-gamebar",
+        "name": { "en": "🎮 Disable Xbox Game Bar", "es": "🎮 Desactivar Xbox Game Bar" },
+        "description": { "en": "Disables the Xbox Game Bar overlay and background recording.", "es": "Desactiva la superposicion Xbox Game Bar y grabacion en segundo plano." },
+        "benefit": { "en": "Frees resources and removes gaming overlay", "es": "Libera recursos y elimina superposicion de juegos" },
+        "impact": "high",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GameDVR\" /v AppCaptureEnabled /t REG_DWORD /d 0 /f",
+          "reg add \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /t REG_DWORD /d 0 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR\" /v AllowGameDVR /t REG_DWORD /d 0 /f"
+        ],
+        "warnings": { "en": ["Disables Game Bar shortcuts (Win+G)"], "es": ["Desactiva atajos de Game Bar (Win+G)"] }
+      },
+      {
+        "id": "disable-lockscreen",
+        "name": { "en": "🔓 Disable Lock Screen", "es": "🔓 Desactivar Pantalla de Bloqueo" },
+        "description": { "en": "Skips the lock screen image and goes straight to login on boot/wake.", "es": "Omite la imagen de bloqueo y va directo al login al encender." },
+        "benefit": { "en": "Faster access to desktop after boot/wake", "es": "Acceso mas rapido al escritorio tras encender" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Personalization\" /v NoLockScreen /t REG_DWORD /d 1 /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "disable-news-interests",
+        "name": { "en": "📰 Disable News & Interests", "es": "📰 Desactivar Noticias e Intereses" },
+        "description": { "en": "Removes the News and Interests widget from the taskbar.", "es": "Elimina el widget de Noticias e Intereses de la barra de tareas." },
+        "benefit": { "en": "Cleaner taskbar, reduced memory usage", "es": "Barra de tareas mas limpia, menos uso de memoria" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds\" /v EnableFeeds /t REG_DWORD /d 0 /f",
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Feeds\" /v ShellFeedsTaskbarViewMode /t REG_DWORD /d 2 /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "disable-widgets",
+        "name": { "en": "🧩 Disable Widgets", "es": "🧩 Desactivar Widgets" },
+        "description": { "en": "Disables the Windows 11 Widgets board.", "es": "Desactiva el panel de Widgets de Windows 11." },
+        "benefit": { "en": "Reduces memory and network usage", "es": "Reduce uso de memoria y red" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh\" /v AllowNewsAndInterests /t REG_DWORD /d 0 /f",
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v TaskbarDa /t REG_DWORD /d 0 /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "disable-onedrive",
+        "name": { "en": "☁ Disable OneDrive", "es": "☁ Desactivar OneDrive" },
+        "description": { "en": "Prevents OneDrive from running and syncing.", "es": "Evita que OneDrive se ejecute y sincronice." },
+        "benefit": { "en": "Stops unwanted cloud sync and background processes", "es": "Detiene sincronizacion no deseada y procesos en segundo plano" },
+        "impact": "medium",
+        "commands": [
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\OneDrive\" /v DisableFileSyncNGSC /t REG_DWORD /d 1 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\OneDrive\" /v DisableFileSync /t REG_DWORD /d 1 /f"
+        ],
+        "warnings": { "en": ["Files stored only in OneDrive may become inaccessible locally"], "es": ["Archivos solo en OneDrive pueden volverse inaccesibles localmente"] }
+      }
+    ]
   }
 ]

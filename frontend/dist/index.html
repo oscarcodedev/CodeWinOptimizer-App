@@ -41,6 +41,7 @@
       <button class="tab active" data-tab="restore"><span class="tab-icon">🔧</span><span id="tab-restore-label">Restore</span></button>
       <button class="tab" data-tab="apps"><span class="tab-icon">📦</span><span id="tab-apps-label">Apps</span></button>
       <button class="tab" data-tab="tweaks"><span class="tab-icon">⚡</span><span id="tab-tweaks-label">Tweaks</span></button>
+      <button class="tab" data-tab="features"><span class="tab-icon">🛠</span><span id="tab-features-label">Features</span></button>
     </nav>
 
     <div class="tab-content active" id="tab-restore">
@@ -48,9 +49,15 @@
         <h2 id="restore-title">System Restore Point</h2>
         <p id="restore-desc">Create a restore point before making changes to your system. This allows you to revert if something goes wrong.</p>
         <input type="text" id="rp-name" class="rp-name-input" maxlength="64" placeholder="Restore point name">
-        <button id="btn-restore" class="btn-primary">
-          <span id="btn-restore-text">Create Restore Point</span>
-        </button>
+        <div class="restore-actions">
+          <button id="btn-restore" class="btn-primary">
+            <span id="btn-restore-text">Create Restore Point</span>
+          </button>
+          <button id="btn-regbackup" class="btn-secondary">
+            <span id="btn-regbackup-text">Backup Registry</span>
+          </button>
+        </div>
+        <p style="margin-top:14px;font-size:.75em;color:var(--tx3)">Backups: <a href="#" id="open-backups-link">Documents\CodeWinOptimizer\registry-backups</a></p>
       </div>
     </div>
 
@@ -80,6 +87,22 @@
       <div id="tweaks-grid"></div>
     </div>
 
+    <div class="tab-content" id="tab-features">
+      <div class="features-panels">
+        <div class="ft-panel">
+          <h3 id="ft-features-title">Windows Features</h3>
+          <div id="ft-features-grid" class="ft-grid"></div>
+          <button id="btn-run-features" class="btn-primary">
+            <span id="btn-features-text">Run Features</span>
+          </button>
+        </div>
+        <div class="ft-panel">
+          <h3 id="ft-fixes-title">Quick Fixes</h3>
+          <div id="ft-fixes-grid" class="ft-grid"></div>
+        </div>
+      </div>
+    </div>
+
     <div id="terminal">
       <div class="term-header">
         <div class="term-dots">
@@ -96,6 +119,12 @@
       </div>
       <pre id="term-log"></pre>
     </div>
+
+    <footer>
+      <div class="footer-left">CodeWinOptimizer</div>
+      <div class="footer-center">v1.0.0</div>
+      <div class="footer-right">OscarDev</div>
+    </footer>
   </div>
 
   <script src="/wailsjs/runtime/runtime.js" type="module"></script>
