@@ -70,7 +70,7 @@ window.APPS=[
   {cat:'Comunicacion',icon:'🔒',id:'signal',n:{en:'Signal',es:'Signal'},d:{en:'Encrypted messaging',es:'Mensajeria encriptada'},w:'OpenWhisperSystems.Signal',c:'signal',u:'https://signal.org/'},
   {cat:'Seguridad',icon:'🔑',id:'bitwarden',n:{en:'Bitwarden',es:'Bitwarden'},d:{en:'Password manager',es:'Gestor de contrasenas'},w:'Bitwarden.Bitwarden',c:'bitwarden',u:'https://bitwarden.com/'},
   {cat:'Seguridad',icon:'🔐',id:'veracrypt',n:{en:'VeraCrypt',es:'VeraCrypt'},d:{en:'Disk encryption',es:'Encriptacion de discos'},w:'IDRIX.VeraCrypt',c:'veracrypt',u:'https://www.veracrypt.fr/'},
-  {cat:'AI',icon:'🧠',id:'aiaw',img:'/icons/AI/aiaw.ico',n:{en:'AI as Workspace',es:'AI as Workspace'},d:{en:'All-in-one AI client',es:'Cliente AI todo en uno'},w:'',c:'',u:'https://aiaw.app/'},
+  {cat:'AI',icon:'🧠',id:'aiaw',n:{en:'AI as Workspace',es:'AI as Workspace'},d:{en:'All-in-one AI client',es:'Cliente AI todo en uno'},w:'',c:'',u:'https://aiaw.app/'},
   {cat:'AI',icon:'🧠',id:'claude',img:'/icons/AI/claude.svg',n:{en:'Claude',es:'Claude'},d:{en:'Anthropic AI assistant',es:'Asistente AI de Anthropic'},w:'Anthropic.Claude',c:'claude',u:'https://claude.ai/'},
   {cat:'AI',icon:'🤖',id:'jan',img:'/icons/AI/jan.ico',n:{en:'Jan AI',es:'Jan AI'},d:{en:'Open-source offline AI',es:'AI offline de codigo abierto'},w:'',c:'',u:'https://www.jan.ai/'},
   {cat:'AI',icon:'🦙',id:'ollama',img:'/icons/AI/ollama.svg',n:{en:'Ollama',es:'Ollama'},d:{en:'Local LLM runtime',es:'Motor LLM local'},w:'Ollama.Ollama',c:'ollama',u:'https://ollama.com/'},

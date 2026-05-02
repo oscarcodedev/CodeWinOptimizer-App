@@ -12,7 +12,6 @@ window.L.en={
   selectAll:'Select All',deselectAll:'Deselect All',
   cmds:'cmds',warn:'warnings',
   adminWarn:'Run as Administrator — registry, DISM, bcdedit, and WinGet commands require admin privileges',
-  viaWinget:'winget:',viaChoco:'choco:',
   uninstall:'Uninstall',website:'Website',
   ftFeaturesTitle:'Windows Features',ftFixesTitle:'Quick Fixes',runFeatures:'Run Features',ftRunning:'Running features...',ftDone:'Done.',
 };
@@ -29,7 +28,6 @@ window.L.es={
   selectAll:'Seleccionar Todo',deselectAll:'Deseleccionar Todo',
   cmds:'cmds',warn:'advertencias',
   adminWarn:'Ejecutar como Administrador — comandos de registro, DISM, bcdedit y WinGet requieren privilegios de admin',
-  viaWinget:'winget:',viaChoco:'choco:',
   uninstall:'Desinstalar',website:'Web',
   ftFeaturesTitle:'Caracteristicas de Windows',ftFixesTitle:'Arreglos Rapidos',runFeatures:'Ejecutar',ftRunning:'Ejecutando...',ftDone:'Completado.',
 };

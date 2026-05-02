@@ -139,16 +139,14 @@ function drawApps(){
          const sel=pickedA.has(a.id)?' selected':'';
          const chk=pickedA.has(a.id)?'checked':'';
          const pkg=pkgMgr==='winget'?a.w:a.c;
-         const noPkg=!pkg;
-         const label=pkg?(pkgMgr==='winget'?T('viaWinget')+' '+pkg:T('viaChoco')+' '+pkg):pkgMgr==='winget'?'No WinGet':'No Choco';
-         return `<div class="app-card${sel}" data-aid="${a.id}">
-          <label class="toggle"><input type="checkbox" data-aid="${a.id}" ${chk} ${noPkg?'disabled':''}><span class="toggle-slider"></span></label>
-          ${a.img?`<img class="app-icon" src="${a.img}" alt="">`:`<span class="app-icon">${a.icon}</span>`}
-          <div class="app-info">
-            <div class="app-name">${LO(a.n)}</div>
-            <div class="app-desc">${LO(a.d)}</div>
-            <div class="app-source">${label}</div>
-            <div class="app-actions">
+          const noPkg=!pkg;
+          return `<div class="app-card${sel}" data-aid="${a.id}">
+           <label class="toggle"><input type="checkbox" data-aid="${a.id}" ${chk} ${noPkg?'disabled':''}><span class="toggle-slider"></span></label>
+           ${a.img?`<img class="app-icon" src="${a.img}" alt="">`:`<span class="app-icon">${a.icon}</span>`}
+           <div class="app-info">
+             <div class="app-name">${LO(a.n)}</div>
+             <div class="app-desc">${LO(a.d)}</div>
+             <div class="app-actions">
               <button class="app-btn app-btn-uninstall" data-aid="${a.id}" data-action="uninstall" ${noPkg?'disabled':''}>${T('uninstall')}</button>
               <button class="app-btn app-btn-web" data-aid="${a.id}" data-action="web">${T('website')}</button>
             </div>
