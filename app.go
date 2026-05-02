@@ -197,6 +197,41 @@ func (a *App) InstallApps(ids []string, lang string, pkgMgr string) string {
 	return ""
 }
 
+func (a *App) UninstallApp(id string, pkgMgr string) string {
+	var psCmd string
+	if pkgMgr == "choco" {
+		psCmd = fmt.Sprintf("[Console]::OutputEncoding = [Text.Encoding]::UTF8; choco uninstall %s -y --limit-output", id)
+	} else {
+		psCmd = fmt.Sprintf("[Console]::OutputEncoding = [Text.Encoding]::UTF8; winget uninstall --id %s --silent --accept-source-agreements", id)
+	}
+
+	a.emitLog(fmt.Sprintf("[CMD] Uninstalling: %s via %s", id, pkgMgr))
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCmd)
+	cmd.SysProcAttr = getSysProcAttr()
+	output, err := cmd.CombinedOutput()
+
+	if err != nil {
+		a.emitLog(fmt.Sprintf("[ERR] %v", err))
+		a.emitLog(strings.TrimSpace(string(output)))
+	} else {
+		out := strings.TrimSpace(string(output))
+		if out != "" {
+			a.emitLog(out)
+		} else {
+			a.emitLog("[OK] Uninstalled successfully")
+		}
+	}
+	return ""
+}
+
+func (a *App) OpenURL(url string) {
+	wailsRuntime.BrowserOpenURL(a.ctx, url)
+}
+
+func (a *App) Quit() {
+	wailsRuntime.Quit(a.ctx)
+}
+
 func (a *App) findTweak(id string) *Tweak {
 	for _, cat := range a.categories {
 		for j := range cat.Tweaks {

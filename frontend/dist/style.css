@@ -11,15 +11,25 @@
 body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);user-select:none;overflow-y:auto}
 #app{min-height:100vh;display:flex;flex-direction:column}
 
-/* HEADER */
-header{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;background:#0d0d0d;border-bottom:1px solid #1a1a1a;position:sticky;top:0;z-index:100}
-.header-left{display:flex;align-items:baseline;gap:10px}
-header h1{font-size:1.25em;font-weight:700}
-.glow-dot{width:8px;height:8px;border-radius:50%;background:var(--gn);box-shadow:0 0 10px var(--gn);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.header-right{display:flex;align-items:center;gap:12px}
-#lang-select{background:#111;color:var(--txt);border:1px solid #222;border-radius:6px;padding:6px 14px;font-size:.82em;cursor:pointer;outline:none}
-#lang-select:hover,#lang-select:focus{border-color:var(--gn)}
+/* HEADER / TITLE BAR */
+header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#0d0d0d;border-bottom:1px solid #1a1a1a;position:sticky;top:0;z-index:100;min-height:36px}
+.titlebar-drag{--wails-draggable:drag;flex:1;display:flex;align-items:center;height:100%}
+.header-left{display:flex;align-items:center;gap:10px}
+.cwo-logo{flex-shrink:0;filter:drop-shadow(0 0 6px rgba(57,255,20,.4))}
+header h1{font-size:1.05em;font-weight:700}
+.header-right{display:flex;align-items:center;gap:6px}
+
+/* LANGUAGE TOGGLE */
+.lang-toggle{display:flex;background:#111;border:1px solid #222;border-radius:6px;overflow:hidden}
+.lang-btn{background:none;color:var(--tx3);border:none;padding:4px 9px;font-size:.72em;font-weight:600;cursor:pointer;transition:all .15s}
+.lang-btn:hover{color:var(--tx2)}
+.lang-btn.active{background:var(--gn);color:#0a0a0a}
+
+/* WINDOW CONTROLS */
+.win-controls{display:flex;gap:1px;margin-left:4px}
+.win-btn{background:none;color:var(--tx3);border:none;width:32px;height:24px;font-size:.75em;cursor:pointer;border-radius:3px;transition:all .15s;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;line-height:1}
+.win-btn:hover{background:#222;color:var(--txt)}
+.win-close:hover{background:var(--rd);color:#fff}
 
 /* WARNING */
 #admin-warning{display:flex;align-items:center;gap:10px;padding:10px 28px;background:var(--rd2);border-bottom:1px solid rgba(255,51,51,.15);font-size:.82em}
@@ -74,11 +84,26 @@ header h1{font-size:1.25em;font-weight:700}
 .app-card:hover{background:var(--bg3)}
 .app-card.selected{background:rgba(57,255,20,.04)}
 .app-card input[type="checkbox"]{accent-color:var(--gn);width:16px;height:16px;flex-shrink:0;cursor:pointer}
-.app-icon{font-size:1.5em;flex-shrink:0;width:34px;text-align:center}
+
+/* TOGGLE SWITCH */
+.toggle{position:relative;display:inline-block;width:38px;height:20px;flex-shrink:0;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#222;border-radius:10px;transition:all .2s;border:1px solid #2a2a2a}
+.toggle-slider::before{content:'';position:absolute;height:14px;width:14px;left:2px;bottom:2px;background:#555;border-radius:50%;transition:all .2s}
+.toggle input:checked+.toggle-slider{background:var(--gn);border-color:var(--gn)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(18px);background:#0a0a0a}
+.toggle input:disabled+.toggle-slider{opacity:.3;cursor:not-allowed}
+.app-icon{font-size:1.5em;flex-shrink:0;width:34px;height:34px;text-align:center;object-fit:contain}
 .app-info{flex:1;min-width:0}
 .app-name{font-size:.88em;font-weight:600}
 .app-desc{font-size:.74em;color:var(--tx2);line-height:1.3;margin-top:2px}
 .app-source{font-size:.68em;color:var(--tx3);margin-top:3px;font-family:'Cascadia Code','Consolas',monospace}
+.app-actions{display:flex;gap:6px;margin-top:8px}
+.app-btn{background:transparent;border:1px solid #222;border-radius:5px;padding:3px 10px;font-size:.7em;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.app-btn-uninstall{color:var(--rd);border-color:rgba(255,51,51,.2)}
+.app-btn-uninstall:hover{background:var(--rd2);border-color:var(--rd)}
+.app-btn-web{color:var(--tx3)}
+.app-btn-web:hover{color:var(--gn);border-color:var(--gn)}
 
 /* TWEAKS GRID */
 #tweaks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
