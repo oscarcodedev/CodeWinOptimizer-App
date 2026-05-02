@@ -2,7 +2,7 @@ const APPS = window.APPS;
 const FEATURES = window.FEATURES;
 const FIXES = window.FIXES;
 const L = window.L;
-let lang='en',busy=false,catData=[],pickedT=new Set(),pickedA=new Set(),curTab='restore',pkgMgr='winget';
+let lang='en',busy=false,catData=[],pickedT=new Set(),pickedA=new Set(),curTab='restore',pkgMgr='winget',installedSet=new Set();
 
 function T(k){return L[lang]?.[k]||L.en?.[k]||k}
 function LO(v){return(typeof v==='object'&&v)?(v[lang]||v['en']||''):(v||'')}
@@ -72,6 +72,7 @@ async function boot(){
 
   if(window.go?.main?.App){window.go.main.App.EventsOn('log',function(d){appendLog(d)})}
   checkAdmin();
+  checkInstalled();
   switchLang(lang);
   setTerm(T('idle'),'');
 }
@@ -140,14 +141,16 @@ function drawApps(){
          const chk=pickedA.has(a.id)?'checked':'';
          const pkg=pkgMgr==='winget'?a.w:a.c;
           const noPkg=!pkg;
-          return `<div class="app-card${sel}" data-aid="${a.id}">
-           <label class="toggle"><input type="checkbox" data-aid="${a.id}" ${chk} ${noPkg?'disabled':''}><span class="toggle-slider"></span></label>
+          const isInst=installedSet.has(a.id);
+          const icls=isInst?' installed':'';
+          return `<div class="app-card${sel}${icls}" data-aid="${a.id}">
+           <label class="toggle"><input type="checkbox" data-aid="${a.id}" ${chk} ${noPkg||isInst?'disabled':''}><span class="toggle-slider"></span></label>
            ${a.img?`<img class="app-icon" src="${a.img}" alt="">`:`<span class="app-icon">${a.icon}</span>`}
            <div class="app-info">
-             <div class="app-name">${LO(a.n)}</div>
+             <div class="app-name">${LO(a.n)}${isInst?` <span class="app-inst-badge">${T('installed')}</span>`:''}</div>
              <div class="app-desc">${LO(a.d)}</div>
              <div class="app-actions">
-              <button class="app-btn app-btn-uninstall" data-aid="${a.id}" data-action="uninstall" ${noPkg?'disabled':''}>${T('uninstall')}</button>
+              <button class="app-btn app-btn-uninstall" data-aid="${a.id}" data-action="uninstall" ${noPkg&&!isInst?'disabled':''}>${T('uninstall')}</button>
               <button class="app-btn app-btn-web" data-aid="${a.id}" data-action="web">${T('website')}</button>
             </div>
           </div>
@@ -331,6 +334,18 @@ function refreshUI(){
 
 async function checkAdmin(){
   try{const ok=await window.go.main.App.CheckAdmin();if(!ok){document.getElementById('warning-text').textContent=T('adminWarn');document.getElementById('admin-warning').classList.remove('hidden')}}catch(e){}
+}
+
+async function checkInstalled(){
+  try{
+    const raw=await window.go.main.App.GetInstalledPackages();
+    const ids=JSON.parse(raw);
+    if(Array.isArray(ids)){
+      installedSet=new Set(ids);
+      APPS.forEach(a=>{if(a.w&&ids.includes(a.w))installedSet.add(a.id)});
+    }
+  }catch(e){}
+  drawApps();
 }
 
 document.addEventListener('DOMContentLoaded',boot);

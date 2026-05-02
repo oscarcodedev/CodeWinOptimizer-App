@@ -322,3 +322,18 @@ func (a *App) CheckAdmin() bool {
 	}
 	return strings.TrimSpace(string(output)) == "True"
 }
+
+func (a *App) GetInstalledPackages() string {
+	psCmd := `$out = winget list --accept-source-agreements 2>$null | Out-String -Width 4096; $lines = $out -split '\r?\n' | Where-Object { $_ -match '\S' }; $collect = $false; $ids = @(); foreach ($l in $lines) { if ($l -match '^-{2,}') { $collect = $true; continue }; if (-not $collect) { continue }; $p = @($l -split '\s{2,}'); if ($p.Count -ge 2 -and $p[1] -match '\.') { $ids += $p[1].Trim() } }; $ids | ConvertTo-Json -Compress; if (-not $?) { '[]' }`
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCmd)
+	cmd.SysProcAttr = getSysProcAttr()
+	output, err := cmd.Output()
+	if err != nil {
+		return "[]"
+	}
+	result := strings.TrimSpace(string(output))
+	if result == "" || result == "null" {
+		return "[]"
+	}
+	return result
+}
