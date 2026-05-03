@@ -14,6 +14,7 @@ window.L.en={
   adminWarn:'Run as Administrator — registry, DISM, bcdedit, and WinGet commands require admin privileges',
   uninstall:'Uninstall',website:'Website',installed:'Installed',
   ftFeaturesTitle:'Windows Features',ftFixesTitle:'Quick Fixes',runFeatures:'Run Features',ftRunning:'Running features...',ftDone:'Done.',
+  tabMonitor:'Monitor',monCPU:'CPU',monRAM:'RAM',monGPU:'GPU',monDisk:'Disk',monTemp:'Temperatures',monUptime:'Uptime',monTempNA:'No temp data',
 };
 
 window.L.es={
@@ -30,4 +31,5 @@ window.L.es={
   adminWarn:'Ejecutar como Administrador — comandos de registro, DISM, bcdedit y WinGet requieren privilegios de admin',
   uninstall:'Desinstalar',website:'Web',installed:'Instalado',
   ftFeaturesTitle:'Caracteristicas de Windows',ftFixesTitle:'Arreglos Rapidos',runFeatures:'Ejecutar',ftRunning:'Ejecutando...',ftDone:'Completado.',
+  tabMonitor:'Monitor',monCPU:'CPU',monRAM:'RAM',monGPU:'GPU',monDisk:'Disco',monTemp:'Temperaturas',monUptime:'Activo',monTempNA:'Sin datos de temp',
 };

@@ -188,6 +188,19 @@ header h1{font-size:1.05em;font-weight:700}
 #open-backups-link{color:var(--gn);text-decoration:none;opacity:.6}
 #open-backups-link:hover{opacity:1;text-decoration:underline}
 
+/* MONITOR DASHBOARD */
+.monitor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:8px 0}
+.mon-card{background:var(--bg2);border:1px solid var(--brd);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.mon-card.mon-wide{grid-column:span 2}
+.mon-card-head{display:flex;align-items:center;gap:8px}
+.mon-card-icon{font-size:1.2em}
+.mon-card-title{font-size:.82em;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.04em}
+.mon-card-val{font-size:1.5em;font-weight:700;line-height:1.2}
+.mon-card-sub{font-size:.72em;color:var(--tx3)}
+.mon-card-detail{font-size:.7em;color:var(--tx3);line-height:1.4}
+.mon-gauge-bar{height:8px;background:#1a1a1a;border-radius:4px;overflow:hidden}
+.mon-gauge-fill{height:100%;background:var(--gn);border-radius:4px;transition:width .4s ease;min-width:2px}
+
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:#222;border-radius:3px}
@@ -200,4 +213,5 @@ header h1{font-size:1.05em;font-weight:700}
   #terminal{margin:0 14px 0 14px;max-height:240px}
   .features-panels{grid-template-columns:1fr}
   .app-cat-grid{grid-template-columns:1fr}
+  .monitor-grid{grid-template-columns:1fr}
 }

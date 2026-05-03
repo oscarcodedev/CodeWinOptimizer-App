@@ -42,6 +42,7 @@
       <button class="tab" data-tab="apps"><span class="tab-icon">📦</span><span id="tab-apps-label">Apps</span></button>
       <button class="tab" data-tab="tweaks"><span class="tab-icon">⚡</span><span id="tab-tweaks-label">Tweaks</span></button>
       <button class="tab" data-tab="features"><span class="tab-icon">🛠</span><span id="tab-features-label">Features</span></button>
+      <button class="tab" data-tab="monitor"><span class="tab-icon">📊</span><span id="tab-monitor-label">Monitor</span></button>
       <button class="tab" data-tab="theme"><span class="tab-icon">🎨</span><span id="tab-theme-label">Appearance</span></button>
     </nav>
 
@@ -100,6 +101,60 @@
         <div class="ft-panel">
           <h3 id="ft-fixes-title">Quick Fixes</h3>
           <div id="ft-fixes-grid" class="ft-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-monitor">
+      <div id="monitor-grid" class="monitor-grid">
+        <div class="mon-card" id="mon-cpu">
+          <div class="mon-card-head">
+            <span class="mon-card-icon">🧠</span>
+            <span class="mon-card-title" id="mon-cpu-title">CPU</span>
+          </div>
+          <div class="mon-gauge-bar"><div class="mon-gauge-fill" id="mon-cpu-bar"></div></div>
+          <div class="mon-card-val" id="mon-cpu-val">--</div>
+          <div class="mon-card-sub" id="mon-cpu-sub"></div>
+        </div>
+        <div class="mon-card" id="mon-ram">
+          <div class="mon-card-head">
+            <span class="mon-card-icon">💾</span>
+            <span class="mon-card-title" id="mon-ram-title">RAM</span>
+          </div>
+          <div class="mon-gauge-bar"><div class="mon-gauge-fill" id="mon-ram-bar" style="background:var(--yl)"></div></div>
+          <div class="mon-card-val" id="mon-ram-val">--</div>
+          <div class="mon-card-sub" id="mon-ram-sub"></div>
+        </div>
+        <div class="mon-card" id="mon-gpu">
+          <div class="mon-card-head">
+            <span class="mon-card-icon">🎮</span>
+            <span class="mon-card-title" id="mon-gpu-title">GPU</span>
+          </div>
+          <div class="mon-card-val" id="mon-gpu-val">--</div>
+          <div class="mon-card-sub" id="mon-gpu-sub"></div>
+        </div>
+        <div class="mon-card" id="mon-disk">
+          <div class="mon-card-head">
+            <span class="mon-card-icon">💿</span>
+            <span class="mon-card-title" id="mon-disk-title">Disk</span>
+          </div>
+          <div class="mon-card-val" id="mon-disk-val">--</div>
+          <div class="mon-card-detail" id="mon-disk-detail"></div>
+        </div>
+        <div class="mon-card mon-wide" id="mon-temp">
+          <div class="mon-card-head">
+            <span class="mon-card-icon">🌡</span>
+            <span class="mon-card-title" id="mon-temp-title">Temperatures</span>
+          </div>
+          <div class="mon-card-val" id="mon-temp-val">--</div>
+          <div class="mon-card-sub" id="mon-temp-sub"></div>
+        </div>
+        <div class="mon-card" id="mon-uptime">
+          <div class="mon-card-head">
+            <span class="mon-card-icon">🕐</span>
+            <span class="mon-card-title" id="mon-uptime-title">Uptime</span>
+          </div>
+          <div class="mon-card-val" id="mon-uptime-val">--</div>
         </div>
       </div>
     </div>

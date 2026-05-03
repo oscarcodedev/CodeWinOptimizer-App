@@ -37,6 +37,60 @@ function drawTheme(){
   const fs=document.getElementById('theme-font-select');if(fs)fs.value=themeFont;
 }
 
+function drawMonitor(){
+  document.getElementById('tab-monitor-label').textContent=T('tabMonitor');
+  document.getElementById('mon-cpu-title').textContent=T('monCPU');
+  document.getElementById('mon-ram-title').textContent=T('monRAM');
+  document.getElementById('mon-gpu-title').textContent=T('monGPU');
+  document.getElementById('mon-disk-title').textContent=T('monDisk');
+  document.getElementById('mon-temp-title').textContent=T('monTemp');
+  document.getElementById('mon-uptime-title').textContent=T('monUptime');
+  fetchMonitor();
+}
+
+async function fetchMonitor(){
+  try{
+    const raw=await window.go.main.App.GetSystemInfo();
+    const d=JSON.parse(raw);
+    if(d.error)return;
+    if(d.cpu){
+      document.getElementById('mon-cpu-val').textContent=d.cpu.pct+'%';
+      document.getElementById('mon-cpu-bar').style.width=d.cpu.pct+'%';
+      document.getElementById('mon-cpu-sub').textContent=(d.cpu.name||'')+(d.cpu.cores?' · '+d.cpu.cores+'C/'+d.cpu.threads+'T':'');
+    }
+    if(d.ram){
+      document.getElementById('mon-ram-val').textContent=d.ram.usedGB+' / '+d.ram.totalGB+' GB';
+      document.getElementById('mon-ram-bar').style.width=d.ram.pct+'%';
+      document.getElementById('mon-ram-sub').textContent=d.ram.freeGB+' GB free';
+    }
+    if(d.gpus&&d.gpus.length>0){
+      const g=d.gpus[0];
+      document.getElementById('mon-gpu-val').textContent=g.name||'GPU';
+      document.getElementById('mon-gpu-sub').textContent=(g.ramGB?g.ramGB+' GB':'');
+    }
+    if(d.disks&&d.disks.length>0){
+      document.getElementById('mon-disk-val').textContent=d.disks[0].pct+'% used';
+      document.getElementById('mon-disk-detail').innerHTML=d.disks.map(dk=>{
+        const cl=dk.pct>90?'var(--rd)':dk.pct>70?'var(--yl)':'var(--gn)';
+        return `<div style="display:flex;align-items:center;gap:6px;margin-top:3px"><span>${dk.drive}</span><div style="flex:1;height:4px;background:#1a1a1a;border-radius:2px"><div style="width:${dk.pct}%;height:100%;background:${cl};border-radius:2px"></div></div><span style="font-size:.85em;color:${cl}">${dk.pct}%</span></div>`;
+      }).join('');
+    }
+    if(d.temps&&d.temps.length>0){
+      document.getElementById('mon-temp-val').innerHTML=d.temps.map(t=>{
+        const cl=t.temp>80?'var(--rd)':t.temp>60?'var(--yl)':'var(--gn)';
+        return `<span style="color:${cl}">${t.temp}°C</span>`;
+      }).join(' ');
+      document.getElementById('mon-temp-sub').textContent=d.temps.map(t=>t.name).join(', ');
+    }else{
+      document.getElementById('mon-temp-val').textContent='--';
+      document.getElementById('mon-temp-sub').textContent=T('monTempNA');
+    }
+    if(d.uptime){
+      document.getElementById('mon-uptime-val').textContent=d.uptime;
+    }
+  }catch(e){}
+}
+
 function initTheme(){
   loadTheme();
   document.querySelectorAll('.color-btn').forEach(b=>b.addEventListener('click',function(){themeAccent=this.dataset.color;applyTheme();saveTheme()}));
@@ -89,8 +143,13 @@ function switchTab(tab){
   if(tab==='restore')drawRestore();
   if(tab==='features')drawFeatures();
   if(tab==='theme')drawTheme();
+  if(tab==='monitor'){drawMonitor();startMonitorPoll()}else{stopMonitorPoll()}
   refreshUI();
 }
+
+let monTimer=null;
+function startMonitorPoll(){stopMonitorPoll();drawMonitor();monTimer=setInterval(drawMonitor,3000)}
+function stopMonitorPoll(){if(monTimer){clearInterval(monTimer);monTimer=null}}
 
 function drawAll(){drawRestore();drawApps();drawTweaks();drawFeatures();drawTheme();refreshUI()}
 
