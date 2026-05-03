@@ -170,15 +170,51 @@ func (a *App) RunCommands(tweakIDs []string, lang string) string {
 	return ""
 }
 
+func ensureChoco(a *App) {
+	check := exec.Command("powershell", "-NoProfile", "-Command",
+		`if (Get-Command choco -ErrorAction SilentlyContinue) { exit 0 }; if (Get-Command "C:\ProgramData\chocolatey\bin\choco.exe" -ErrorAction SilentlyContinue) { exit 0 }; exit 1`)
+	check.SysProcAttr = getSysProcAttr()
+	if check.Run() == nil {
+		return
+	}
+	a.emitLog("[CMD] Chocolatey not found — installing...")
+	install := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+		`Write-Host "Downloading Chocolatey..."; Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))`)
+	install.SysProcAttr = getSysProcAttr()
+	out, err := install.CombinedOutput()
+	if err != nil {
+		a.emitLog(fmt.Sprintf("[ERR] Chocolatey install failed: %v", err))
+	}
+	outStr := strings.TrimSpace(string(out))
+	if outStr != "" {
+		for _, line := range strings.Split(outStr, "\n") {
+			line = strings.TrimSpace(line)
+			if line != "" {
+				a.emitLog(line)
+			}
+		}
+	} else {
+		a.emitLog("[OK] Chocolatey installed")
+	}
+}
+
 func (a *App) InstallApps(ids []string, lang string, pkgMgr string) string {
 	total := len(ids)
+
+	if pkgMgr == "choco" {
+		ensureChoco(a)
+	}
 
 	for i, id := range ids {
 		a.emitLog(fmt.Sprintf("--- [%d/%d] Installing: %s ---", i+1, total, id))
 
 		var psCmd string
 		if pkgMgr == "choco" {
-			psCmd = fmt.Sprintf("[Console]::OutputEncoding = [Text.Encoding]::UTF8; choco install %s -y --limit-output", id)
+			psCmd = fmt.Sprintf(`[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$choco = Get-Command choco -ErrorAction SilentlyContinue
+if (-not $choco) { $choco = Get-Command "C:\ProgramData\chocolatey\bin\choco.exe" -ErrorAction SilentlyContinue }
+if (-not $choco) { Write-Host "[ERR] Chocolatey not available — restart app and try again"; exit 1 }
+& $choco install %s -y --no-progress`, id)
 		} else {
 			psCmd = fmt.Sprintf("[Console]::OutputEncoding = [Text.Encoding]::UTF8; winget install --id %s --silent --accept-package-agreements --accept-source-agreements", id)
 		}
@@ -207,7 +243,12 @@ func (a *App) InstallApps(ids []string, lang string, pkgMgr string) string {
 func (a *App) UninstallApp(id string, pkgMgr string) string {
 	var psCmd string
 	if pkgMgr == "choco" {
-		psCmd = fmt.Sprintf("[Console]::OutputEncoding = [Text.Encoding]::UTF8; choco uninstall %s -y --limit-output", id)
+		ensureChoco(a)
+		psCmd = fmt.Sprintf(`[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$choco = Get-Command choco -ErrorAction SilentlyContinue
+if (-not $choco) { $choco = Get-Command "C:\ProgramData\chocolatey\bin\choco.exe" -ErrorAction SilentlyContinue }
+if (-not $choco) { Write-Host "[ERR] Chocolatey not available — restart app and try again"; exit 1 }
+& $choco uninstall %s -y --no-progress`, id)
 	} else {
 		psCmd = fmt.Sprintf("[Console]::OutputEncoding = [Text.Encoding]::UTF8; winget uninstall --id %s --silent --accept-source-agreements", id)
 	}

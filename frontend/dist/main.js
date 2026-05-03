@@ -179,10 +179,12 @@ async function boot(){
   document.getElementById('btn-apply-tweaks').addEventListener('click',doApply);
   document.getElementById('btn-run-features').addEventListener('click',doRunFeatures);
   document.getElementById('btn-run-cleanup').addEventListener('click',doCleanup);
+  document.getElementById('apps-search').addEventListener('input',function(){appsSearch=this.value;drawApps()});
 
   initTheme();
   document.getElementById('btn-clear').addEventListener('click',clearTerm);
   document.getElementById('btn-copy').addEventListener('click',copyTerm);
+  document.querySelector('.term-header').addEventListener('click',function(e){if(e.target.closest('button'))return;document.getElementById('terminal').classList.toggle('collapsed')});
   document.querySelectorAll('.pkg-btn').forEach(b=>b.addEventListener('click',function(){pkgMgr=this.dataset.pkg;document.querySelectorAll('.pkg-btn').forEach(x=>x.classList.toggle('active',x===this));drawApps()}));
   document.querySelectorAll('.lang-btn').forEach(b=>b.addEventListener('click',function(){switchLang(this.dataset.lang);document.querySelectorAll('.lang-btn').forEach(x=>x.classList.toggle('active',x===this))}));
   document.querySelector('.win-min')?.addEventListener('click',()=>window.runtime.WindowMinimise());
@@ -253,14 +255,18 @@ async function doRegBackup(){
 }
 
 /* ========= TAB: APPS ========= */
+let collapsedCats=new Set(),appsSearch='';
 function drawApps(){
   document.getElementById('tab-apps-label').textContent=T('tabApps');
-  const cats=[...new Set(APPS.map(a=>a.cat))];
+  const q=appsSearch.toLowerCase();
+  const allCats=[...new Set(APPS.map(a=>a.cat))];
   const grid=document.getElementById('apps-grid');
-  grid.innerHTML=cats.map((c,ci)=>{
-    const apps=APPS.filter(a=>a.cat===c);
-    return `<div class="app-cat-section">
-      <div class="app-cat-title">${c}<span class="app-cat-sel-all" data-ci="${ci}">${T('selectAll')}</span><span style="font-weight:400;color:var(--tx3);margin-left:auto">${apps.length} apps</span></div>
+  grid.innerHTML=allCats.map((c,ci)=>{
+    const apps=APPS.filter(a=>a.cat===c&&(!q||LO(a.n).toLowerCase().includes(q)||(a.id&&a.id.includes(q))));
+    if(apps.length===0)return'';
+    const collapsed=collapsedCats.has(c);
+    return `<div class="app-cat-section${collapsed?' collapsed':''}" data-cat="${c}">
+      <div class="app-cat-title"><span class="app-cat-arrow">▼</span>${c}<span class="app-cat-sel-all" data-ci="${ci}">${T('selectAll')}</span><span style="font-weight:400;color:var(--tx3);margin-left:auto">${apps.length} apps</span></div>
        <div class="app-cat-grid">${apps.map(a=>{
          const sel=pickedA.has(a.id)?' selected':'';
          const chk=pickedA.has(a.id)?'checked':'';
@@ -290,8 +296,11 @@ function drawApps(){
   grid.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
     cb.addEventListener('change',function(e){e.stopPropagation();const id=this.dataset.aid;if(this.checked)pickedA.add(id);else pickedA.delete(id);this.closest('.app-card').classList.toggle('selected',this.checked);refreshUI()});
   });
+  grid.querySelectorAll('.app-cat-title').forEach(title=>{
+    title.addEventListener('click',function(e){if(e.target.closest('.app-cat-sel-all'))return;const cat=this.parentElement.dataset.cat;collapsedCats.has(cat)?collapsedCats.delete(cat):collapsedCats.add(cat);drawApps()});
+  });
   grid.querySelectorAll('.app-cat-sel-all').forEach(el=>{
-    el.addEventListener('click',function(e){e.stopPropagation();const ci=parseInt(this.dataset.ci);const c=cats[ci];if(!c)return;const apps=APPS.filter(a=>a.cat===c);const all=apps.every(a=>pickedA.has(a.id));apps.forEach(a=>all?pickedA.delete(a.id):pickedA.add(a.id));drawApps();refreshUI()});
+    el.addEventListener('click',function(e){e.stopPropagation();const ci=parseInt(this.dataset.ci);const c=allCats[ci];if(!c)return;const apps=APPS.filter(a=>a.cat===c&&(!q||LO(a.n).toLowerCase().includes(q)));const all=apps.every(a=>pickedA.has(a.id));apps.forEach(a=>all?pickedA.delete(a.id):pickedA.add(a.id));drawApps();refreshUI()});
   });
   grid.querySelectorAll('.app-btn-uninstall').forEach(btn=>{
     btn.addEventListener('click',function(e){e.stopPropagation();doUninstall(this.dataset.aid)});

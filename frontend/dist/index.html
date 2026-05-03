@@ -77,6 +77,7 @@
           <span id="btn-install-text">Install Selected</span>
         </button>
       </div>
+      <input type="text" id="apps-search" class="apps-search" placeholder="Search apps..." autocomplete="off">
       <div id="apps-grid"></div>
     </div>
 
@@ -203,13 +204,9 @@
       </div>
     </div>
 
-    <div id="terminal">
+    <div id="terminal" class="collapsed">
       <div class="term-header">
-        <div class="term-dots">
-          <span class="dot red"></span>
-          <span class="dot yellow"></span>
-          <span class="dot green"></span>
-        </div>
+        <span class="term-toggle">▼</span>
         <span class="term-brand">CodeWinOptimizer &middot; v1.0.0 &middot; OscarDev</span>
         <span id="term-title"></span>
         <div class="term-actions">

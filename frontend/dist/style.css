@@ -71,6 +71,13 @@ header h1{font-size:1.05em;font-weight:700}
 .btn-primary:hover:not(:disabled){box-shadow:0 0 25px rgba(57,255,20,.35);transform:translateY(-1px)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;color:#000!important}
 .btn-primary span{color:#000!important}
+.apps-search{width:100%;padding:8px 14px;background:#111;color:var(--txt);border:1px solid #222;border-radius:8px;font-size:.82em;outline:none;margin-bottom:12px}
+.apps-search::placeholder{color:var(--tx3)}
+.apps-search:focus{border-color:var(--gn)}
+.app-cat-title{cursor:pointer;user-select:none}
+.app-cat-arrow{color:var(--tx2);font-size:.65em;transition:transform .25s;margin-right:4px}
+.collapsed .app-cat-arrow{transform:rotate(-90deg)}
+.collapsed .app-cat-grid,.collapsed .app-cat-sel-all{display:none}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -161,11 +168,15 @@ header h1{font-size:1.05em;font-weight:700}
 .theme-actions{display:flex;justify-content:center;gap:12px}
 
 /* TERMINAL */
-#terminal{margin:0 28px 0 28px;border:1px solid #1a1a1a;border-radius:10px 10px 0 0;overflow:hidden;background:#080808;display:flex;flex-direction:column;min-height:200px;max-height:420px;flex-shrink:0}
-.term-header{display:flex;align-items:center;gap:12px;padding:7px 14px;background:#0e0e0e;border-bottom:1px solid #1a1a1a;flex-shrink:0}
-.term-dots{display:flex;gap:6px;flex-shrink:0}
-.dot{width:10px;height:10px;border-radius:50%}
-.dot.red{background:#ff5f57}.dot.yellow{background:#febc2e}.dot.green{background:#28c840}
+#terminal{margin:0 28px 0 28px;border:1px solid #1a1a1a;border-radius:10px 10px 0 0;overflow:hidden;background:#080808;display:flex;flex-direction:column;flex-shrink:0}
+#terminal.collapsed{min-height:42px}
+#terminal:not(.collapsed){min-height:200px;flex:0 0 280px}
+.term-header{cursor:pointer;display:flex;align-items:center;gap:12px;padding:7px 14px;background:#0e0e0e;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.term-header:hover{background:#111}
+#terminal.collapsed #term-log{display:none}
+#terminal.collapsed .term-header{border-bottom:none}
+.term-toggle{color:var(--tx3);font-size:.7em;transition:transform .25s;flex-shrink:0}
+#terminal.collapsed .term-toggle{transform:rotate(-90deg)}
 #term-title{font-size:.75em;color:var(--tx3);flex:1}
 .term-actions{display:flex;align-items:center;gap:8px}
 #term-status{font-size:.7em;color:var(--tx3)}
