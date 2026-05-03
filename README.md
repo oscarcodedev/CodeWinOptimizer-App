@@ -19,11 +19,12 @@ Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend r
 
 ### 📦 Apps
 - **86+ apps** across 7 categories: Navegadores (15), Multimedia (17), Desarrollo (29), AI (13), Juegos (2), Utilidades (5), Comunicación (2), Seguridad (2)
-- Install/Uninstall via **WinGet** or **Chocolatey** (toggle selector)
+- Install/Uninstall via **WinGet** or **Chocolatey** (auto-installs Choco if missing)
 - Per-category "Select All / Deselect All"
 - Each app has **Website** link and **Uninstall** button
 - Toggle switches instead of checkboxes
 - **Detects already installed apps** (green badge + border)
+- **Search bar** and **collapsible categories** for quick navigation
 
 ### ⚡ Tweaks
 - **105+ system tweaks** across 12 categories:
@@ -53,11 +54,17 @@ Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend r
 - **6 font choices:** Segoe UI, Cascadia Code, Inter, JetBrains Mono, Arial, Trebuchet MS
 - Live preview + persistent via localStorage
 
+### 🧹 Cleanup
+- **7 cleanup tasks:** Temp files, Recycle Bin, Prefetch, Windows Update cache, Thumbnails, DNS cache, Memory dumps
+- Toggle switch selection per task
+- Reports MB freed per task in terminal
+- Auto-deselects after completion
+
 ### 💻 Terminal
 - Real-time command output logging
+- **Collapsible** — minimized by default, auto-expands on activity
 - **Copy** button to clipboard
 - **Clear** button
-- Text selection enabled
 
 ---
 
@@ -74,6 +81,10 @@ Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend r
 | Appearance |
 |-----------|
 | ![Appearance](https://i.imgur.com/exoZMYs.png) |
+
+| Monitor | Cleanup |
+|---------|---------|
+| ![Monitor](https://i.imgur.com/ohaeGgS.png) | ![Cleanup](https://i.imgur.com/3gx9upH.png) |
 
 ---
 
