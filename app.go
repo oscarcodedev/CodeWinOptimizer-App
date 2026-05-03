@@ -5,10 +5,15 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/host"
+	"github.com/shirou/gopsutil/v3/mem"
 
 	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -339,33 +344,51 @@ func (a *App) GetInstalledPackages() string {
 }
 
 func (a *App) GetSystemInfo() string {
+	// --- CPU % (gopsutil — native, reliable) ---
+	cpuPercent := 0.0
+	if percents, err := cpu.Percent(0, false); err == nil && len(percents) > 0 {
+		cpuPercent = math.Round(percents[0]*10) / 10
+	}
+
+	// CPU info via CIM (one-shot, no polling needed)
+	cpuInfo, _ := cpu.Info()
+	cpuName := ""
+	cpuCores := 0
+	cpuThreads := 0
+	if len(cpuInfo) > 0 {
+		cpuName = cpuInfo[0].ModelName
+		cpuCores = int(cpuInfo[0].Cores)
+	}
+	// Logical (thread) count
+	if n, err := cpu.Counts(true); err == nil {
+		cpuThreads = n
+	}
+
+	// --- RAM (gopsutil) ---
+	ramTotal := 0.0
+	ramFree := 0.0
+	ramUsed := 0.0
+	ramPct := 0.0
+	if vmem, err := mem.VirtualMemory(); err == nil {
+		ramTotal = math.Round(float64(vmem.Total)/1024/1024/1024*10) / 10
+		ramFree = math.Round(float64(vmem.Available)/1024/1024/1024*10) / 10
+		ramUsed = math.Round(float64(vmem.Used)/1024/1024/1024*10) / 10
+		ramPct = math.Round(vmem.UsedPercent*10) / 10
+	}
+
+	// --- Uptime (gopsutil) ---
+	uptimeStr := ""
+	if up, err := host.Uptime(); err == nil {
+		uptimeSec := uint64(up)
+		days := uptimeSec / 86400
+		hours := (uptimeSec % 86400) / 3600
+		minutes := (uptimeSec % 3600) / 60
+		uptimeStr = fmt.Sprintf("%dd %dh %dm", days, hours, minutes)
+	}
+
+	// --- GPU, Disks, Temps via PowerShell ---
 	psCmd := `[Console]::OutputEncoding = [Text.Encoding]::UTF8
 
-# --- CPU ---
-$cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
-$cpuPct = 0
-# Two-sample Get-Counter for accurate reading
-try {
-	$null = Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction Stop
-	Start-Sleep -Milliseconds 600
-	$s = (Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction Stop).CounterSamples[0].CookedValue
-	$cpuPct = [math]::Round([double]$s, 1)
-} catch {
-	# Fallback to CIM LoadPercentage
-	try { $cpuPct = [double]($cpu.LoadPercentage) } catch {}
-}
-$cpuName = $cpu.Name
-$cpuCores = $cpu.NumberOfCores
-$cpuThreads = $cpu.NumberOfLogicalProcessors
-
-# --- RAM ---
-$os = Get-CimInstance Win32_OperatingSystem
-$ramTotal = [math]::Round($os.TotalVisibleMemorySize/1MB, 1)
-$ramFree = [math]::Round($os.FreePhysicalMemory/1MB, 1)
-$ramUsed = [math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory)/1MB, 1)
-$ramPct = [math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory) / $os.TotalVisibleMemorySize * 100, 1)
-
-# --- GPU: collect CIM info + try nvidia-smi ---
 $gpuList = @()
 $gpus = Get-CimInstance Win32_VideoController
 foreach ($g in $gpus) {
@@ -376,7 +399,6 @@ foreach ($g in $gpus) {
 	$gpuList += [PSCustomObject]@{ name = $name; driver = $g.DriverVersion; ramGB = $vram; usage = 0; temp = 0 }
 }
 
-# Try nvidia-smi for usage+temp (find first NVIDIA GPU index)
 $nvidiaIdx = -1
 for ($i=0; $i -lt $gpuList.Count; $i++) {
 	if ($gpuList[$i].name -match '(?i)nvidia|geforce|rtx|quadro|tesla') { $nvidiaIdx = $i; break }
@@ -397,7 +419,6 @@ if ($nvidiaIdx -ge 0) {
 	} catch {}
 }
 
-# --- Disks ---
 $diskList = @()
 $disks = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3"
 foreach ($d in $disks) {
@@ -408,13 +429,10 @@ foreach ($d in $disks) {
 	$diskList += [PSCustomObject]@{ drive = $d.DeviceID; total = $t; free = $f; used = $u; pct = $p }
 }
 
-# --- Temps ---
 $tempList = @()
-# NVIDIA GPU temp from smi
 if ($nvidiaIdx -ge 0 -and $gpuList[$nvidiaIdx].temp -gt 0) {
 	$tempList += [PSCustomObject]@{ name = 'GPU'; temp = $gpuList[$nvidiaIdx].temp }
 }
-# WMI thermal zones (usually laptops only)
 try {
 	$wmiTemps = Get-CimInstance -Namespace root/wmi MSAcpi_ThermalZoneTemperature -ErrorAction Stop
 	foreach ($tz in $wmiTemps) {
@@ -423,49 +441,54 @@ try {
 		if ($t -ge 0 -and $t -le 125) { $tempList += [PSCustomObject]@{ name = $n; temp = $t } }
 	}
 } catch {}
-# WMI TemperatureProbe (rare but try)
-try {
-	$probes = Get-CimInstance Win32_TemperatureProbe -ErrorAction Stop
-	foreach ($p in $probes) {
-		if ($p.CurrentReading -ne $null -and [double]$p.CurrentReading -gt 0 -and [double]$p.CurrentReading -lt 1000) {
-			$t = [math]::Round([double]($p.CurrentReading)/10.0, 1)
-			$tempList += [PSCustomObject]@{ name = 'CPU'; temp = $t }
-		}
-	}
-} catch {}
-# LibreHardwareMonitor WMI (if installed)
-try {
-	$ohm = Get-CimInstance -Namespace root/LibreHardwareMonitor -Class Sensor -ErrorAction Stop
-	foreach ($s in $ohm) {
-		if ($s.SensorType -eq 'Temperature' -and $s.Name -match '(?i)cpu.*package|core.*tctl') {
-			$tempList += [PSCustomObject]@{ name = $s.Name; temp = [math]::Round($s.Value, 1) }
-		}
-	}
-} catch {}
 
-# --- Uptime ---
-$uptime = (Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
-$uptimeStr = "$($uptime.Days)d $($uptime.Hours)h $($uptime.Minutes)m"
-
-# --- Build JSON safely ---
 [PSCustomObject]@{ 
-	cpu = [PSCustomObject]@{ pct = $cpuPct; name = $cpuName; cores = $cpuCores; threads = $cpuThreads };
-	ram = [PSCustomObject]@{ totalGB = $ramTotal; freeGB = $ramFree; usedGB = $ramUsed; pct = $ramPct };
 	gpus = @($gpuList);
 	disks = @($diskList);
 	temps = @($tempList);
-	uptime = $uptimeStr
 } | ConvertTo-Json -Compress -Depth 4
 `
 	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCmd)
 	cmd.SysProcAttr = getSysProcAttr()
-	output, err := cmd.Output()
-	if err != nil {
-		return `{"error":"` + err.Error() + `"}`
+	psOutput, psErr := cmd.Output()
+
+	// Build final JSON
+	psJSON := `{"gpus":[],"disks":[],"temps":[]}`
+	if psErr == nil && len(psOutput) > 0 {
+		psJSON = strings.TrimSpace(string(psOutput))
 	}
-	result := strings.TrimSpace(string(output))
-	if result == "" || result == "null" {
-		return `{"error":"empty"}`
+
+	// Parse PS output and inject Go-computed values
+	type CPUOut struct {
+		Pct     float64 `json:"pct"`
+		Name    string  `json:"name"`
+		Cores   int     `json:"cores"`
+		Threads int     `json:"threads"`
 	}
+	type RAMOut struct {
+		TotalGB float64 `json:"totalGB"`
+		FreeGB  float64 `json:"freeGB"`
+		UsedGB  float64 `json:"usedGB"`
+		Pct     float64 `json:"pct"`
+	}
+	type FullOut struct {
+		CPU    CPUOut  `json:"cpu"`
+		RAM    RAMOut  `json:"ram"`
+		Uptime string  `json:"uptime"`
+	}
+
+	fo := FullOut{
+		CPU:    CPUOut{Pct: cpuPercent, Name: cpuName, Cores: cpuCores, Threads: cpuThreads},
+		RAM:    RAMOut{TotalGB: ramTotal, FreeGB: ramFree, UsedGB: ramUsed, Pct: ramPct},
+		Uptime: uptimeStr,
+	}
+
+	foJSON, _ := json.Marshal(fo)
+
+	// Merge: strip closing } from foJSON, strip opening { from psJSON
+	foStr := strings.TrimSuffix(string(foJSON), "}")
+	psStr := strings.TrimPrefix(psJSON, "{")
+	result := foStr + "," + psStr
+
 	return result
 }
