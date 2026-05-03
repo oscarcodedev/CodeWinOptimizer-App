@@ -15,6 +15,7 @@ window.L.en={
   uninstall:'Uninstall',website:'Website',installed:'Installed',
   ftFeaturesTitle:'Windows Features',ftFixesTitle:'Quick Fixes',runFeatures:'Run Features',ftRunning:'Running features...',ftDone:'Done.',
   tabMonitor:'Monitor',monCPU:'CPU',monRAM:'RAM',monGPU:'GPU',monDisk:'Disk',monTemp:'Temperatures',monUptime:'Uptime',monTempNA:'No temp data',
+  tabCleanup:'Cleanup',cleanupDesc:'Select items to clean — all operations are safe and reversible',cleanupBtn:'Run Cleanup',cleanupBtnCount:'Clean {n} items',
 };
 
 window.L.es={
@@ -32,4 +33,5 @@ window.L.es={
   uninstall:'Desinstalar',website:'Web',installed:'Instalado',
   ftFeaturesTitle:'Caracteristicas de Windows',ftFixesTitle:'Arreglos Rapidos',runFeatures:'Ejecutar',ftRunning:'Ejecutando...',ftDone:'Completado.',
   tabMonitor:'Monitor',monCPU:'CPU',monRAM:'RAM',monGPU:'GPU',monDisk:'Disco',monTemp:'Temperaturas',monUptime:'Activo',monTempNA:'Sin datos de temp',
+  tabCleanup:'Limpieza',cleanupDesc:'Selecciona qué limpiar — todas las operaciones son seguras',cleanupBtn:'Ejecutar Limpieza',cleanupBtnCount:'Limpiar {n} items',
 };

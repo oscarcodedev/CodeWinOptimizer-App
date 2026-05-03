@@ -43,6 +43,7 @@
       <button class="tab" data-tab="tweaks"><span class="tab-icon">⚡</span><span id="tab-tweaks-label">Tweaks</span></button>
       <button class="tab" data-tab="features"><span class="tab-icon">🛠</span><span id="tab-features-label">Features</span></button>
       <button class="tab" data-tab="monitor"><span class="tab-icon">📊</span><span id="tab-monitor-label">Monitor</span></button>
+      <button class="tab" data-tab="cleanup"><span class="tab-icon">🧹</span><span id="tab-cleanup-label">Cleanup</span></button>
       <button class="tab" data-tab="theme"><span class="tab-icon">🎨</span><span id="tab-theme-label">Appearance</span></button>
     </nav>
 
@@ -157,6 +158,14 @@
           <div class="mon-card-val" id="mon-uptime-val">--</div>
         </div>
       </div>
+    </div>
+
+    <div class="tab-content" id="tab-cleanup">
+      <div class="cleanup-bar">
+        <span id="cleanup-desc"></span>
+        <button id="btn-run-cleanup" class="btn-primary"><span id="btn-cleanup-text">Run Cleanup</span></button>
+      </div>
+      <div id="cleanup-grid" class="cleanup-grid"></div>
     </div>
 
     <div class="tab-content" id="tab-theme">

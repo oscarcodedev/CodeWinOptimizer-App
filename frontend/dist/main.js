@@ -97,6 +97,52 @@ async function fetchMonitor(){
   }catch(e){}
 }
 
+const CLEANUP_TASKS=[
+  {id:'temp',icon:'📁',n:{en:'Temporary files',es:'Archivos temporales'},d:{en:'%TEMP% and Windows\\Temp folders',es:'Carpetas %TEMP% y Windows\\Temp'}},
+  {id:'recycle',icon:'🗑',n:{en:'Recycle Bin',es:'Papelera de reciclaje'},d:{en:'Empty all drives recycle bins',es:'Vaciar papelera de todas las unidades'}},
+  {id:'prefetch',icon:'⚡',n:{en:'Prefetch files',es:'Archivos Prefetch'},d:{en:'Windows\\Prefetch — safe to delete',es:'Windows\\Prefetch — seguro de borrar'}},
+  {id:'winupdate',icon:'🔽',n:{en:'Windows Update cache',es:'Caché de Windows Update'},d:{en:'SoftwareDistribution\\Download folder',es:'Carpeta SoftwareDistribution\\Download'}},
+  {id:'thumbnails',icon:'🖼',n:{en:'Thumbnail cache',es:'Caché de miniaturas'},d:{en:'Explorer thumbnail cache files',es:'Archivos de caché de miniaturas'}},
+  {id:'dnscache',icon:'🌐',n:{en:'DNS cache',es:'Caché DNS'},d:{en:'Flush DNS resolver cache',es:'Limpiar caché del resolver DNS'}},
+  {id:'memorydump',icon:'💥',n:{en:'Memory dumps',es:'Volcados de memoria'},d:{en:'MEMORY.DMP + Minidump folder',es:'MEMORY.DMP + carpeta Minidump'}},
+];
+let cleanPicked=new Set();
+
+function drawCleanup(){
+  document.getElementById('tab-cleanup-label').textContent=T('tabCleanup');
+  document.getElementById('cleanup-desc').textContent=T('cleanupDesc');
+  document.getElementById('btn-cleanup-text').textContent=T('cleanupBtn');
+  const g=document.getElementById('cleanup-grid');
+  g.innerHTML=CLEANUP_TASKS.map(t=>{
+    const sel=cleanPicked.has(t.id)?' selected':'';
+    const chk=cleanPicked.has(t.id)?'checked':'';
+    return `<label class="cleanup-item${sel}">
+      <input type="checkbox" data-cid="${t.id}" ${chk}>
+      <span style="font-size:1.3em;flex-shrink:0">${t.icon}</span>
+      <div class="cleanup-item-body">
+        <div class="cleanup-item-name">${LO(t.n)}</div>
+        <div class="cleanup-item-desc">${LO(t.d)}</div>
+      </div>
+    </label>`;
+  }).join('');
+  g.querySelectorAll('input').forEach(cb=>{
+    cb.addEventListener('change',function(){
+      if(this.checked)cleanPicked.add(this.dataset.cid);else cleanPicked.delete(this.dataset.cid);
+      this.closest('.cleanup-item').classList.toggle('selected',this.checked);
+      document.getElementById('btn-cleanup-text').textContent=cleanPicked.size>0?T('cleanupBtnCount').replace('{n}',cleanPicked.size):T('cleanupBtn');
+    });
+  });
+}
+
+async function doCleanup(){
+  if(busy||cleanPicked.size===0)return;
+  busy=true;refreshUI();
+  setTerm('Cleaning...','running');
+  await window.go.main.App.RunCleanup([...cleanPicked],lang);
+  setTerm(T('idle'),'');
+  busy=false;refreshUI();
+}
+
 function initTheme(){
   loadTheme();
   document.querySelectorAll('.color-btn').forEach(b=>b.addEventListener('click',function(){themeAccent=this.dataset.color;applyTheme();saveTheme()}));
@@ -120,6 +166,7 @@ async function boot(){
   document.getElementById('btn-install-apps').addEventListener('click',doInstall);
   document.getElementById('btn-apply-tweaks').addEventListener('click',doApply);
   document.getElementById('btn-run-features').addEventListener('click',doRunFeatures);
+  document.getElementById('btn-run-cleanup').addEventListener('click',doCleanup);
 
   initTheme();
   document.getElementById('btn-clear').addEventListener('click',clearTerm);
@@ -150,6 +197,7 @@ function switchTab(tab){
   if(tab==='features')drawFeatures();
   if(tab==='theme')drawTheme();
   if(tab==='monitor'){drawMonitor();startMonitorPoll()}else{stopMonitorPoll()}
+  if(tab==='cleanup')drawCleanup();
   refreshUI();
 }
 
