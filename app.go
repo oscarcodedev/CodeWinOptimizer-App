@@ -340,23 +340,50 @@ func (a *App) GetInstalledPackages() string {
 
 func (a *App) GetSystemInfo() string {
 	psCmd := `[Console]::OutputEncoding = [Text.Encoding]::UTF8
-$cpuPct = (Get-CimInstance Win32_Processor | Measure-Object -Property LoadPercentage -Average).Average
-$cpuName = (Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty Name)
-$cpuCores = (Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty NumberOfCores)
-$cpuThreads = (Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty NumberOfLogicalProcessors)
+# CPU usage via Get-Counter (2 samples 750ms apart for accuracy)
+$cpuPct = 0
+try {
+	$a = (Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction Stop).CounterSamples[0].CookedValue
+	Start-Sleep -Milliseconds 750
+	$b = (Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction Stop).CounterSamples[0].CookedValue
+	$cpuPct = [math]::Round($b, 1)
+} catch {
+	try { $cpuPct = (Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty LoadPercentage) } catch {}
+}
+$cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
+$cpuName = $cpu.Name; $cpuCores = $cpu.NumberOfCores; $cpuThreads = $cpu.NumberOfLogicalProcessors
 
+# RAM
 $os = Get-CimInstance Win32_OperatingSystem
 $ramTotal = [math]::Round($os.TotalVisibleMemorySize/1MB, 1)
 $ramFree = [math]::Round($os.FreePhysicalMemory/1MB, 1)
 $ramUsed = [math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory)/1MB, 1)
 $ramPct = [math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory) / $os.TotalVisibleMemorySize * 100, 1)
 
+# GPU: name/VRAM from CIM, usage/temp from nvidia-smi (if NVIDIA)
 $gpus = @(Get-CimInstance Win32_VideoController | ForEach-Object {
 	$n = if($_.Name){if($_.Name.Length -gt 50){$_.Name.Substring(0,47)+'...'}else{$_.Name}}else{'Unknown'}
 	$ram = if($_.AdapterRAM){[math]::Round($_.AdapterRAM/1GB,1)}else{0}
-	[PSCustomObject]@{ name = $n; driver = $_.DriverVersion; ramGB = $ram }
+	[PSCustomObject]@{ name = $n; driver = $_.DriverVersion; ramGB = $ram; usage = 0 }
 })
 
+# Try to get GPU usage and temp from nvidia-smi
+$nvidiaIdx = -1
+for ($i=0; $i -lt $gpus.Count; $i++) { if ($gpus[$i].name -match '(?i)nvidia|geforce|rtx|quadro|tesla') { $nvidiaIdx = $i; break } }
+if ($nvidiaIdx -ge 0) {
+	try {
+		$smi = & nvidia-smi --query-gpu=utilization.gpu,temperature.gpu --format=csv,noheader,nounits 2>$null
+		if ($smi) {
+			$parts = $smi.Trim() -split ',\s*'
+			if ($parts.Count -ge 2) {
+				$gpus[$nvidiaIdx].usage = [double]$parts[0]
+				$gpus[$nvidiaIdx].temp = [double]$parts[1]
+			}
+		}
+	} catch {}
+}
+
+# Disks
 $disks = @(Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" | ForEach-Object {
 	$t = [math]::Round($_.Size/1GB, 1); $f = [math]::Round($_.FreeSpace/1GB, 1)
 	$u = [math]::Round($t - $f, 1)
@@ -364,14 +391,21 @@ $disks = @(Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" | ForEach-Obj
 	[PSCustomObject]@{ drive = $_.DeviceID; total = $t; free = $f; used = $u; pct = $p }
 })
 
-$temps = try {
-	@(Get-CimInstance -Namespace root/wmi MSAcpi_ThermalZoneTemperature -ErrorAction Stop | ForEach-Object {
+# Temps: nvidia-smi GPU temp + WMI thermal zones
+$temps = @()
+if ($nvidiaIdx -ge 0 -and $gpus[$nvidiaIdx].temp) {
+	$temps += [PSCustomObject]@{ name = 'GPU'; temp = $gpus[$nvidiaIdx].temp }
+}
+try {
+	$wmiTemps = @(Get-CimInstance -Namespace root/wmi MSAcpi_ThermalZoneTemperature -ErrorAction Stop | ForEach-Object {
 		$n = $_.InstanceName -replace '.*\\',''
 		$t = [math]::Round(($_.CurrentTemperature - 2732) / 10.0, 1)
-		[PSCustomObject]@{ name = $n; temp = $t }
+		if ($t -ge 0 -and $t -le 125) { [PSCustomObject]@{ name = $n; temp = $t } }
 	})
-} catch { @() }
+	$temps += $wmiTemps
+} catch {}
 
+# Uptime
 $uptime = (Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
 $uptimeStr = "$($uptime.Days)d $($uptime.Hours)h $($uptime.Minutes)m"
 

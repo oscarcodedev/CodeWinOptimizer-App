@@ -65,8 +65,11 @@ async function fetchMonitor(){
     }
     if(d.gpus&&d.gpus.length>0){
       const g=d.gpus[0];
-      document.getElementById('mon-gpu-val').textContent=g.name||'GPU';
-      document.getElementById('mon-gpu-sub').textContent=(g.ramGB?g.ramGB+' GB':'');
+      document.getElementById('mon-gpu-val').textContent=(g.usage||g.usage===0)?g.usage+'%':(g.name||'GPU');
+      const sub=[];
+      if(g.ramGB)sub.push(g.ramGB+' GB');
+      if(g.temp||g.temp===0)sub.push(g.temp+'°C');
+      document.getElementById('mon-gpu-sub').textContent=sub.join(' · ')||'';
     }
     if(d.disks&&d.disks.length>0){
       document.getElementById('mon-disk-val').textContent=d.disks[0].pct+'% used';
