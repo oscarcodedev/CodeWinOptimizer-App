@@ -1,6 +1,6 @@
 {
-  "name": "codewinoptimizer",
-  "outputfilename": "codewinoptimizer",
+  "name": "CodeWinOptimizer",
+  "outputfilename": "CodeWinOptimizer",
   "frontend:install": "",
   "frontend:build": "powershell -Command \"Copy-Item -Recurse -Force frontend/wailsjs frontend/dist/wailsjs\"",
   "frontend:dev:watcher": "",
