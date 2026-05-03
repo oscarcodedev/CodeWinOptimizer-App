@@ -10,6 +10,28 @@ Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend r
 
 ---
 
+## Preview
+
+<details><summary>Click to expand</summary>
+
+| Restore | Apps |
+|-----------|------|
+| ![Restore](https://i.imgur.com/1ZVIUVs.png) | ![Apps](https://i.imgur.com/rJqpplf.png) |
+
+| Tweaks | Features |
+|--------|----------|
+| ![Tweaks](https://i.imgur.com/dGvBRuB.png) | ![Features](https://i.imgur.com/CIAySy3.png) |
+
+| Monitor | Cleanup |
+|---------|---------|
+| ![Monitor](https://i.imgur.com/ohaeGgS.png) | ![Cleanup](https://i.imgur.com/3gx9upH.png) |
+
+| Appearance |
+|-----------|
+| ![Appearance](https://i.imgur.com/exoZMYs.png) |
+
+</details>
+
 ## Features
 
 ### 🔧 Restore
@@ -68,30 +90,6 @@ Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend r
 
 ---
 
-## Preview
-
-<details><summary>Click to expand</summary>
-
-| Restore | Apps |
-|-----------|------|
-| ![Restore](https://i.imgur.com/1ZVIUVs.png) | ![Apps](https://i.imgur.com/rJqpplf.png) |
-
-| Tweaks | Features |
-|--------|----------|
-| ![Tweaks](https://i.imgur.com/dGvBRuB.png) | ![Features](https://i.imgur.com/CIAySy3.png) |
-
-| Monitor | Cleanup |
-|---------|---------|
-| ![Monitor](https://i.imgur.com/ohaeGgS.png) | ![Cleanup](https://i.imgur.com/3gx9upH.png) |
-
-| Appearance |
-|-----------|
-| ![Appearance](https://i.imgur.com/exoZMYs.png) |
-
-</details>
-
----
-
 ## How to Run
 
 ### Prerequisites
@@ -133,6 +131,8 @@ Output: `build/bin/CodeWinOptimizer.exe`
 
 ## Roadmap
 
+<details><summary>Click to expand</summary>
+
 ### Completed
 - [x] System Restore Point creation (registry bypass for 24h cooldown)
 - [x] Full registry backup to .reg files (5 hives)
@@ -162,6 +162,8 @@ Output: `build/bin/CodeWinOptimizer.exe`
 - [ ] Registry defrag & optimization
 - [ ] Scheduled maintenance (auto-clean, auto-backup registry)
 - [ ] Process/service manager (stop bloatware)
+
+</details>
 
 
 ## License
