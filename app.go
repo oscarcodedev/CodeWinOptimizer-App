@@ -414,13 +414,32 @@ $tempList = @()
 if ($nvidiaIdx -ge 0 -and $gpuList[$nvidiaIdx].temp -gt 0) {
 	$tempList += [PSCustomObject]@{ name = 'GPU'; temp = $gpuList[$nvidiaIdx].temp }
 }
-# WMI thermal zones
+# WMI thermal zones (usually laptops only)
 try {
 	$wmiTemps = Get-CimInstance -Namespace root/wmi MSAcpi_ThermalZoneTemperature -ErrorAction Stop
 	foreach ($tz in $wmiTemps) {
 		$n = $tz.InstanceName -replace '.*\\',''
 		$t = [math]::Round(($tz.CurrentTemperature - 2732) / 10.0, 1)
 		if ($t -ge 0 -and $t -le 125) { $tempList += [PSCustomObject]@{ name = $n; temp = $t } }
+	}
+} catch {}
+# WMI TemperatureProbe (rare but try)
+try {
+	$probes = Get-CimInstance Win32_TemperatureProbe -ErrorAction Stop
+	foreach ($p in $probes) {
+		if ($p.CurrentReading -ne $null -and [double]$p.CurrentReading -gt 0 -and [double]$p.CurrentReading -lt 1000) {
+			$t = [math]::Round([double]($p.CurrentReading)/10.0, 1)
+			$tempList += [PSCustomObject]@{ name = 'CPU'; temp = $t }
+		}
+	}
+} catch {}
+# LibreHardwareMonitor WMI (if installed)
+try {
+	$ohm = Get-CimInstance -Namespace root/LibreHardwareMonitor -Class Sensor -ErrorAction Stop
+	foreach ($s in $ohm) {
+		if ($s.SensorType -eq 'Temperature' -and $s.Name -match '(?i)cpu.*package|core.*tctl') {
+			$tempList += [PSCustomObject]@{ name = $s.Name; temp = [math]::Round($s.Value, 1) }
+		}
 	}
 } catch {}
 
