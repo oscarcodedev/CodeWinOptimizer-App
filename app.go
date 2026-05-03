@@ -340,7 +340,7 @@ func (a *App) GetInstalledPackages() string {
 
 func (a *App) GetSystemInfo() string {
 	psCmd := `[Console]::OutputEncoding = [Text.Encoding]::UTF8
-$cpu = (Get-CimInstance Win32_Processor | Measure-Object -Property LoadPercentage -Average).Average
+$cpuPct = (Get-CimInstance Win32_Processor | Measure-Object -Property LoadPercentage -Average).Average
 $cpuName = (Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty Name)
 $cpuCores = (Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty NumberOfCores)
 $cpuThreads = (Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty NumberOfLogicalProcessors)
@@ -351,28 +351,32 @@ $ramFree = [math]::Round($os.FreePhysicalMemory/1MB, 1)
 $ramUsed = [math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory)/1MB, 1)
 $ramPct = [math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory) / $os.TotalVisibleMemorySize * 100, 1)
 
-$gpus = Get-CimInstance Win32_VideoController | ForEach-Object {
-	@{ name = if($_.Name.Length -gt 50){$_.Name.Substring(0,47)+'...'}else{$_.Name};
-	   driver = $_.DriverVersion;
-	   ramGB = [math]::Round($_.AdapterRAM/1GB, 1) }
-} | ConvertTo-Json -Compress
+$gpus = @(Get-CimInstance Win32_VideoController | ForEach-Object {
+	$n = if($_.Name){if($_.Name.Length -gt 50){$_.Name.Substring(0,47)+'...'}else{$_.Name}}else{'Unknown'}
+	$ram = if($_.AdapterRAM){[math]::Round($_.AdapterRAM/1GB,1)}else{0}
+	[PSCustomObject]@{ name = $n; driver = $_.DriverVersion; ramGB = $ram }
+})
 
-$disks = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" | ForEach-Object {
-	$t = [math]::Round($_.Size/1GB, 1); $f = [math]::Round($_.FreeSpace/1GB, 1);
-	@{ drive = $_.DeviceID; total = $t; free = $f; used = [math]::Round($t-$f, 1); pct = if($t -gt 0){[math]::Round(($t-$f)/$t*100,1)}else{0} }
-} | ConvertTo-Json -Compress
+$disks = @(Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" | ForEach-Object {
+	$t = [math]::Round($_.Size/1GB, 1); $f = [math]::Round($_.FreeSpace/1GB, 1)
+	$u = [math]::Round($t - $f, 1)
+	$p = if($t -gt 0){[math]::Round(($t-$f)/$t*100,1)}else{0}
+	[PSCustomObject]@{ drive = $_.DeviceID; total = $t; free = $f; used = $u; pct = $p }
+})
 
 $temps = try {
-	Get-CimInstance -Namespace root/wmi MSAcpi_ThermalZoneTemperature -ErrorAction Stop | ForEach-Object {
-		@{ name = ($_.InstanceName -replace '.*\\',''); temp = [math]::Round(($_.CurrentTemperature - 2732) / 10.0, 1) }
-	} | ConvertTo-Json -Compress
-} catch { '[]' }
+	@(Get-CimInstance -Namespace root/wmi MSAcpi_ThermalZoneTemperature -ErrorAction Stop | ForEach-Object {
+		$n = $_.InstanceName -replace '.*\\',''
+		$t = [math]::Round(($_.CurrentTemperature - 2732) / 10.0, 1)
+		[PSCustomObject]@{ name = $n; temp = $t }
+	})
+} catch { @() }
 
 $uptime = (Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
 $uptimeStr = "$($uptime.Days)d $($uptime.Hours)h $($uptime.Minutes)m"
 
 @{ 
-	cpu = @{ pct = $cpu; name = $cpuName; cores = $cpuCores; threads = $cpuThreads };
+	cpu = @{ pct = $cpuPct; name = $cpuName; cores = $cpuCores; threads = $cpuThreads };
 	ram = @{ totalGB = $ramTotal; freeGB = $ramFree; usedGB = $ramUsed; pct = $ramPct };
 	gpus = $gpus;
 	disks = $disks;
