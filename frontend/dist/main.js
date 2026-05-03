@@ -54,21 +54,23 @@ async function fetchMonitor(){
     const d=JSON.parse(raw);
     if(d.error)return;
     if(d.cpu){
-      document.getElementById('mon-cpu-val').textContent=d.cpu.pct+'%';
-      document.getElementById('mon-cpu-bar').style.width=d.cpu.pct+'%';
+      const cp=Number(d.cpu.pct)||0;
+      document.getElementById('mon-cpu-val').textContent=cp+'%';
+      document.getElementById('mon-cpu-bar').style.width=cp+'%';
       document.getElementById('mon-cpu-sub').textContent=(d.cpu.name||'')+(d.cpu.cores?' · '+d.cpu.cores+'C/'+d.cpu.threads+'T':'');
     }
     if(d.ram){
       document.getElementById('mon-ram-val').textContent=d.ram.usedGB+' / '+d.ram.totalGB+' GB';
-      document.getElementById('mon-ram-bar').style.width=d.ram.pct+'%';
+      document.getElementById('mon-ram-bar').style.width=(Number(d.ram.pct)||0)+'%';
       document.getElementById('mon-ram-sub').textContent=d.ram.freeGB+' GB free';
     }
     if(d.gpus&&d.gpus.length>0){
       const g=d.gpus[0];
-      document.getElementById('mon-gpu-val').textContent=(g.usage||g.usage===0)?g.usage+'%':(g.name||'GPU');
+      const gu=Number(g.usage)||0;
+      document.getElementById('mon-gpu-val').textContent=gu>0?gu+'%':(g.name||'GPU');
       const sub=[];
-      if(g.ramGB)sub.push(g.ramGB+' GB');
-      if(g.temp||g.temp===0)sub.push(g.temp+'°C');
+      if(g.ramGB)sub.push(Number(g.ramGB)+' GB');
+      if(g.temp||g.temp===0)sub.push(Number(g.temp)+'°C');
       document.getElementById('mon-gpu-sub').textContent=sub.join(' · ')||'';
     }
     if(d.disks&&d.disks.length>0){

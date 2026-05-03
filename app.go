@@ -340,83 +340,93 @@ func (a *App) GetInstalledPackages() string {
 
 func (a *App) GetSystemInfo() string {
 	psCmd := `[Console]::OutputEncoding = [Text.Encoding]::UTF8
-# CPU usage via Get-Counter (2 samples 750ms apart for accuracy)
-$cpuPct = 0
-try {
-	$a = (Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction Stop).CounterSamples[0].CookedValue
-	Start-Sleep -Milliseconds 750
-	$b = (Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction Stop).CounterSamples[0].CookedValue
-	$cpuPct = [math]::Round($b, 1)
-} catch {
-	try { $cpuPct = (Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty LoadPercentage) } catch {}
-}
-$cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
-$cpuName = $cpu.Name; $cpuCores = $cpu.NumberOfCores; $cpuThreads = $cpu.NumberOfLogicalProcessors
 
-# RAM
+# --- CPU ---
+$cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
+$cpuPct = [double]($cpu.LoadPercentage)
+$cpuName = $cpu.Name
+$cpuCores = $cpu.NumberOfCores
+$cpuThreads = $cpu.NumberOfLogicalProcessors
+
+# --- RAM ---
 $os = Get-CimInstance Win32_OperatingSystem
 $ramTotal = [math]::Round($os.TotalVisibleMemorySize/1MB, 1)
 $ramFree = [math]::Round($os.FreePhysicalMemory/1MB, 1)
 $ramUsed = [math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory)/1MB, 1)
 $ramPct = [math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory) / $os.TotalVisibleMemorySize * 100, 1)
 
-# GPU: name/VRAM from CIM, usage/temp from nvidia-smi (if NVIDIA)
-$gpus = @(Get-CimInstance Win32_VideoController | ForEach-Object {
-	$n = if($_.Name){if($_.Name.Length -gt 50){$_.Name.Substring(0,47)+'...'}else{$_.Name}}else{'Unknown'}
-	$ram = if($_.AdapterRAM){[math]::Round($_.AdapterRAM/1GB,1)}else{0}
-	[PSCustomObject]@{ name = $n; driver = $_.DriverVersion; ramGB = $ram; usage = 0 }
-})
+# --- GPU: collect CIM info + try nvidia-smi ---
+$gpuList = @()
+$gpus = Get-CimInstance Win32_VideoController
+foreach ($g in $gpus) {
+	$name = $g.Name; if (-not $name) { $name = 'Unknown' }
+	if ($name.Length -gt 50) { $name = $name.Substring(0,47)+'...' }
+	$vram = 0
+	if ($g.AdapterRAM -and $g.AdapterRAM -gt 0) { $vram = [math]::Round($g.AdapterRAM/1GB, 1) }
+	$gpuList += [PSCustomObject]@{ name = $name; driver = $g.DriverVersion; ramGB = $vram; usage = 0; temp = 0 }
+}
 
-# Try to get GPU usage and temp from nvidia-smi
+# Try nvidia-smi for usage+temp (find first NVIDIA GPU index)
 $nvidiaIdx = -1
-for ($i=0; $i -lt $gpus.Count; $i++) { if ($gpus[$i].name -match '(?i)nvidia|geforce|rtx|quadro|tesla') { $nvidiaIdx = $i; break } }
+for ($i=0; $i -lt $gpuList.Count; $i++) {
+	if ($gpuList[$i].name -match '(?i)nvidia|geforce|rtx|quadro|tesla') { $nvidiaIdx = $i; break }
+}
 if ($nvidiaIdx -ge 0) {
 	try {
-		$smi = & nvidia-smi --query-gpu=utilization.gpu,temperature.gpu --format=csv,noheader,nounits 2>$null
+		$smi = & nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,memory.total --format=csv,noheader,nounits 2>$null
 		if ($smi) {
 			$parts = $smi.Trim() -split ',\s*'
 			if ($parts.Count -ge 2) {
-				$gpus[$nvidiaIdx].usage = [double]$parts[0]
-				$gpus[$nvidiaIdx].temp = [double]$parts[1]
+				$gpuList[$nvidiaIdx].usage = [double]$parts[0]
+				$gpuList[$nvidiaIdx].temp = [double]$parts[1]
+				if ($parts.Count -ge 3 -and [double]$parts[2] -gt 0) {
+					$gpuList[$nvidiaIdx].ramGB = [double]$parts[2]
+				}
 			}
 		}
 	} catch {}
 }
 
-# Disks
-$disks = @(Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" | ForEach-Object {
-	$t = [math]::Round($_.Size/1GB, 1); $f = [math]::Round($_.FreeSpace/1GB, 1)
+# --- Disks ---
+$diskList = @()
+$disks = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3"
+foreach ($d in $disks) {
+	$t = [math]::Round($d.Size/1GB, 1)
+	$f = [math]::Round($d.FreeSpace/1GB, 1)
 	$u = [math]::Round($t - $f, 1)
 	$p = if($t -gt 0){[math]::Round(($t-$f)/$t*100,1)}else{0}
-	[PSCustomObject]@{ drive = $_.DeviceID; total = $t; free = $f; used = $u; pct = $p }
-})
-
-# Temps: nvidia-smi GPU temp + WMI thermal zones
-$temps = @()
-if ($nvidiaIdx -ge 0 -and $gpus[$nvidiaIdx].temp) {
-	$temps += [PSCustomObject]@{ name = 'GPU'; temp = $gpus[$nvidiaIdx].temp }
+	$diskList += [PSCustomObject]@{ drive = $d.DeviceID; total = $t; free = $f; used = $u; pct = $p }
 }
+
+# --- Temps ---
+$tempList = @()
+# NVIDIA GPU temp from smi
+if ($nvidiaIdx -ge 0 -and $gpuList[$nvidiaIdx].temp -gt 0) {
+	$tempList += [PSCustomObject]@{ name = 'GPU'; temp = $gpuList[$nvidiaIdx].temp }
+}
+# WMI thermal zones
 try {
-	$wmiTemps = @(Get-CimInstance -Namespace root/wmi MSAcpi_ThermalZoneTemperature -ErrorAction Stop | ForEach-Object {
-		$n = $_.InstanceName -replace '.*\\',''
-		$t = [math]::Round(($_.CurrentTemperature - 2732) / 10.0, 1)
-		if ($t -ge 0 -and $t -le 125) { [PSCustomObject]@{ name = $n; temp = $t } }
-	})
-	$temps += $wmiTemps
+	$wmiTemps = Get-CimInstance -Namespace root/wmi MSAcpi_ThermalZoneTemperature -ErrorAction Stop
+	foreach ($tz in $wmiTemps) {
+		$n = $tz.InstanceName -replace '.*\\',''
+		$t = [math]::Round(($tz.CurrentTemperature - 2732) / 10.0, 1)
+		if ($t -ge 0 -and $t -le 125) { $tempList += [PSCustomObject]@{ name = $n; temp = $t } }
+	}
 } catch {}
 
-# Uptime
+# --- Uptime ---
 $uptime = (Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
 $uptimeStr = "$($uptime.Days)d $($uptime.Hours)h $($uptime.Minutes)m"
 
-@{ 
-	cpu = @{ pct = $cpuPct; name = $cpuName; cores = $cpuCores; threads = $cpuThreads };
-	ram = @{ totalGB = $ramTotal; freeGB = $ramFree; usedGB = $ramUsed; pct = $ramPct };
-	gpus = $gpus;
-	disks = $disks;
-	temps = $temps;
+# --- Build JSON safely ---
+[PSCustomObject]@{ 
+	cpu = [PSCustomObject]@{ pct = $cpuPct; name = $cpuName; cores = $cpuCores; threads = $cpuThreads };
+	ram = [PSCustomObject]@{ totalGB = $ramTotal; freeGB = $ramFree; usedGB = $ramUsed; pct = $ramPct };
+	gpus = @($gpuList);
+	disks = @($diskList);
+	temps = @($tempList);
 	uptime = $uptimeStr
-} | ConvertTo-Json -Compress
+} | ConvertTo-Json -Compress -Depth 4
 `
 	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCmd)
 	cmd.SysProcAttr = getSysProcAttr()
@@ -424,5 +434,9 @@ $uptimeStr = "$($uptime.Days)d $($uptime.Hours)h $($uptime.Minutes)m"
 	if err != nil {
 		return `{"error":"` + err.Error() + `"}`
 	}
-	return strings.TrimSpace(string(output))
+	result := strings.TrimSpace(string(output))
+	if result == "" || result == "null" {
+		return `{"error":"empty"}`
+	}
+	return result
 }
