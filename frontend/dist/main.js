@@ -111,35 +111,44 @@ let cleanPicked=new Set();
 function drawCleanup(){
   document.getElementById('tab-cleanup-label').textContent=T('tabCleanup');
   document.getElementById('cleanup-desc').textContent=T('cleanupDesc');
-  document.getElementById('btn-cleanup-text').textContent=T('cleanupBtn');
+  document.getElementById('btn-cleanup-text').textContent=cleanPicked.size>0?T('cleanupBtnCount').replace('{n}',cleanPicked.size):T('cleanupBtn');
   const g=document.getElementById('cleanup-grid');
   g.innerHTML=CLEANUP_TASKS.map(t=>{
     const sel=cleanPicked.has(t.id)?' selected':'';
     const chk=cleanPicked.has(t.id)?'checked':'';
     return `<label class="cleanup-item${sel}">
-      <input type="checkbox" data-cid="${t.id}" ${chk}>
-      <span style="font-size:1.3em;flex-shrink:0">${t.icon}</span>
+      <label class="toggle"><input type="checkbox" data-cid="${t.id}" ${chk}><span class="toggle-slider"></span></label>
+      <span style="font-size:1.2em">${t.icon}</span>
       <div class="cleanup-item-body">
         <div class="cleanup-item-name">${LO(t.n)}</div>
         <div class="cleanup-item-desc">${LO(t.d)}</div>
       </div>
     </label>`;
   }).join('');
-  g.querySelectorAll('input').forEach(cb=>{
+  g.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
     cb.addEventListener('change',function(){
       if(this.checked)cleanPicked.add(this.dataset.cid);else cleanPicked.delete(this.dataset.cid);
       this.closest('.cleanup-item').classList.toggle('selected',this.checked);
       document.getElementById('btn-cleanup-text').textContent=cleanPicked.size>0?T('cleanupBtnCount').replace('{n}',cleanPicked.size):T('cleanupBtn');
     });
   });
+  document.getElementById('btn-run-cleanup').disabled=busy||cleanPicked.size===0;
 }
 
 async function doCleanup(){
-  if(busy||cleanPicked.size===0)return;
+  appendLog('[CMD] Cleanup triggered, selected: '+cleanPicked.size);
+  if(busy){appendLog('[WARN] Busy');return}
+  if(cleanPicked.size===0){appendLog('[WARN] No items selected');return}
   busy=true;refreshUI();
-  setTerm('Cleaning...','running');
-  await window.go.main.App.RunCleanup([...cleanPicked],lang);
-  setTerm(T('idle'),'');
+  try{
+    setTerm('Cleaning...','running');
+    const r=await window.go.main.App.RunCleanup([...cleanPicked],lang);
+    if(r)appendLog(r);
+    setTerm(T('idle'),'');
+  }catch(e){
+    appendLog('[ERR] Cleanup failed: '+e);
+    setTerm('Error','err');
+  }
   busy=false;refreshUI();
 }
 
