@@ -343,7 +343,17 @@ func (a *App) GetSystemInfo() string {
 
 # --- CPU ---
 $cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
-$cpuPct = [double]($cpu.LoadPercentage)
+$cpuPct = 0
+# Two-sample Get-Counter for accurate reading
+try {
+	$null = Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction Stop
+	Start-Sleep -Milliseconds 600
+	$s = (Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction Stop).CounterSamples[0].CookedValue
+	$cpuPct = [math]::Round([double]$s, 1)
+} catch {
+	# Fallback to CIM LoadPercentage
+	try { $cpuPct = [double]($cpu.LoadPercentage) } catch {}
+}
 $cpuName = $cpu.Name
 $cpuCores = $cpu.NumberOfCores
 $cpuThreads = $cpu.NumberOfLogicalProcessors
@@ -380,7 +390,7 @@ if ($nvidiaIdx -ge 0) {
 				$gpuList[$nvidiaIdx].usage = [double]$parts[0]
 				$gpuList[$nvidiaIdx].temp = [double]$parts[1]
 				if ($parts.Count -ge 3 -and [double]$parts[2] -gt 0) {
-					$gpuList[$nvidiaIdx].ramGB = [double]$parts[2]
+					$gpuList[$nvidiaIdx].ramGB = [math]::Round([double]$parts[2]/1024, 1)
 				}
 			}
 		}
