@@ -538,3 +538,33 @@ try {
 
 	return result
 }
+
+var cleanupScripts = map[string]string{
+	"temp":       "$c=0;try{$d=\"$env:TEMP\";if(Test-Path $d){$s=(Get-ChildItem -Recurse -Force $d -ErrorAction SilentlyContinue|Measure-Object -Property Length -Sum).Sum;$c+=$s;Remove-Item -Recurse -Force \"$d\\*\" -ErrorAction SilentlyContinue};$d=\"$env:WINDIR\\Temp\";if(Test-Path $d){$s=(Get-ChildItem -Recurse -Force $d -ErrorAction SilentlyContinue|Measure-Object -Property Length -Sum).Sum;$c+=$s;Remove-Item -Recurse -Force \"$d\\*\" -ErrorAction SilentlyContinue};Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
+	"recycle":    "try{Clear-RecycleBin -Force -ErrorAction Stop;Write-Host \"[OK] Recycle bin emptied\"}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
+	"prefetch":   "try{$d=\"$env:WINDIR\\Prefetch\";if(Test-Path $d){$s=(Get-ChildItem -Force $d -ErrorAction SilentlyContinue|Measure-Object -Property Length -Sum).Sum;Remove-Item -Force \"$d\\*\" -ErrorAction SilentlyContinue;Write-Host (\"[OK] \"+[math]::Round($s/1MB,1)+\" MB cleaned\")}else{Write-Host \"[WARN] Prefetch not found\"}}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
+	"winupdate":  "try{net stop wuauserv 2>$null;net stop bits 2>$null;$d=\"$env:WINDIR\\SoftwareDistribution\\Download\";$c=0;if(Test-Path $d){$s=(Get-ChildItem -Recurse -Force $d -ErrorAction SilentlyContinue|Measure-Object -Property Length -Sum).Sum;$c+=$s;Remove-Item -Recurse -Force \"$d\\*\" -ErrorAction SilentlyContinue};net start wuauserv 2>$null;net start bits 2>$null;Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
+	"thumbnails": "try{$c=0;$u=$env:LOCALAPPDATA;if($u){$d=\"$u\\Microsoft\\Windows\\Explorer\";if(Test-Path $d){$s=(Get-ChildItem -Recurse -Force \"$d\\thumbcache_*\" -ErrorAction SilentlyContinue|Measure-Object -Property Length -Sum).Sum;$c+=$s;Remove-Item -Force \"$d\\thumbcache_*\" -ErrorAction SilentlyContinue}};Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
+	"dnscache":   "try{ipconfig /flushdns 2>$null|Out-Null;Write-Host \"[OK] DNS cache flushed\"}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
+	"memorydump": "try{$d=\"$env:WINDIR\\MEMORY.DMP\";$c=0;if(Test-Path $d){$s=(Get-Item $d).Length;$c+=$s;Remove-Item -Force $d -ErrorAction SilentlyContinue};$d2=\"$env:WINDIR\\Minidump\";if(Test-Path $d2){$s=(Get-ChildItem -Force $d2 -ErrorAction SilentlyContinue|Measure-Object -Property Length -Sum).Sum;$c+=$s;Remove-Item -Force \"$d2\\*\" -ErrorAction SilentlyContinue};Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
+}
+var cleanupNamesES = map[string]string{"temp":"Archivos temporales","recycle":"Papelera","prefetch":"Archivos Prefetch","winupdate":"Cache Windows Update","thumbnails":"Cache miniaturas","dnscache":"Cache DNS","memorydump":"Volcados de memoria"}
+
+func (a *App) CleanupRun(tasks []string, lang string) string {
+	for _, id := range tasks {
+		ps, ok := cleanupScripts[id]
+		if !ok { continue }
+		name := id
+		if lang == "es" {
+			if n, ok := cleanupNamesES[id]; ok { name = n }
+		}
+		a.emitLog(fmt.Sprintf("--- %s ---", name))
+		cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", "[Console]::OutputEncoding = [Text.Encoding]::UTF8; "+ps)
+		cmd.SysProcAttr = getSysProcAttr()
+		out, err := cmd.CombinedOutput()
+		if err != nil { a.emitLog(fmt.Sprintf("[ERR] %v", err)) }
+		if len(out) > 0 { a.emitLog(strings.TrimSpace(string(out))) }
+	}
+	a.emitLog("=== Complete ===")
+	return ""
+}

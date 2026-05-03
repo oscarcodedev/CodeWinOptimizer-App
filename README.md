@@ -133,12 +133,12 @@ Output: `build/bin/CodeWinOptimizer.exe`
 - [x] Per-category Select All / Deselect All
 - [x] Custom theme editor — 6 accent colors, 6 fonts, persisted via localStorage
 - [x] System monitoring dashboard — CPU, RAM, GPU (usage/temp/VRAM), disks, temps, uptime
+- [x] Disk cleanup & temp files removal
 
 ### Planned
 - [ ] Save/Load tweak profiles (export selections as JSON)
 - [ ] Startup program manager
 - [ ] Context menu (right-click) editor
-- [ ] Disk cleanup & temp files removal
 - [ ] Driver backup & restore
 - [ ] Auto-update mechanism
 - [ ] More apps: Docker, Wireshark, VirtualBox, VS 2022 Build Tools, CMake, .NET SDK

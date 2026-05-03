@@ -129,10 +129,12 @@ function drawCleanup(){
     cb.addEventListener('change',function(){
       if(this.checked)cleanPicked.add(this.dataset.cid);else cleanPicked.delete(this.dataset.cid);
       this.closest('.cleanup-item').classList.toggle('selected',this.checked);
-      document.getElementById('btn-cleanup-text').textContent=cleanPicked.size>0?T('cleanupBtnCount').replace('{n}',cleanPicked.size):T('cleanupBtn');
+      const has=cleanPicked.size>0;
+      document.getElementById('btn-cleanup-text').textContent=has?T('cleanupBtnCount').replace('{n}',cleanPicked.size):T('cleanupBtn');
+      document.getElementById('btn-run-cleanup').disabled=busy||!has;
     });
   });
-  document.getElementById('btn-run-cleanup').disabled=busy||cleanPicked.size===0;
+  document.getElementById('btn-run-cleanup').disabled=true;
 }
 
 async function doCleanup(){
@@ -142,7 +144,7 @@ async function doCleanup(){
   busy=true;refreshUI();
   try{
     setTerm('Cleaning...','running');
-    const r=await window.go.main.App.RunCleanup([...cleanPicked],lang);
+    const r=await window.go.main.App.CleanupRun([...cleanPicked],lang);
     if(r)appendLog(r);
     setTerm(T('idle'),'');
   }catch(e){
@@ -150,6 +152,7 @@ async function doCleanup(){
     setTerm('Error','err');
   }
   busy=false;refreshUI();
+  cleanPicked.clear();drawCleanup();
 }
 
 function initTheme(){
