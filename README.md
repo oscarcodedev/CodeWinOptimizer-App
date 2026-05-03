@@ -70,6 +70,8 @@ Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend r
 
 ## Preview
 
+<details><summary>Click to expand</summary>
+
 | Restore | Apps |
 |-----------|------|
 | ![Restore](https://i.imgur.com/1ZVIUVs.png) | ![Apps](https://i.imgur.com/rJqpplf.png) |
@@ -78,13 +80,15 @@ Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend r
 |--------|----------|
 | ![Tweaks](https://i.imgur.com/dGvBRuB.png) | ![Features](https://i.imgur.com/CIAySy3.png) |
 
+| Monitor | Cleanup |
+|---------|---------|
+| ![Monitor](https://i.imgur.com/ohaeGgS.png) | ![Cleanup](https://i.imgur.com/3gx9upH.png) |
+
 | Appearance |
 |-----------|
 | ![Appearance](https://i.imgur.com/exoZMYs.png) |
 
-| Monitor | Cleanup |
-|---------|---------|
-| ![Monitor](https://i.imgur.com/ohaeGgS.png) | ![Cleanup](https://i.imgur.com/3gx9upH.png) |
+</details>
 
 ---
 
