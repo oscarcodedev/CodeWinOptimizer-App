@@ -67,11 +67,12 @@ async function fetchMonitor(){
     if(d.gpus&&d.gpus.length>0){
       const g=d.gpus[0];
       const gu=Number(g.usage)||0;
-      document.getElementById('mon-gpu-val').textContent=gu>0?gu+'%':(g.name||'GPU');
+      document.getElementById('mon-gpu-val').textContent=gu>0?gu+'%':'--';
       const sub=[];
+      if(g.name)sub.push(g.name);
       if(g.ramGB)sub.push(Number(g.ramGB)+' GB');
       if(g.temp||g.temp===0)sub.push(Number(g.temp)+'°C');
-      document.getElementById('mon-gpu-sub').textContent=sub.join(' · ')||'';
+      document.getElementById('mon-gpu-sub').textContent=sub.join(' · ')||'--';
     }
     if(d.disks&&d.disks.length>0){
       document.getElementById('mon-disk-val').textContent=d.disks[0].pct+'% used';

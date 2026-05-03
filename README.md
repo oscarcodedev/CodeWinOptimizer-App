@@ -116,6 +116,7 @@ Output: `build/bin/codewinoptimizer.exe`
 - [x] Toggle switches UI, language selector ES/EN
 - [x] Per-category Select All / Deselect All
 - [x] Custom theme editor (colors, fonts)
+- [ ] System monitoring dashboard (CPU, GPU, RAM, temps)
 
 ### Planned
 - [ ] Save/Load tweak profiles (export selections as JSON)
