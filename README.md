@@ -1,12 +1,12 @@
 # CodeWinOptimizer
 
-Windows optimization & customization tool — system restore, app management, registry tweaks, and quick fixes.
+Windows optimization & customization tool — 171 apps, 105+ tweaks, system monitor, disk cleanup, and more — all in a single portable .exe.
 
 Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend rendered in WebView2.
 
-> **IMPORTANT:** Run as Administrator. Most features (registry, DISM, bcdedit, WinGet) require admin privileges.
+> **Auto-elevates to Administrator** on launch. Most features (registry, DISM, bcdedit, WinGet) require admin privileges.
 
-> **Antivirus notice:** This tool uses PowerShell, DISM, WMI, and registry commands. Some antivirus may flag the .exe as suspicious (heuristic/AI false positives). All code is open source — [review the source](https://github.com/kirii86/CodeWinOptimizer) or build it yourself with `wails build`.
+> **Antivirus notice:** This tool uses PowerShell, DISM, WMI, and registry commands. Some antivirus may flag the .exe as suspicious (heuristic/AI false positives). All code is open source — [review the source](https://github.com/kirii86/CodeWinOptimizer-App) or build it yourself with `wails build`.
 
 ---
 
@@ -40,13 +40,14 @@ Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend r
 - Backups folder opens automatically after completion
 
 ### 📦 Apps
-- **86+ apps** across 7 categories: Navegadores (15), Multimedia (17), Desarrollo (29), AI (13), Juegos (2), Utilidades (5), Comunicación (2), Seguridad (2)
+- **171 apps** across 7 categories: Navegadores, Multimedia, Desarrollo, Juegos, Comunicacion, AI, Utilidades
 - Install/Uninstall via **WinGet** or **Chocolatey** (auto-installs Choco if missing)
 - Per-category "Select All / Deselect All"
 - Each app has **Website** link and **Uninstall** button
 - Toggle switches instead of checkboxes
 - **Detects already installed apps** (green badge + border)
 - **Search bar** and **collapsible categories** for quick navigation
+- Toolbar: **Clear Selection**, **Collapse All**, **Show Installed** filter, **Selected count**
 
 ### ⚡ Tweaks
 - **105+ system tweaks** across 12 categories:
@@ -136,19 +137,21 @@ Output: `build/bin/CodeWinOptimizer.exe`
 ### Completed
 - [x] System Restore Point creation (registry bypass for 24h cooldown)
 - [x] Full registry backup to .reg files (5 hives)
-- [x] App manager — install/uninstall via WinGet & Chocolatey (86+ apps, 7 categories including AI)
+- [x] App manager — install/uninstall via WinGet & Chocolatey (171 apps, 7 categories)
 - [x] Installed app detection via winget list (green badge + border)
+- [x] Apps toolbar: Clear Selection, Collapse All, Show Installed filter, Selected count
 - [x] 105+ system tweaks across 12 categories (network, GPU, memory, privacy, performance...)
 - [x] Windows Features manager — .NET, Hyper-V, WSL, Sandbox, NFS, etc.
 - [x] Quick Fixes — network reset, NTP sync, SFC/DISM scan, Windows Update reset, WinGet reinstall, autologin
 - [x] Portable mode — no installation required, single .exe
-- [x] Terminal with real-time logs, copy to clipboard, always visible at bottom
+- [x] Terminal with real-time logs, collapsible, copy to clipboard
 - [x] Custom frameless titlebar with min/max/close
 - [x] Toggle switches UI, language selector ES/EN
-- [x] Per-category Select All / Deselect All
+- [x] Per-category Select All / Deselect All with collapsible categories
 - [x] Custom theme editor — 6 accent colors, 6 fonts, persisted via localStorage
 - [x] System monitoring dashboard — CPU, RAM, GPU (usage/temp/VRAM), disks, temps, uptime
-- [x] Disk cleanup & temp files removal
+- [x] Disk cleanup & temp files removal (7 tasks)
+- [x] Auto-elevate to Administrator on launch (UAC prompt)
 
 ### Planned
 - [ ] Save/Load tweak profiles (export selections as JSON)
