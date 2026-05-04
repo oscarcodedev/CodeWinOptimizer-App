@@ -3,6 +3,8 @@ package main
 import (
 	"embed"
 	"log"
+	"os"
+	"os/exec"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -13,7 +15,19 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+func isAdmin() bool {
+	_, err := os.Open("\\\\.\\PHYSICALDRIVE0")
+	return err == nil
+}
+
 func main() {
+	if !isAdmin() {
+		exe, _ := os.Executable()
+		cmd := exec.Command("powershell", "-Command", "Start-Process", "-FilePath", exe, "-Verb", "RunAs")
+		cmd.Run()
+		os.Exit(0)
+	}
+
 	app := NewApp()
 
 	err := wails.Run(&options.App{

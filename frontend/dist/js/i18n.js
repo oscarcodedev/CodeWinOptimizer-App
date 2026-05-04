@@ -3,7 +3,7 @@ window.L = {en:{},es:{}};
 window.L.en={
   tabRestore:'Restore',tabApps:'Apps',tabTweaks:'Tweaks',tabFeatures:'Features',tabTheme:'Appearance',
   restoreTitle:'System Restore Point',restoreDesc:'Create a restore point before making changes to your system. This allows you to revert if something goes wrong.',restoreBtn:'Create Restore Point',rpPlaceholder:'Restore point name...',regBackup:'Backup Registry',regBackupRunning:'Backing up registry...',regBackupOk:'Registry backup complete',
-  installBtn:'Install Selected',installCount:'{n} apps selected',
+  installBtn:'Install Selected',installCount:'{n} apps selected',selectedCount:'Selected: {n}',
   applyBtn:'Apply Selected',applyCount:'{n} tweaks selected',selectFirst:'Select tweaks',
   terminal:'Terminal — Logs',clear:'Clear',idle:'Idle',
   restoreRunning:'Creating restore point...',restoreOk:'Restore point created.',restoreFail:'Restore point failed',
@@ -16,12 +16,13 @@ window.L.en={
   ftFeaturesTitle:'Windows Features',ftFixesTitle:'Quick Fixes',runFeatures:'Run Features',ftRunning:'Running features...',ftDone:'Done.',
   tabMonitor:'Monitor',monCPU:'CPU',monRAM:'RAM',monGPU:'GPU',monDisk:'Disk',monTemp:'Temperatures',monUptime:'Uptime',monTempNA:'No temp data',
   tabCleanup:'Cleanup',cleanupDesc:'Select items to clean — all operations are safe and reversible',cleanupBtn:'Run Cleanup',cleanupBtnCount:'Clean {n} items',
+  catNavegadores:'Browsers',catMultimedia:'Multimedia',catDesarrollo:'Development',catJuegos:'Games',catUtilidades:'Utilities',catComunicacion:'Communication',catAI:'AI',
 };
 
 window.L.es={
   tabRestore:'Restaurar',tabApps:'Apps',tabTweaks:'Tweaks',tabFeatures:'Funciones',tabTheme:'Apariencia',
   restoreTitle:'Punto de Restauracion',restoreDesc:'Crea un punto de restauracion antes de hacer cambios en el sistema. Esto permite revertir si algo sale mal.',restoreBtn:'Crear Punto de Restauracion',rpPlaceholder:'Nombre del punto...',regBackup:'Respaldar Registro',regBackupRunning:'Respaldando registro...',regBackupOk:'Respaldo del registro completo',
-  installBtn:'Instalar Seleccionados',installCount:'{n} apps seleccionadas',
+  installBtn:'Instalar Seleccionados',installCount:'{n} apps seleccionadas',selectedCount:'Seleccionadas: {n}',
   applyBtn:'Aplicar Seleccionados',applyCount:'{n} tweaks seleccionados',selectFirst:'Selecciona tweaks',
   terminal:'Terminal — Registros',clear:'Limpiar',idle:'Inactivo',
   restoreRunning:'Creando punto de restauracion...',restoreOk:'Punto de restauracion creado.',restoreFail:'Fallo al crear punto de restauracion',
@@ -34,4 +35,5 @@ window.L.es={
   ftFeaturesTitle:'Caracteristicas de Windows',ftFixesTitle:'Arreglos Rapidos',runFeatures:'Ejecutar',ftRunning:'Ejecutando...',ftDone:'Completado.',
   tabMonitor:'Monitor',monCPU:'CPU',monRAM:'RAM',monGPU:'GPU',monDisk:'Disco',monTemp:'Temperaturas',monUptime:'Activo',monTempNA:'Sin datos de temp',
   tabCleanup:'Limpieza',cleanupDesc:'Selecciona qué limpiar — todas las operaciones son seguras',cleanupBtn:'Ejecutar Limpieza',cleanupBtnCount:'Limpiar {n} items',
+  catNavegadores:'Navegadores',catMultimedia:'Multimedia',catDesarrollo:'Desarrollo',catJuegos:'Juegos',catUtilidades:'Utilidades',catComunicacion:'Comunicacion',catAI:'IA',
 };

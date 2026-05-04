@@ -180,6 +180,9 @@ async function boot(){
   document.getElementById('btn-run-features').addEventListener('click',doRunFeatures);
   document.getElementById('btn-run-cleanup').addEventListener('click',doCleanup);
   document.getElementById('apps-search').addEventListener('input',function(){appsSearch=this.value;drawApps()});
+  document.getElementById('btn-clear-selection').addEventListener('click',function(){pickedA.clear();drawApps();refreshUI()});
+  document.getElementById('btn-collapse-all').addEventListener('click',function(){const cats=[...new Set(APPS.map(a=>a.cat))];cats.forEach(c=>collapsedCats.add(c));drawApps()});
+  document.getElementById('btn-show-installed').addEventListener('click',function(){showInstalledOnly=!showInstalledOnly;drawApps()});
 
   initTheme();
   document.getElementById('btn-clear').addEventListener('click',clearTerm);
@@ -255,18 +258,21 @@ async function doRegBackup(){
 }
 
 /* ========= TAB: APPS ========= */
-let collapsedCats=new Set(),appsSearch='';
+let collapsedCats=new Set(),appsSearch='',showInstalledOnly=false;
 function drawApps(){
   document.getElementById('tab-apps-label').textContent=T('tabApps');
+  document.getElementById('selected-count-label').textContent=pickedA.size>0?T('selectedCount').replace('{n}',pickedA.size):'';
+  document.getElementById('btn-show-installed').classList.toggle('active',showInstalledOnly);
   const q=appsSearch.toLowerCase();
-  const allCats=[...new Set(APPS.map(a=>a.cat))];
+  const catOrder=['Navegadores','Multimedia','Desarrollo','Juegos','Comunicacion','AI','Utilidades'];
+  const allCats=[...new Set(APPS.map(a=>a.cat))].sort((a,b)=>{const ai=catOrder.indexOf(a),bi=catOrder.indexOf(b);return (ai===-1?99:ai)-(bi===-1?99:bi)});
   const grid=document.getElementById('apps-grid');
   grid.innerHTML=allCats.map((c,ci)=>{
-    const apps=APPS.filter(a=>a.cat===c&&(!q||LO(a.n).toLowerCase().includes(q)||(a.id&&a.id.includes(q))));
+    const apps=APPS.filter(a=>a.cat===c&&(!q||LO(a.n).toLowerCase().includes(q)||(a.id&&a.id.includes(q)))&&(!showInstalledOnly||installedSet.has(a.id)));
     if(apps.length===0)return'';
     const collapsed=collapsedCats.has(c);
     return `<div class="app-cat-section${collapsed?' collapsed':''}" data-cat="${c}">
-      <div class="app-cat-title"><span class="app-cat-arrow">▼</span>${c}<span class="app-cat-sel-all" data-ci="${ci}">${T('selectAll')}</span><span style="font-weight:400;color:var(--tx3);margin-left:auto">${apps.length} apps</span></div>
+      <div class="app-cat-title"><span class="app-cat-arrow">▼</span>${T('cat'+c)}<span class="app-cat-sel-all" data-ci="${ci}">${T('selectAll')}</span><span style="font-weight:400;color:var(--tx3);margin-left:auto">${apps.length} apps</span></div>
        <div class="app-cat-grid">${apps.map(a=>{
          const sel=pickedA.has(a.id)?' selected':'';
          const chk=pickedA.has(a.id)?'checked':'';
