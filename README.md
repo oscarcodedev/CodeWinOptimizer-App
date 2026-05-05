@@ -191,10 +191,6 @@ Output: `build/bin/CodeWinOptimizer.exe`
 
 ### Planned
 
-- [ ] Auto-update mechanism
 - [ ] More apps: Docker, Wireshark, VirtualBox, VS 2022 Build Tools, CMake, .NET SDK
-- [ ] Registry defrag & optimization
-- [ ] Scheduled maintenance (auto-clean, auto-backup registry)
-- [ ] Process/service manager (stop bloatware)
 
 </details>
