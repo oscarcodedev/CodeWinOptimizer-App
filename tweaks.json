@@ -2365,5 +2365,349 @@
         "warnings": { "en": ["Files stored only in OneDrive may become inaccessible locally"], "es": ["Archivos solo en OneDrive pueden volverse inaccesibles localmente"] }
       }
     ]
+  },
+  {
+    "id": "essential",
+    "icon": "✅",
+    "name": { "en": "Essential Tweaks", "es": "Tweaks Esenciales" },
+    "tweaks": [
+      {
+        "id": "disable-consumerfeatures",
+        "name": { "en": "🛒 Disable ConsumerFeatures", "es": "🛒 Desactivar ConsumerFeatures" },
+        "description": { "en": "Disables Windows Consumer Features like app suggestions and tips on lock screen.", "es": "Desactiva funciones de consumidor como sugerencias de apps y consejos en pantalla de bloqueo." },
+        "benefit": { "en": "Stops unwanted app suggestions and ads", "es": "Detiene sugerencias de apps y anuncios no deseados" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent\" /v DisableWindowsConsumerFeatures /t REG_DWORD /d 1 /f",
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SystemPaneSuggestionsEnabled /t REG_DWORD /d 0 /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "run-disk-cleanup",
+        "name": { "en": "🧹 Disk Cleanup - Run", "es": "🧹 Limpieza de Disco - Ejecutar" },
+        "description": { "en": "Runs Windows Disk Cleanup to remove temporary and unnecessary files.", "es": "Ejecuta la Limpieza de Disco de Windows para eliminar archivos temporales e innecesarios." },
+        "benefit": { "en": "Frees up disk space", "es": "Libera espacio en disco" },
+        "impact": "low",
+        "commands": [
+          "cleanmgr /sagerun:1"
+        ],
+        "warnings": { "en": ["May take a few minutes to complete"], "es": ["Puede tardar unos minutos en completarse"] }
+      },
+      {
+        "id": "enable-endtask-rightclick",
+        "name": { "en": "🖱️ End Task With Right Click - Enable", "es": "🖱️ Finalizar Tarea con Click Derecho - Activar" },
+        "description": { "en": "Adds 'End task' option to taskbar right-click menu for faster app closing.", "es": "Añade opción 'Finalizar tarea' al menú derecho de la barra de tareas para cerrar apps más rápido." },
+        "benefit": { "en": "Quickly force-close apps from taskbar", "es": "Cierra apps forzosamente desde la barra de tareas" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings\" /v TaskbarEndTask /t REG_DWORD /d 1 /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "disable-folder-discovery",
+        "name": { "en": "📁 File Explorer Auto Folder Discovery - Disable", "es": "📁 Descubrimiento Automático de Carpetas - Desactivar" },
+        "description": { "en": "Disables automatic folder type discovery in File Explorer.", "es": "Desactiva el descubrimiento automático de tipo de carpeta en el Explorador." },
+        "benefit": { "en": "Faster folder loading, prevents Explorer from changing folder views", "es": "Carga de carpetas más rápida, evita que Explorer cambie vistas de carpeta" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\Bags\\AllFolders\\Shell\" /v FolderType /t REG_SZ /d NotSpecified /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "disable-location-tracking",
+        "name": { "en": "📍 Location Tracking - Disable", "es": "📍 Rastreo de Ubicación - Desactivar" },
+        "description": { "en": "Disables Windows location tracking and services.", "es": "Desactiva el rastreo de ubicación y servicios de Windows." },
+        "benefit": { "en": "Improves privacy and reduces background activity", "es": "Mejora privacidad y reduce actividad en segundo plano" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\location\" /v Value /t REG_SZ /d Deny /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\LocationAndSensors\" /v DisableLocation /t REG_DWORD /d 1 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\LocationAndSensors\" /v DisableLocationScripting /t REG_DWORD /d 1 /f"
+        ],
+        "warnings": { "en": ["Location-dependent apps (Maps, Weather) will not work"], "es": ["Apps que dependen de ubicación (Mapas, Clima) no funcionarán"] }
+      },
+      {
+        "id": "disable-store-search-results",
+        "name": { "en": "🔍 Microsoft Store Recommended Search Results - Disable", "es": "🔍 Resultados de Búsqueda Recomendados de Microsoft Store - Desactivar" },
+        "description": { "en": "Disables Store app suggestions in Windows Search.", "es": "Desactiva sugerencias de la Tienda en la Búsqueda de Windows." },
+        "benefit": { "en": "Cleaner search results without Store ads", "es": "Resultados de búsqueda más limpios sin anuncios de la Tienda" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer\" /v DisableSearchBoxSuggestions /t REG_DWORD /d 1 /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "disable-powershell7-telemetry",
+        "name": { "en": "📟 PowerShell 7 Telemetry - Disable", "es": "📟 Telemetría de PowerShell 7 - Desactivar" },
+        "description": { "en": "Disables telemetry in PowerShell 7 if installed.", "es": "Desactiva telemetría en PowerShell 7 si está instalado." },
+        "benefit": { "en": "Prevents PowerShell 7 from sending usage data", "es": "Evita que PowerShell 7 envíe datos de uso" },
+        "impact": "low",
+        "commands": [
+          "$env:POWERSHELL_TELEMETRY_OPTOUT = '1'",
+          "[Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', '1', 'Machine')"
+        ],
+        "warnings": { "en": ["Only affects PowerShell 7+"], "es": ["Solo afecta a PowerShell 7+"] }
+      },
+      {
+        "id": "create-restore-point",
+        "name": { "en": "💾 Restore Point - Create", "es": "💾 Punto de Restauración - Crear" },
+        "description": { "en": "Creates a system restore point before applying other tweaks.", "es": "Crea un punto de restauración del sistema antes de aplicar otros tweaks." },
+        "benefit": { "en": "Allows reverting changes if something goes wrong", "es": "Permite revertir cambios si algo sale mal" },
+        "impact": "low",
+        "commands": [
+          "Checkpoint-Computer -Description 'CodeWinOptimizer Essential Tweaks' -RestorePointType MODIFY_SETTINGS"
+        ],
+        "warnings": { "en": ["May fail if System Restore is disabled"], "es": ["Puede fallar si la Restauración del Sistema está desactivada"] }
+      },
+      {
+        "id": "set-services-manual",
+        "name": { "en": "⚙️ Services - Set to Manual", "es": "⚙️ Servicios - Establecer a Manual" },
+        "description": { "en": "Sets unnecessary services to Manual startup.", "es": "Establece servicios innecesarios a inicio Manual." },
+        "benefit": { "en": "Reduces background CPU/RAM usage", "es": "Reduce uso de CPU/RAM en segundo plano" },
+        "impact": "medium",
+        "commands": [
+          "$services = @('DiagTrack', 'dmwappushservice', 'MapsBroker', 'WMPNetworkSvc', 'Fax', 'WbioSrvc'); foreach ($s in $services) { Set-Service $s -StartupType Manual -ErrorAction SilentlyContinue }"
+        ],
+        "warnings": { "en": ["Some services may be needed by specific hardware"], "es": ["Algunos servicios pueden ser necesarios para hardware específico"] }
+      },
+      {
+        "id": "enable-startmenu-previous-layout",
+        "name": { "en": "🪟 Start Menu Previous Layout - Enable", "es": "🪟 Layout Anterior del Menú Inicio - Activar" },
+        "description": { "en": "Restores classic Start Menu layout (Windows 10 style on Win11).", "es": "Restaura el layout clásico del Menú Inicio (estilo Windows 10 en Win11)." },
+        "benefit": { "en": "More familiar Start Menu layout", "es": "Layout de Menú Inicio más familiar" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v Start_ShowClassicMode /t REG_DWORD /d 1 /f"
+        ],
+        "warnings": { "en": ["Only affects Windows 11"], "es": ["Solo afecta a Windows 11"] }
+      },
+      {
+        "id": "remove-temporary-files",
+        "name": { "en": "🗑️ Temporary Files - Remove", "es": "🗑️ Archivos Temporales - Eliminar" },
+        "description": { "en": "Removes Windows temporary files from TEMP and Windows\\Temp.", "es": "Elimina archivos temporales de Windows de TEMP y Windows\\Temp." },
+        "benefit": { "en": "Frees up disk space", "es": "Libera espacio en disco" },
+        "impact": "low",
+        "commands": [
+          "Remove-Item -Path \"$env:TEMP\\*\" -Recurse -Force -ErrorAction SilentlyContinue",
+          "Remove-Item -Path \"$env:WINDIR\\Temp\\*\" -Recurse -Force -ErrorAction SilentlyContinue"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "disable-wpbt",
+        "name": { "en": "🔒 Windows Platform Binary Table (WPBT) - Disable", "es": "🔒 Tabla Binaria de Plataforma Windows (WPBT) - Desactivar" },
+        "description": { "en": "Disables WPBT which allows OEMs to run programs at boot.", "es": "Desactiva WPBT que permite a los OEMs ejecutar programas al arrancar." },
+        "benefit": { "en": "Prevents OEM bloatware from reinstalling", "es": "Evita que bloatware de OEM se reinstale" },
+        "impact": "medium",
+        "commands": [
+          "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v DisableWpbtExecution /t REG_DWORD /d 1 /f"
+        ],
+        "warnings": { "en": ["Some OEM utilities may not work"], "es": ["Algunas utilidades de OEM pueden no funcionar"] }
+      }
+    ]
+  },
+  {
+    "id": "advanced",
+    "icon": "⚠️",
+    "name": { "en": "Advanced Tweaks - CAUTION", "es": "Tweaks Avanzados - PRECAUCION" },
+    "tweaks": [
+      {
+        "id": "enable-adobe-block",
+        "name": { "en": "🚫 Adobe URL Block List - Enable", "es": "🚫 Lista de Bloqueo de URLs de Adobe - Activar" },
+        "description": { "en": "Blocks Adobe telemetry and licensing URLs via hosts file.", "es": "Bloquea URLs de telemetría y licencias de Adobe mediante archivo hosts." },
+        "benefit": { "en": "Stops Adobe apps from phoning home", "es": "Evita que apps de Adobe se comuniquen con servidores" },
+        "impact": "low",
+        "commands": [
+          "$hosts = '127.0.0.1 lmlicenses.wip4.adobe.com', '127.0.0.1 lmlicenses.wip4.adobe.com', '127.0.0.1 na1r.services.adobe.com', '127.0.0.1 hlrcv.stage.adobe.com', '127.0.0.1 practivate.adobe.com', '127.0.0.1 activate.adobe.com', '127.0.0.1 activate-sjc0.adobe.com', '127.0.0.1 activate.wip3.adobe.com'; $file = '$env:SystemRoot\\System32\\drivers\\etc\\hosts'; foreach ($line in $hosts) { if (-not (Select-String -Path $file -Pattern $line.Replace('127.0.0.1 ', '') -Quiet)) { Add-Content -Path $file -Value $line } }"
+        ],
+        "warnings": { "en": ["May break Adobe software activation"], "es": ["Puede romper la activación de software Adobe"] }
+      },
+      {
+        "id": "debloat-brave",
+        "name": { "en": "🦁 Brave Browser - Debloat", "es": "🦁 Brave Browser - Debloat" },
+        "description": { "en": "Disables Brave telemetry, rewards, and crypto features.", "es": "Desactiva telemetría, recompensas y funciones crypto de Brave." },
+        "benefit": { "en": "Cleaner Brave experience without unwanted features", "es": "Experiencia Brave más limpia sin funciones no deseadas" },
+        "impact": "low",
+        "commands": [
+          "Write-Host '[INFO] Brave debloating requires manual policy configuration - see https://support.brave.com/hc/en-us/articles/360039248271-Group-Policy'"
+        ],
+        "warnings": { "en": ["Manual configuration required via Brave policies"], "es": ["Configuración manual requerida mediante políticas de Brave"] }
+      },
+      {
+        "id": "set-utc-time",
+        "name": { "en": "🕐 Date & Time - Set Time to UTC", "es": "🕐 Fecha y Hora - Establecer Hora a UTC" },
+        "description": { "en": "Sets Windows hardware clock to UTC (recommended for dual-boot with Linux).", "es": "Establece el reloj hardware de Windows a UTC (recomendado para dual-boot con Linux)." },
+        "benefit": { "en": "Fixes time issues in dual-boot systems", "es": "Arregla problemas de hora en sistemas dual-boot" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation\" /v RealTimeIsUniversal /t REG_DWORD /d 1 /f"
+        ],
+        "warnings": { "en": ["May cause time issues if not dual-booting"], "es": ["Puede causar problemas de hora si no hay dual-boot"] }
+      },
+      {
+        "id": "disable-rdp-warnings",
+        "name": { "en": "🔌 Disable Warnings for Unsigned RDP Files", "es": "🔌 Desactivar Advertencias de Archivos RDP No Firmados" },
+        "description": { "en": "Disables publisher warning prompts for RDP connection files.", "es": "Desactiva avisos de editor para archivos de conexión RDP." },
+        "benefit": { "en": "Smoother RDP workflow", "es": "Flujo de trabajo RDP más fluido" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Terminal Server Client\" /v AuthenticationLevelOverride /t REG_DWORD /d 0 /f"
+        ],
+        "warnings": { "en": ["Reduces security for RDP connections"], "es": ["Reduce seguridad para conexiones RDP"] }
+      },
+      {
+        "id": "disable-gallery",
+        "name": { "en": "🖼️ File Explorer Gallery - Disable", "es": "🖼️ Galería del Explorador - Desactivar" },
+        "description": { "en": "Removes the Gallery section from File Explorer navigation pane.", "es": "Elimina la sección Galería del panel de navegación del Explorador." },
+        "benefit": { "en": "Cleaner File Explorer sidebar", "es": "Barra lateral del Explorador más limpia" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Classes\\CLSID\\{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}\\ShellFolder\" /v Attributes /t REG_DWORD /d 0xf090013d /f"
+        ],
+        "warnings": { "en": ["Windows 11 only"], "es": ["Solo Windows 11"] }
+      },
+      {
+        "id": "disable-home",
+        "name": { "en": "🏠 File Explorer Home - Disable", "es": "🏠 Inicio del Explorador - Desactivar" },
+        "description": { "en": "Changes File Explorer default page from Home to This PC.", "es": "Cambia la página predeterminada del Explorador de Inicio a Este Equipo." },
+        "benefit": { "en": "Opens File Explorer directly to This PC", "es": "Abre el Explorador directamente en Este Equipo" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v LaunchTo /t REG_DWORD /d 1 /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "prefer-ipv4",
+        "name": { "en": "🌐 IPv6 - Set IPv4 as Preferred", "es": "🌐 IPv6 - Establecer IPv4 como Preferido" },
+        "description": { "en": "Prefers IPv4 over IPv6 for network connections.", "es": "Prefiere IPv4 sobre IPv6 para conexiones de red." },
+        "benefit": { "en": "May improve compatibility with older networks", "es": "Puede mejorar compatibilidad con redes antiguas" },
+        "impact": "medium",
+        "commands": [
+          "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip6\\Parameters\" /v DisabledComponents /t REG_DWORD /d 0x20 /f"
+        ],
+        "warnings": { "en": ["May break IPv6-only services"], "es": ["Puede romper servicios solo IPv6"] }
+      },
+      {
+        "id": "disable-copilot",
+        "name": { "en": "🤖 Microsoft Copilot - Disable", "es": "🤖 Microsoft Copilot - Desactivar" },
+        "description": { "en": "Disables Microsoft Copilot AI assistant.", "es": "Desactiva el asistente de IA Microsoft Copilot." },
+        "benefit": { "en": "Removes AI assistant from taskbar and system", "es": "Elimina el asistente de IA de la barra de tareas y sistema" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot\" /v TurnOffWindowsCopilot /t REG_DWORD /d 1 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot\" /v TurnOffWindowsCopilot /t REG_DWORD /d 1 /f"
+        ],
+        "warnings": { "en": ["Copilot will be completely unavailable"], "es": ["Copilot estará completamente disponible"] }
+      },
+      {
+        "id": "debloat-edge",
+        "name": { "en": "🌊 Microsoft Edge - Debloat", "es": "🌊 Microsoft Edge - Debloat" },
+        "description": { "en": "Disables Edge telemetry, shopping assistant, and unwanted features.", "es": "Desactiva telemetría de Edge, asistente de compras y funciones no deseadas." },
+        "benefit": { "en": "Cleaner Edge browser experience", "es": "Experiencia de navegador Edge más limpia" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v HubAppsEnabled /t REG_DWORD /d 0 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v ShowRecommendationsEnabled /t REG_DWORD /d 0 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v ShoppingListEnabled /t REG_DWORD /d 0 /f",
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v ShowPDFDefaultRecommendationsEnabled /t REG_DWORD /d 0 /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "remove-edge",
+        "name": { "en": "❌ Microsoft Edge - Remove", "es": "❌ Microsoft Edge - Eliminar" },
+        "description": { "en": "Removes Microsoft Edge browser from Windows.", "es": "Elimina el navegador Microsoft Edge de Windows." },
+        "benefit": { "en": "Completely removes Edge browser", "es": "Elimina completamente el navegador Edge" },
+        "impact": "high",
+        "commands": [
+          "Write-Host '[WARN] Edge removal is complex and may break Windows. Use at your own risk.'"
+        ],
+        "warnings": { "en": ["MAY BREAK WINDOWS UPDATES AND WEBVIEW2 APPS. NOT RECOMMENDED."], "es": ["PUEDE ROMPER ACTUALIZACIONES DE WINDOWS Y APPS WEBVIEW2. NO RECOMENDADO."] }
+      },
+      {
+        "id": "disable-notifications",
+        "name": { "en": "🔕 Notification Tray & Calendar - Disable", "es": "🔕 Bandeja de Notificaciones y Calendario - Desactivar" },
+        "description": { "en": "Disables notification center and calendar flyout.", "es": "Desactiva el centro de notificaciones y panel de calendario." },
+        "benefit": { "en": "Completely disables notifications", "es": "Desactiva completamente las notificaciones" },
+        "impact": "medium",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer\" /v DisableNotificationCenter /t REG_DWORD /d 1 /f",
+          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\PushNotifications\" /v ToastEnabled /t REG_DWORD /d 0 /f"
+        ],
+        "warnings": { "en": ["You will not receive ANY notifications"], "es": ["No recibirás NINGUNA notificación"] }
+      },
+      {
+        "id": "disable-razer-auto",
+        "name": { "en": "🐍 Razer Software Auto-Install - Disable", "es": "🐍 Instalación Automática de Software Razer - Desactivar" },
+        "description": { "en": "Prevents Razer devices from automatically installing Synapse.", "es": "Evita que dispositivos Razer instalen Synapse automáticamente." },
+        "benefit": { "en": "Stops unwanted Razer software installation", "es": "Detiene instalación no deseada de software Razer" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Device Metadata\\PreventDeviceMetadataFromNetwork\" /v value /t REG_DWORD /d 1 /f"
+        ],
+        "warnings": { "en": ["May affect other hardware auto-installation"], "es": ["Puede afectar otras instalaciones automáticas de hardware"] }
+      },
+      {
+        "id": "enable-classic-rightclick",
+        "name": { "en": "🖱️ Right-Click Menu Previous Layout - Enable", "es": "🖱️ Menú de Click Derecho Clásico - Activar" },
+        "description": { "en": "Restores classic right-click context menu (Windows 10 style on Win11).", "es": "Restaura el menú contextual clásico de click derecho (estilo Windows 10 en Win11)." },
+        "benefit": { "en": "Faster, more familiar right-click menu", "es": "Menú de click derecho más rápido y familiar" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKCU\\SOFTWARE\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32\" /f /ve"
+        ],
+        "warnings": { "en": ["Windows 11 only"], "es": ["Solo Windows 11"] }
+      },
+      {
+        "id": "disable-storage-sense",
+        "name": { "en": "💾 Storage Sense - Disable", "es": "💾 Storage Sense - Desactivar" },
+        "description": { "en": "Disables automatic Storage Sense cleanup.", "es": "Desactiva la limpieza automática de Storage Sense." },
+        "benefit": { "en": "Prevents Windows from auto-deleting files", "es": "Evita que Windows elimine archivos automáticamente" },
+        "impact": "low",
+        "commands": [
+          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\StorageSense\" /v AllowStorageSenseGlobal /t REG_DWORD /d 0 /f"
+        ],
+        "warnings": { "en": [], "es": [] }
+      },
+      {
+        "id": "disable-teredo",
+        "name": { "en": "🌍 Teredo - Disable", "es": "🌍 Teredo - Desactivar" },
+        "description": { "en": "Completely disables Teredo tunneling protocol.", "es": "Desactiva completamente el protocolo de tunelización Teredo." },
+        "benefit": { "en": "Reduces network overhead and potential security risks", "es": "Reduce overhead de red y riesgos potenciales de seguridad" },
+        "impact": "medium",
+        "commands": [
+          "netsh int teredo set state disabled",
+          "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip6\\Parameters\" /v DisabledComponents /t REG_DWORD /d 1 /f"
+        ],
+        "warnings": { "en": ["Will break Xbox LIVE and some IPv6-dependent games"], "es": ["Romperá Xbox LIVE y algunos juegos que dependen de IPv6"] }
+      },
+      {
+        "id": "remove-bloatware",
+        "name": { "en": "📦 Unwanted Pre-Installed Apps - Remove", "es": "📦 Apps Pre-Instaladas No Deseadas - Eliminar" },
+        "description": { "en": "Removes bloatware apps like Candy Crush, Solitaire, etc.", "es": "Elimina apps bloatware como Candy Crush, Solitario, etc." },
+        "benefit": { "en": "Cleans up unwanted pre-installed apps", "es": "Limpia apps pre-instaladas no deseadas" },
+        "impact": "medium",
+        "commands": [
+          "$apps = @('Microsoft.Windows.PinballDelivery', 'Microsoft.MicrosoftSolitaireCollection', 'Microsoft.Windows.YourPhone', 'Microsoft.ZuneMusic', 'Microsoft.ZuneVideo', 'Microsoft.WindowsMaps', 'Microsoft.People', 'Microsoft.Microsoft3DViewer', 'Microsoft.WindowsCamera', 'Microsoft.WindowsFeedbackHub', 'Microsoft.GetHelp', 'Microsoft.Getstarted', 'Microsoft.MicrosoftOfficeHub', 'Microsoft.MixedReality.Portal', 'Microsoft.SkypeApp', 'Microsoft.WindowsAlarms', 'Microsoft.WindowsCalculator', 'Microsoft.WindowsCommunicationsApps', 'Microsoft.WindowsSoundRecorder', 'Microsoft.XboxApp', 'Microsoft.XboxGameOverlay', 'Microsoft.XboxGamingOverlay', 'Microsoft.XboxIdentityProvider', 'Microsoft.XboxSpeechToTextOverlay', 'Microsoft.Xbox.TCUI', 'Microsoft.YourPhone'); foreach ($app in $apps) { Get-AppxPackage -Name $app -ErrorAction SilentlyContinue | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq $app } | Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue }"
+        ],
+        "warnings": { "en": ["Removed apps cannot be easily restored"], "es": ["Las apps eliminadas no se pueden restaurar fácilmente"] }
+      },
+      {
+        "id": "remove-xbox-components",
+        "name": { "en": "🎮 Xbox & Gaming Components - Remove", "es": "🎮 Componentes Xbox y Gaming - Eliminar" },
+        "description": { "en": "Completely removes Xbox app and gaming-related components.", "es": "Elimina completamente la app Xbox y componentes relacionados con gaming." },
+        "benefit": { "en": "Frees resources if you don't use Xbox features", "es": "Libera recursos si no usas funciones Xbox" },
+        "impact": "medium",
+        "commands": [
+          "$xboxApps = @('Microsoft.XboxApp', 'Microsoft.XboxGameOverlay', 'Microsoft.XboxGamingOverlay', 'Microsoft.XboxIdentityProvider', 'Microsoft.XboxSpeechToTextOverlay', 'Microsoft.Xbox.TCUI'); foreach ($app in $xboxApps) { Get-AppxPackage -Name $app -ErrorAction SilentlyContinue | Remove-AppxPackage -ErrorAction SilentlyContinue }"
+        ],
+        "warnings": { "en": ["Xbox Game Bar and related features will not work"], "es": ["Xbox Game Bar y funciones relacionadas no funcionarán"] }
+      }
+    ]
   }
 ]

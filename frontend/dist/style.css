@@ -201,8 +201,12 @@ header h1{font-size:1.05em;font-weight:700}
 
 /* RESTORE ACTIONS */
 .restore-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
-#open-backups-link{color:var(--gn);text-decoration:none;opacity:.6}
-#open-backups-link:hover{opacity:1;text-decoration:underline}
+#open-backups-link,#open-drivers-link{color:var(--gn);text-decoration:none;opacity:.6}
+#open-backups-link:hover,#open-drivers-link:hover{opacity:1;text-decoration:underline}
+.restore-panels{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;margin:0 auto;align-items:stretch}
+.restore-panel{text-align:center;padding:30px 20px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.restore-spacer{min-height:42px;display:flex;align-items:center;justify-content:center;width:100%}
+.restore-backup-path{font-size:.75em;color:var(--tx3);margin:0}
 
 /* MONITOR DASHBOARD */
 .monitor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:8px 0}
@@ -217,6 +221,19 @@ header h1{font-size:1.05em;font-weight:700}
 .mon-gauge-bar{height:8px;background:#1a1a1a;border-radius:4px;overflow:hidden}
 .mon-gauge-fill{height:100%;background:var(--gn);border-radius:4px;transition:width .4s ease;min-width:2px}
 
+/* Network Card Specific Styles */
+.network-section{margin-top:8px}
+.network-section-title{font-size:.75em;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.speedtest-ping{display:flex;gap:16px;font-size:.85em;color:var(--txt);margin-bottom:10px;flex-wrap:wrap}
+.speedtest-ping-item{display:flex;align-items:center;gap:4px}
+.speedtest-ping-label{color:var(--tx3);font-size:.8em}
+.speedtest-ping-value{font-weight:600}
+.speedtest-speeds{display:flex;gap:24px;font-size:1.1em;font-weight:700}
+.speedtest-down{color:var(--gn);display:flex;align-items:center;gap:6px}
+.speedtest-up{color:var(--yl);display:flex;align-items:center;gap:6px}
+.speedtest-arrow{font-size:.8em;opacity:.7}
+.network-actions{display:flex;align-items:center;margin-top:auto}
+
 /* CLEANUP TAB */
 .cleanup-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;padding:10px 16px;background:var(--bg2);border:1px solid var(--brd);border-radius:8px;font-size:.85em;color:var(--tx2)}
 .cleanup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
@@ -226,6 +243,33 @@ header h1{font-size:1.05em;font-weight:700}
 .cleanup-item-body{flex:1;min-width:0}
 .cleanup-item-name{font-size:.85em;font-weight:600}
 .cleanup-item-desc{font-size:.7em;color:var(--tx3);margin-top:2px}
+
+/* PROFILE DROPDOWN */
+.profile-dropdown{position:relative;display:inline-block}
+.profile-dropdown-menu{position:absolute;top:calc(100% + 6px);right:0;background:var(--bg2);border:1px solid var(--brd);border-radius:8px;padding:4px;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,.6);z-index:100}
+.profile-dropdown-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;font-size:.82em;color:var(--txt);cursor:default;border-radius:6px;transition:all .1s;gap:8px}
+.profile-dropdown-item:hover{background:var(--bg3)}
+.profile-dropdown-item.disabled{color:var(--tx3);cursor:default}
+.profile-dropdown-item.disabled:hover{background:transparent}
+.profile-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.profile-name:hover{color:var(--gn)}
+.profile-actions{display:flex;gap:4px;flex-shrink:0}
+.profile-actions button{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:.85em;padding:2px 6px;border-radius:4px;transition:all .15s}
+.profile-actions button:hover{color:var(--txt);background:var(--bg3)}
+.profile-quick-btn{font-weight:600}
+.profile-quick-btn[data-profile="Standard"]{color:#00b4ff;border-color:rgba(0,180,255,.3)}
+.profile-quick-btn[data-profile="Standard"]:hover{background:rgba(0,180,255,.1);border-color:#00b4ff}
+.profile-quick-btn[data-profile="Gaming"]{color:var(--gn);border-color:var(--gn2)}
+.profile-quick-btn[data-profile="Gaming"]:hover{background:var(--gn2);border-color:var(--gn)}
+.profile-quick-btn[data-profile="Minimal"]{color:#bf5af2;border-color:rgba(191,90,242,.3)}
+.profile-quick-btn[data-profile="Minimal"]:hover{background:rgba(191,90,242,.1);border-color:#bf5af2}
+.profile-btn-load:hover{color:var(--gn)!important}
+.profile-btn-del:hover{color:var(--rd)!important}
+
+/* CONTEXT MENU */
+.context-menu{position:fixed;z-index:1000;background:var(--bg2);border:1px solid var(--brd);border-radius:8px;padding:4px;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+.context-menu-item{padding:8px 14px;font-size:.82em;color:var(--txt);cursor:pointer;border-radius:6px;transition:all .1s}
+.context-menu-item:hover{background:var(--gn2);color:var(--gn)}
 
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -238,6 +282,7 @@ header h1{font-size:1.05em;font-weight:700}
   .tab-content{padding:14px}
   #terminal{margin:0 14px 0 14px;max-height:240px}
   .features-panels{grid-template-columns:1fr}
+  .restore-panels{grid-template-columns:1fr}
   .app-cat-grid{grid-template-columns:1fr}
   .monitor-grid{grid-template-columns:1fr}
   .cleanup-grid{grid-template-columns:1fr}

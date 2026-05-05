@@ -45,7 +45,10 @@ function drawMonitor(){
   document.getElementById('mon-disk-title').textContent=T('monDisk');
   document.getElementById('mon-temp-title').textContent=T('monTemp');
   document.getElementById('mon-uptime-title').textContent=T('monUptime');
+  document.getElementById('mon-network-title').textContent=T('monNetwork');
+  document.getElementById('btn-speedtest-text').textContent=T('runSpeedTest');
   fetchMonitor();
+  fetchNetworkLatency();
 }
 
 async function fetchMonitor(){
@@ -95,6 +98,77 @@ async function fetchMonitor(){
       document.getElementById('mon-uptime-val').textContent=d.uptime;
     }
   }catch(e){}
+}
+
+async function fetchNetworkLatency(){
+  try{
+    const raw=await window.go.main.App.GetNetworkLatency();
+    const d=JSON.parse(raw);
+    if(!Array.isArray(d))return;
+    const lines=d.map(r=>`${r.host}: ${r.ms>=0?r.ms+' ms':'--'}`).join(' · ');
+    document.getElementById('mon-network-val').textContent=lines;
+  }catch(e){}
+}
+
+async function runSpeedTest(){
+  if(busy)return;
+  busy=true;
+  document.getElementById('btn-speedtest').disabled=true;
+  document.getElementById('btn-speedtest-text').textContent=T('testing');
+  document.getElementById('speedtest-result').style.display='none';
+  setTerm('Speed test running...','running');
+  appendLog('[CMD] Starting Speedtest.net measurement...');
+  try{
+    const raw=await window.go.main.App.RunSpeedTest();
+    const d=JSON.parse(raw);
+    
+    // Server info
+    const serverInfo=d.serverName?`${d.serverName} — ${d.serverSponsor||''}`:'';
+    
+    // Build ping display
+    const pingVal=d.pingMs!=null&&d.pingMs>0?d.pingMs.toFixed(0)+' ms':'--';
+    
+    document.getElementById('speedtest-ping').innerHTML=`
+      <div class="speedtest-ping-item"><span class="speedtest-ping-label">Ping:</span><span class="speedtest-ping-value">${pingVal}</span></div>
+      ${serverInfo?`<div class="speedtest-ping-item" style="margin-left:auto"><span class="speedtest-ping-label">Server:</span><span class="speedtest-ping-value" style="color:var(--tx2);font-size:.8em">${serverInfo}</span></div>`:''}
+    `;
+    
+    // Format speeds: UI gets HTML, log gets plain text
+    function fmtSpeedUI(val){
+      if(!val||val<=0)return '--';
+      if(val>=1000){
+        return (val/1000).toFixed(2)+' <span style="font-size:.7em;font-weight:500;color:var(--tx3)">Gbps</span>';
+      }
+      return val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' <span style="font-size:.7em;font-weight:500;color:var(--tx3)">Mbps</span>';
+    }
+    function fmtSpeedLog(val){
+      if(!val||val<=0)return '--';
+      if(val>=1000)return (val/1000).toFixed(2)+' Gbps';
+      return val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' Mbps';
+    }
+    
+    const downUI=fmtSpeedUI(d.downloadMbps);
+    const upUI=fmtSpeedUI(d.uploadMbps);
+    const downLog=fmtSpeedLog(d.downloadMbps);
+    const upLog=fmtSpeedLog(d.uploadMbps);
+    
+    document.getElementById('speedtest-speeds').innerHTML=`
+      <div class="speedtest-down"><span class="speedtest-arrow">↓</span>${downUI}</div>
+      <div class="speedtest-up"><span class="speedtest-arrow">↑</span>${upUI}</div>
+    `;
+    
+    // Show result section
+    document.getElementById('speedtest-result').style.display='block';
+    
+    appendLog(`[OK] Ping ${pingVal} · Download ${downLog} · Upload ${upLog}`);
+    setTerm('Speed test complete','ok');
+  }catch(e){
+    appendLog('[ERR] Speed test failed: '+e);
+    setTerm('Speed test failed','err');
+  }
+  busy=false;
+  document.getElementById('btn-speedtest').disabled=false;
+  document.getElementById('btn-speedtest-text').textContent=T('runSpeedTest');
 }
 
 const CLEANUP_TASKS=[
@@ -172,13 +246,18 @@ async function boot(){
   }
 
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){switchTab(this.dataset.tab)}));
-  document.getElementById('btn-restore').addEventListener('click',doRestore);
-  document.getElementById('btn-regbackup').addEventListener('click',doRegBackup);
-  document.getElementById('open-backups-link').addEventListener('click',function(e){e.preventDefault();window.go.main.App.OpenFolder()});
+  initRestoreListeners();
   document.getElementById('btn-install-apps').addEventListener('click',doInstall);
   document.getElementById('btn-apply-tweaks').addEventListener('click',doApply);
   document.getElementById('btn-run-features').addEventListener('click',doRunFeatures);
   document.getElementById('btn-run-cleanup').addEventListener('click',doCleanup);
+  document.getElementById('btn-speedtest')?.addEventListener('click',runSpeedTest);
+  document.getElementById('btn-profile-save')?.addEventListener('click',showSaveProfileModal);
+  document.getElementById('btn-profile-load')?.addEventListener('click',toggleProfileMenu);
+  document.getElementById('btn-tweaks-clear')?.addEventListener('click',clearTweaksSelection);
+  document.querySelectorAll('.profile-quick-btn').forEach(btn=>{
+    btn.addEventListener('click',function(){doLoadProfile(this.dataset.profile);});
+  });
   document.getElementById('apps-search').addEventListener('input',function(){appsSearch=this.value;drawApps()});
   document.getElementById('btn-clear-selection').addEventListener('click',function(){pickedA.clear();drawApps();refreshUI()});
   document.getElementById('btn-collapse-all').addEventListener('click',function(){const cats=[...new Set(APPS.map(a=>a.cat))];cats.forEach(c=>collapsedCats.add(c));drawApps()});
@@ -208,9 +287,9 @@ function switchTab(tab){
   curTab=tab;
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+tab));
-  if(tab==='tweaks')drawTweaks();
+  if(tab==='tweaks'){drawTweaks();drawProfileMenu();}
   if(tab==='apps')drawApps();
-  if(tab==='restore')drawRestore();
+  if(tab==='restore'){drawRestore();drawDriverBackup();}
   if(tab==='features')drawFeatures();
   if(tab==='theme')drawTheme();
   if(tab==='monitor'){drawMonitor();startMonitorPoll()}else{stopMonitorPoll()}
@@ -219,43 +298,10 @@ function switchTab(tab){
 }
 
 let monTimer=null;
-function startMonitorPoll(){stopMonitorPoll();drawMonitor();monTimer=setInterval(drawMonitor,3000)}
+function startMonitorPoll(){stopMonitorPoll();drawMonitor();monTimer=setInterval(()=>{fetchMonitor();fetchNetworkLatency();},3000)}
 function stopMonitorPoll(){if(monTimer){clearInterval(monTimer);monTimer=null}}
 
-function drawAll(){drawRestore();drawApps();drawTweaks();drawFeatures();drawTheme();refreshUI()}
-
-/* ========= TAB: RESTORE ========= */
-function drawRestore(){
-  document.getElementById('tab-restore-label').textContent=T('tabRestore');
-  document.getElementById('restore-title').textContent=T('restoreTitle');
-  document.getElementById('restore-desc').textContent=T('restoreDesc');
-  document.getElementById('btn-restore-text').textContent=T('restoreBtn');
-  document.getElementById('btn-regbackup-text').textContent=T('regBackup');
-  document.getElementById('rp-name').placeholder=T('rpPlaceholder');
-}
-
-async function doRestore(){
-  if(busy)return;busy=true;refreshUI();
-  const name=document.getElementById('rp-name').value.trim()||'CodeWinOptimizer Restore';
-  setTerm(T('restoreRunning'),'running');appendLog('=== '+T('restoreRunning')+' ===');
-  try{
-    const r=await window.go.main.App.CreateRestorePoint(name);
-    appendLog('[OK] '+T('restoreOk'));if(r)appendLog(r);
-    setTerm(T('restoreOk'),'ok');
-  }catch(e){appendLog('[ERR] '+T('restoreFail')+': '+e);setTerm(T('restoreFail'),'err')}
-  busy=false;refreshUI();
-}
-
-async function doRegBackup(){
-  if(busy)return;busy=true;refreshUI();
-  setTerm(T('regBackupRunning'),'running');appendLog('=== '+T('regBackupRunning')+' ===');
-  try{
-    const r=await window.go.main.App.BackupRegistry();
-    if(r)appendLog(r);
-    appendLog('[OK] '+T('regBackupOk'));setTerm(T('regBackupOk'),'ok');
-  }catch(e){appendLog('[ERR] '+e);setTerm('Backup failed','err')}
-  busy=false;refreshUI();
-}
+function drawAll(){drawRestore();drawDriverBackup();drawApps();drawTweaks();drawFeatures();drawTheme();refreshUI();drawProfileMenu();}
 
 /* ========= TAB: APPS ========= */
 let collapsedCats=new Set(),appsSearch='',showInstalledOnly=false;
@@ -453,11 +499,7 @@ function refreshUI(){
   document.getElementById('term-title').textContent=T('terminal');
   const ab=document.getElementById('btn-apply-tweaks'),at=document.getElementById('btn-apply-text');
   const ib=document.getElementById('btn-install-apps'),it=document.getElementById('btn-install-text');
-  const rb=document.getElementById('btn-restore'),rt=document.getElementById('btn-restore-text');
-  const rbb=document.getElementById('btn-regbackup'),rbt=document.getElementById('btn-regbackup-text');
-
-  rb.disabled=busy;rt.textContent=busy?'...':T('restoreBtn');
-  rbb.disabled=busy;rbt.textContent=busy?'...':T('regBackup');
+  refreshRestoreUI();
 
   const tc=pickedT.size;ab.disabled=busy||tc===0;
   at.textContent=busy?'...':tc>0?T('applyCount').replace('{n}',tc):T('selectFirst');
@@ -486,6 +528,126 @@ async function checkInstalled(){
     }
   }catch(e){}
   drawApps();
+}
+
+/* ========= TWEAK PROFILES ========= */
+
+function drawProfileMenu(){
+  const btnLoad=document.getElementById('btn-profile-load-text');
+  const btnSave=document.getElementById('btn-profile-save-text');
+  const btnClear=document.getElementById('btn-tweaks-clear-text');
+  if(btnLoad)btnLoad.textContent=T('profileLoad');
+  if(btnSave)btnSave.textContent=T('profileSave');
+  if(btnClear)btnClear.textContent=T('tweaksClear');
+}
+
+async function toggleProfileMenu(){
+  const menu=document.getElementById('profile-menu');
+  if(!menu)return;
+  if(!menu.classList.contains('hidden')){menu.classList.add('hidden');return;}
+
+  let profiles=[];
+  try{
+    const raw=await window.go.main.App.ListProfiles();
+    profiles=JSON.parse(raw);
+  }catch(e){}
+
+  if(profiles.length===0){
+    menu.innerHTML=`<div class="profile-dropdown-item disabled">${T('profileEmpty')}</div>`;
+  }else{
+    menu.innerHTML=profiles.map(p=>`
+      <div class="profile-dropdown-item">
+        <span class="profile-name" data-name="${p}">${p}</span>
+        <span class="profile-actions">
+          <button class="profile-btn-load" data-name="${p}" title="${T('profileLoad')}">▶</button>
+          <button class="profile-btn-del" data-name="${p}" title="${T('profileDelete')}">✕</button>
+        </span>
+      </div>
+    `).join('');
+  }
+  menu.classList.remove('hidden');
+
+  // Close on outside click
+  setTimeout(()=>{
+    const close=(e)=>{if(!menu.contains(e.target)&&e.target.id!=='btn-profile-load'){menu.classList.add('hidden');document.removeEventListener('click',close);}};
+    document.addEventListener('click',close);
+  },0);
+
+  menu.querySelectorAll('.profile-btn-load').forEach(b=>{
+    b.addEventListener('click',(e)=>{e.stopPropagation();doLoadProfile(b.dataset.name);document.getElementById('profile-menu').classList.add('hidden');});
+  });
+  menu.querySelectorAll('.profile-btn-del').forEach(b=>{
+    b.addEventListener('click',(e)=>{e.stopPropagation();if(confirm(`${T('profileDeleteConfirm')} "${b.dataset.name}"?`))doDeleteProfile(b.dataset.name);});
+  });
+}
+
+function showSaveProfileModal(){
+  const existing=document.getElementById('profile-save-modal');
+  if(existing)existing.remove();
+
+  const html=`<div class="startup-modal-overlay" id="profile-save-modal">
+    <div class="startup-modal" style="min-width:340px;max-width:400px">
+      <h3 style="margin:0 0 14px;font-size:1.1em">${T('profileSaveTitle')}</h3>
+      <div style="margin-bottom:16px">
+        <label style="font-size:.8em;color:var(--tx2);display:block;margin-bottom:4px">${T('profileName')}</label>
+        <input type="text" id="profile-save-name" class="rp-name-input" style="width:100%;text-align:left;max-width:100%" placeholder="Gaming, Work, Minimal..." maxlength="32">
+      </div>
+      <div style="font-size:.78em;color:var(--tx3);margin-bottom:16px">${pickedT.size} ${T('profileTweaksSelected')}</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="profile-save-cancel" class="btn-secondary" style="padding:8px 18px;font-size:.82em">${T('profileCancel')}</button>
+        <button id="profile-save-ok" class="btn-primary" style="padding:8px 18px;font-size:.82em">${T('profileSave')}</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+
+  document.getElementById('profile-save-cancel').addEventListener('click',()=>document.getElementById('profile-save-modal').remove());
+  document.getElementById('profile-save-ok').addEventListener('click',()=>{
+    const name=document.getElementById('profile-save-name').value.trim();
+    if(!name){appendLog('[WARN] Profile name required');return;}
+    if(pickedT.size===0){appendLog('[WARN] No tweaks selected');return;}
+    doSaveProfile(name);
+    document.getElementById('profile-save-modal').remove();
+  });
+  document.getElementById('profile-save-modal').addEventListener('click',function(e){if(e.target===this)this.remove();});
+}
+
+async function doSaveProfile(name){
+  try{
+    const ids=Array.from(pickedT);
+    const r=await window.go.main.App.SaveProfile(name,ids);
+    appendLog(r);
+  }catch(e){appendLog('[ERR] Save profile failed: '+e);}
+}
+
+async function doLoadProfile(name){
+  try{
+    const raw=await window.go.main.App.LoadProfile(name);
+    if(raw.startsWith('[ERR]')){appendLog(raw);return;}
+    const ids=JSON.parse(raw);
+    if(!Array.isArray(ids)){appendLog('[ERR] Invalid profile data');return;}
+    pickedT=new Set(ids);
+    drawTweaks();
+    refreshUI();
+    appendLog(`[OK] Profile loaded: ${name} (${ids.length} tweaks)`);
+  }catch(e){appendLog('[ERR] Load profile failed: '+e);}
+}
+
+async function doDeleteProfile(name){
+  try{
+    const r=await window.go.main.App.DeleteProfile(name);
+    appendLog(r);
+    toggleProfileMenu();
+  }catch(e){appendLog('[ERR] Delete profile failed: '+e);}
+}
+
+function clearTweaksSelection(){
+  const count=pickedT.size;
+  if(count===0)return;
+  pickedT.clear();
+  drawTweaks();
+  refreshUI();
+  appendLog(`[OK] Cleared ${count} selected tweak(s)`);
 }
 
 document.addEventListener('DOMContentLoaded',boot);

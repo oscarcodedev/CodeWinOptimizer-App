@@ -168,6 +168,18 @@ window.APPS=[
 {cat:'Utilidades',icon:'🔍',id:'zoomit',img:'/icons/utilidades/ZoomIt.webp',n:{en:'ZoomIt',es:'ZoomIt'},d:{en:'Screen zoom & annotation (Sysinternals)',es:'Zoom y anotacion de pantalla (Sysinternals)'},w:'Microsoft.Sysinternals.ZoomIt',c:'zoomit',u:'https://learn.microsoft.com/en-us/sysinternals/downloads/zoomit'},
 ];
 
+window.FEATURES=[
+  {id:'netfx',n:{en:'.NET Framework 2/3/4 — Enable',es:'.NET Framework 2/3/4 — Activar'},enable:'dism /online /enable-feature /featurename:NetFx3 /all /quiet /norestart; Write-Host "[OK] .NET Framework enabled"'},
+  {id:'hyperv',n:{en:'Hyper-V — Enable',es:'Hyper-V — Activar'},enable:'dism /online /enable-feature /featurename:Microsoft-Hyper-V-All /all /quiet /norestart; Write-Host "[OK] Hyper-V enabled"'},
+  {id:'f8disable',n:{en:'Legacy F8 Boot Recovery — Disable',es:'Legacy F8 Boot Recovery — Desactivar'},enable:'bcdedit /set {default} bootmenupolicy standard; Write-Host "[OK] F8 legacy disabled"'},
+  {id:'f8enable',n:{en:'Legacy F8 Boot Recovery — Enable',es:'Legacy F8 Boot Recovery — Activar'},enable:'bcdedit /set {default} bootmenupolicy legacy; Write-Host "[OK] F8 legacy enabled"'},
+  {id:'legacymedia',n:{en:'Legacy Media (WMP, DirectPlay) — Enable',es:'Legacy Media (WMP, DirectPlay) — Activar'},enable:'dism /online /enable-feature /featurename:WindowsMediaPlayer /all /quiet /norestart; dism /online /enable-feature /featurename:DirectPlay /all /quiet /norestart; Write-Host "[OK] Legacy media enabled"'},
+  {id:'nfs',n:{en:'Network File System (NFS) — Enable',es:'Network File System (NFS) — Activar'},enable:'dism /online /enable-feature /featurename:ServicesForNFS-ClientOnly /all /quiet /norestart; dism /online /enable-feature /featurename:ClientForNFS-Infrastructure /all /quiet /norestart; Write-Host "[OK] NFS enabled"'},
+  {id:'regbackupsched',n:{en:'Registry Backup (Daily 12:30am) — Enable',es:'Registry Backup (Diario 00:30) — Activar'},enable:`$dir = "$env:SystemDrive\\RegistryBackup"; New-Item -ItemType Directory -Path $dir -Force -ErrorAction SilentlyContinue | Out-Null; $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-Command reg export HKLM '$dir\\HKLM_$(Get-Date -Format yyyyMMdd_HHmmss).reg' /y"; $trigger = New-ScheduledTaskTrigger -Daily -At 00:30; Register-ScheduledTask -TaskName "CodeWinOptimizer_RegistryBackup" -Action $action -Trigger $trigger -Force -ErrorAction Stop | Out-Null; Write-Host "[OK] Daily registry backup scheduled at 00:30"`},
+  {id:'sandbox',n:{en:'Windows Sandbox — Enable',es:'Windows Sandbox — Activar'},enable:'dism /online /enable-feature /featurename:Containers-DisposableClientVM /all /quiet /norestart; Write-Host "[OK] Windows Sandbox enabled"'},
+  {id:'wsl',n:{en:'WSL — Enable',es:'WSL — Activar'},enable:'dism /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /quiet /norestart; dism /online /enable-feature /featurename:VirtualMachinePlatform /all /quiet /norestart; Write-Host "[OK] WSL enabled"'},
+];
+
 window.FIXES=[
   {id:'autologin',n:{en:'Autologin — Enable',es:'Autologin — Activar'},cmd:`
 $regPath = "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"

@@ -4,6 +4,7 @@ go 1.26.2
 
 require (
 	github.com/shirou/gopsutil/v3 v3.24.5
+	github.com/showwin/speedtest-go v1.7.10
 	github.com/wailsapp/wails/v2 v2.12.0
 )
 

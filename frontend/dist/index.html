@@ -48,19 +48,37 @@
     </nav>
 
     <div class="tab-content active" id="tab-restore">
-      <div class="panel">
-        <h2 id="restore-title">System Restore Point</h2>
-        <p id="restore-desc">Create a restore point before making changes to your system. This allows you to revert if something goes wrong.</p>
-        <input type="text" id="rp-name" class="rp-name-input" maxlength="64" placeholder="Restore point name">
-        <div class="restore-actions">
-          <button id="btn-restore" class="btn-primary">
-            <span id="btn-restore-text">Create Restore Point</span>
-          </button>
-          <button id="btn-regbackup" class="btn-secondary">
-            <span id="btn-regbackup-text">Backup Registry</span>
-          </button>
+      <div class="restore-panels">
+        <div class="panel restore-panel">
+          <h2 id="restore-title">System Restore Point</h2>
+          <p id="restore-desc">Create a restore point before making changes to your system. This allows you to revert if something goes wrong.</p>
+          <div class="restore-spacer">
+            <input type="text" id="rp-name" class="rp-name-input" maxlength="64" placeholder="Restore point name">
+          </div>
+          <div class="restore-actions">
+            <button id="btn-restore" class="btn-primary">
+              <span id="btn-restore-text">Create Restore Point</span>
+            </button>
+            <button id="btn-regbackup" class="btn-secondary">
+              <span id="btn-regbackup-text">Backup Registry</span>
+            </button>
+          </div>
+          <p class="restore-backup-path">Backups: <a href="#" id="open-backups-link">Documents\CodeWinOptimizer\registry-backups</a></p>
         </div>
-        <p style="margin-top:14px;font-size:.75em;color:var(--tx3)">Backups: <a href="#" id="open-backups-link">Documents\CodeWinOptimizer\registry-backups</a></p>
+        <div class="panel restore-panel">
+          <h2 id="driver-backup-title">Driver Backup & Restore</h2>
+          <p id="driver-backup-desc">Export all installed third-party drivers to a folder for safekeeping, or restore them later on a fresh Windows install.</p>
+          <div class="restore-spacer"></div>
+          <div class="restore-actions">
+            <button id="btn-driver-backup" class="btn-primary">
+              <span id="btn-driver-backup-text">Backup All Drivers</span>
+            </button>
+            <button id="btn-driver-restore" class="btn-secondary">
+              <span id="btn-driver-restore-text">Restore from Folder</span>
+            </button>
+          </div>
+          <p class="restore-backup-path">Backups: <a href="#" id="open-drivers-link">Documents\CodeWinOptimizer\driver-backups</a></p>
+        </div>
       </div>
     </div>
 
@@ -90,9 +108,20 @@
     <div class="tab-content" id="tab-tweaks">
       <div class="actions-bar">
         <span id="tweaks-count-label"></span>
-        <button id="btn-apply-tweaks" class="btn-primary">
-          <span id="btn-apply-text">Select tweaks</span>
-        </button>
+        <div class="actions-left" style="gap:8px">
+          <button class="app-tool-btn profile-quick-btn" data-profile="Standard">Standard</button>
+          <button class="app-tool-btn profile-quick-btn" data-profile="Gaming">Gaming</button>
+          <button class="app-tool-btn profile-quick-btn" data-profile="Minimal">Minimal</button>
+          <button class="app-tool-btn" id="btn-tweaks-clear"><span id="btn-tweaks-clear-text">Clear Selection</span></button>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <button class="app-tool-btn" id="btn-profile-load"><span id="btn-profile-load-text">Load Profile</span> <span style="font-size:.7em">▼</span></button>
+            <div class="profile-dropdown-menu hidden" id="profile-menu"></div>
+          </div>
+          <button class="app-tool-btn" id="btn-profile-save"><span id="btn-profile-save-text">Save Profile</span></button>
+          <button id="btn-apply-tweaks" class="btn-primary">
+            <span id="btn-apply-text">Select tweaks</span>
+          </button>
+        </div>
       </div>
       <div id="tweaks-grid"></div>
     </div>
@@ -164,6 +193,31 @@
           </div>
           <div class="mon-card-val" id="mon-uptime-val">--</div>
         </div>
+        <div class="mon-card mon-wide" id="mon-network">
+          <div class="mon-card-head">
+            <span class="mon-card-icon">🌐</span>
+            <span class="mon-card-title" id="mon-network-title">Network</span>
+          </div>
+          
+          <!-- Latency Section (Real-time) -->
+          <div class="network-section">
+            <div class="network-section-title">Latency (TCP)</div>
+            <div class="mon-card-val" id="mon-network-val">--</div>
+          </div>
+          
+          <!-- Speed Test Result Section -->
+          <div class="network-section" id="speedtest-result" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--brd)">
+            <div class="network-section-title">Speed Test Result</div>
+            <div class="speedtest-ping" id="speedtest-ping"></div>
+            <div class="speedtest-speeds" id="speedtest-speeds"></div>
+          </div>
+          
+          <!-- Action Button -->
+          <div class="network-actions" style="margin-top:12px">
+            <button id="btn-speedtest" class="btn-primary" style="padding:8px 16px;font-size:.8em"><span id="btn-speedtest-text">Run Speed Test</span></button>
+            <span class="speedtest-hint" style="font-size:.75em;color:var(--tx3);margin-left:10px">~12 seconds</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -229,6 +283,7 @@
   <script src="/js/data.js"></script>
   <script src="/js/i18n.js"></script>
   <script src="/js/terminal.js"></script>
-  <script src="/main.js" type="module"></script>
+  <script src="/js/restore.js"></script>
+  <script src="/main.js"></script>
 </body>
 </html>

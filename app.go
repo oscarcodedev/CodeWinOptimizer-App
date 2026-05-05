@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"net"
 	"os"
 	"os/exec"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/host"
 	"github.com/shirou/gopsutil/v3/mem"
+	"github.com/showwin/speedtest-go/speedtest"
 
 	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -52,6 +54,7 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	wailsRuntime.LogInfo(ctx, "CodeWinOptimizer started")
+	a.ensureDefaultProfiles()
 }
 
 func (a *App) loadTweaks() {
@@ -278,6 +281,12 @@ func (a *App) OpenURL(url string) {
 
 func (a *App) OpenFolder() {
 	backupDir := fmt.Sprintf("%s\\CodeWinOptimizer\\registry-backups", os.Getenv("USERPROFILE"))
+	os.MkdirAll(backupDir, 0755)
+	exec.Command("explorer", backupDir).Start()
+}
+
+func (a *App) OpenDriverFolder() {
+	backupDir := fmt.Sprintf("%s\\CodeWinOptimizer\\driver-backups", os.Getenv("USERPROFILE"))
 	os.MkdirAll(backupDir, 0755)
 	exec.Command("explorer", backupDir).Start()
 }
@@ -562,4 +571,348 @@ func (a *App) CleanupRun(tasks []string, lang string) string {
 	}
 	a.emitLog("=== Complete ===")
 	return ""
+}
+
+func measureTCPLatency(host, port string) float64 {
+	start := time.Now()
+	conn, err := net.DialTimeout("tcp", host+":"+port, 2*time.Second)
+	if err != nil {
+		return -1
+	}
+	conn.Close()
+	return float64(time.Since(start).Milliseconds())
+}
+
+func (a *App) GetNetworkLatency() string {
+	type LatencyResult struct {
+		Host string  `json:"host"`
+		MS   float64 `json:"ms"`
+	}
+	results := []LatencyResult{}
+	hosts := []struct{ host, port string }{
+		{"1.1.1.1", "53"},
+		{"8.8.8.8", "53"},
+		{"google.com", "443"},
+	}
+	for _, h := range hosts {
+		ms := measureTCPLatency(h.host, h.port)
+		results = append(results, LatencyResult{Host: h.host, MS: ms})
+	}
+	b, _ := json.Marshal(results)
+	return string(b)
+}
+
+func (a *App) RunSpeedTest() string {
+	type Result struct {
+		PingMs       float64 `json:"pingMs"`
+		DownloadMbps float64 `json:"downloadMbps"`
+		UploadMbps   float64 `json:"uploadMbps"`
+		ServerName   string  `json:"serverName"`
+		ServerSponsor string `json:"serverSponsor"`
+		ServerCountry string `json:"serverCountry"`
+	}
+	res := Result{}
+
+	importSpeedtest := func() {
+		// Dynamic import to avoid compile issues if library changes
+		// Using direct import in the package instead
+	}
+	_ = importSpeedtest
+
+	a.emitLog("[NET] Finding best Speedtest.net server...")
+
+	// Use speedtest-go library for professional measurements
+	var speedtest = speedtest.New()
+
+	serverList, err := speedtest.FetchServers()
+	if err != nil {
+		a.emitLog(fmt.Sprintf("[ERR] Failed to fetch servers: %v", err))
+		b, _ := json.Marshal(res)
+		return string(b)
+	}
+
+	targets, err := serverList.FindServer([]int{})
+	if err != nil || len(targets) == 0 {
+		a.emitLog(fmt.Sprintf("[ERR] No servers found: %v", err))
+		b, _ := json.Marshal(res)
+		return string(b)
+	}
+
+	s := targets[0]
+	res.ServerName = s.Name
+	res.ServerSponsor = s.Sponsor
+	res.ServerCountry = s.Country
+
+	a.emitLog(fmt.Sprintf("[NET] Server: %s (%s) — %s", s.Name, s.Country, s.Sponsor))
+
+	// Ping test
+	a.emitLog("[NET] Running ping test...")
+	s.PingTest(nil)
+	res.PingMs = float64(s.Latency.Milliseconds())
+	a.emitLog(fmt.Sprintf("[NET] Ping: %.0f ms", res.PingMs))
+
+	// Download test
+	a.emitLog("[NET] Running download test...")
+	s.DownloadTest()
+	// speedtest-go returns bytes/sec. Convert to Mbps: *8 / 1000 / 1000
+	res.DownloadMbps = math.Round(float64(s.DLSpeed)*8/1000/1000*100) / 100
+	a.emitLog(fmt.Sprintf("[NET] Download: %.2f Mbps", res.DownloadMbps))
+
+	// Upload test
+	a.emitLog("[NET] Running upload test...")
+	s.UploadTest()
+	res.UploadMbps = math.Round(float64(s.ULSpeed)*8/1000/1000*100) / 100
+	a.emitLog(fmt.Sprintf("[NET] Upload: %.2f Mbps", res.UploadMbps))
+
+	b, _ := json.Marshal(res)
+	return string(b)
+}
+
+func (a *App) BackupDrivers() string {
+	backupDir := fmt.Sprintf("%s\\CodeWinOptimizer\\driver-backups", os.Getenv("USERPROFILE"))
+	ts := time.Now().Format("2006-01-02_150405")
+	dir := fmt.Sprintf("%s\\%s", backupDir, ts)
+
+	psCmd := fmt.Sprintf(`[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$dir = "%s"
+New-Item -ItemType Directory -Path $dir -Force | Out-Null
+Write-Host "[CMD] Exporting all third-party drivers to $dir ..."
+dism /Online /Export-Driver /Destination:$dir 2>$null | Out-Null
+if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq 3010) {
+    $count = (Get-ChildItem -Recurse -Filter '*.inf' $dir -ErrorAction SilentlyContinue).Count
+    Write-Host "[OK] Driver backup complete: $count driver(s) exported -> $dir"
+} else {
+    Write-Host "[WARN] DISM exited with code $LASTEXITCODE — drivers may be partially exported"
+}`, dir)
+
+	a.emitLog("[CMD] Backing up all installed drivers...")
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCmd)
+	cmd.SysProcAttr = getSysProcAttr()
+	output, err := cmd.CombinedOutput()
+
+	if err != nil {
+		a.emitLog(fmt.Sprintf("[ERR] Driver backup failed: %v", err))
+	} else {
+		a.emitLog(fmt.Sprintf("[OK] Drivers backed up to: %s", dir))
+	}
+
+	return strings.TrimSpace(string(output))
+}
+
+func (a *App) RestoreDrivers(folderPath string) string {
+	psCmd := fmt.Sprintf(`[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$dir = "%s"
+if (-not (Test-Path $dir)) { Write-Host "[ERR] Folder not found: $dir"; exit 1 }
+$infFiles = Get-ChildItem -Recurse -Filter '*.inf' $dir -ErrorAction SilentlyContinue
+if (-not $infFiles) { Write-Host "[ERR] No .inf files found in $dir"; exit 1 }
+Write-Host "[CMD] Installing $($infFiles.Count) driver(s) from $dir ..."
+$ok = 0; $fail = 0
+foreach ($inf in $infFiles) {
+    try {
+        $result = pnputil /add-driver $inf.FullName /install 2>$null
+        if ($LASTEXITCODE -eq 0) { $ok++ } else { $fail++ }
+    } catch { $fail++ }
+}
+Write-Host "[OK] Drivers installed: $ok success, $fail failed"`, folderPath)
+
+	a.emitLog(fmt.Sprintf("[CMD] Restoring drivers from: %s", folderPath))
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCmd)
+	cmd.SysProcAttr = getSysProcAttr()
+	output, err := cmd.CombinedOutput()
+
+	if err != nil {
+		a.emitLog(fmt.Sprintf("[ERR] Driver restore failed: %v", err))
+	} else {
+		a.emitLog("[OK] Driver restore complete")
+	}
+
+	return strings.TrimSpace(string(output))
+}
+
+/* ========= TWEAK PROFILES ========= */
+
+type TweakProfile struct {
+	Name      string   `json:"name"`
+	Tweaks    []string `json:"tweaks"`
+	CreatedAt string   `json:"createdAt"`
+}
+
+func profilesDir() string {
+	return fmt.Sprintf("%s\\CodeWinOptimizer\\profiles", os.Getenv("USERPROFILE"))
+}
+
+func (a *App) ensureDefaultProfiles() {
+	dir := profilesDir()
+	os.MkdirAll(dir, 0755)
+
+	defaults := map[string][]string{
+		"Standard": {
+			"disable-consumerfeatures",
+			"disable-activity-history",
+			"disable-hibernation",
+			"disable-telemetry",
+			"disable-widgets",
+			"disable-background-apps",
+			"disable-onedrive",
+			"optimize-visual-effects",
+			"disable-news-interests",
+			"disable-advertising-id",
+			"disable-startup-delay",
+			"disable-cortana",
+			"remove-temporary-files",
+			"set-services-manual",
+			"enable-endtask-rightclick",
+		},
+		"Gaming": {
+			"disable-consumerfeatures",
+			"disable-activity-history",
+			"disable-hibernation",
+			"disable-telemetry",
+			"disable-widgets",
+			"disable-background-apps",
+			"disable-onedrive",
+			"optimize-visual-effects",
+			"disable-xbox-gamebar",
+			"fullscreen-optimizations",
+			"disable-hpet",
+			"disable-dynamic-tick",
+			"disable-network-throttling",
+			"set-system-responsiveness-zero",
+			"large-system-cache",
+			"gpu-scheduling",
+			"ultimate-power-plan",
+			"disable-ipv6",
+			"congestion-provider",
+			"disable-compression",
+			"disable-paging-executive",
+			"nvidia-performance",
+		},
+		"Minimal": {
+			"disable-consumerfeatures",
+			"disable-activity-history",
+			"disable-hibernation",
+			"disable-telemetry",
+			"disable-widgets",
+			"disable-background-apps",
+			"disable-onedrive",
+			"optimize-visual-effects",
+			"disable-cortana",
+			"disable-news-interests",
+			"disable-advertising-id",
+			"disable-lockscreen",
+			"disable-startup-delay",
+			"disable-location-tracking",
+			"disable-store-search-results",
+			"disable-notifications",
+			"disable-copilot",
+			"disable-gallery",
+			"disable-home",
+			"remove-bloatware",
+		},
+	}
+
+	for name, tweaks := range defaults {
+		filename := strings.ReplaceAll(name, " ", "_")
+		path := fmt.Sprintf("%s\\%s.json", dir, filename)
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			profile := TweakProfile{
+				Name:      name,
+				Tweaks:    tweaks,
+				CreatedAt: time.Now().Format(time.RFC3339),
+			}
+			data, _ := json.MarshalIndent(profile, "", "  ")
+			os.WriteFile(path, data, 0644)
+			a.emitLog(fmt.Sprintf("[OK] Default profile created: %s (%d tweaks)", name, len(tweaks)))
+		}
+	}
+}
+
+func (a *App) SaveProfile(name string, tweakIDs []string) string {
+	dir := profilesDir()
+	os.MkdirAll(dir, 0755)
+
+	filename := strings.ReplaceAll(name, " ", "_")
+	filename = strings.ReplaceAll(filename, "/", "_")
+	filename = strings.ReplaceAll(filename, "\\", "_")
+	filename = strings.ReplaceAll(filename, ".", "_")
+	path := fmt.Sprintf("%s\\%s.json", dir, filename)
+
+	profile := TweakProfile{
+		Name:      name,
+		Tweaks:    tweakIDs,
+		CreatedAt: time.Now().Format(time.RFC3339),
+	}
+
+	data, err := json.MarshalIndent(profile, "", "  ")
+	if err != nil {
+		return fmt.Sprintf("[ERR] Failed to marshal profile: %v", err)
+	}
+
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		return fmt.Sprintf("[ERR] Failed to write profile: %v", err)
+	}
+
+	a.emitLog(fmt.Sprintf("[OK] Profile saved: %s (%d tweaks)", name, len(tweakIDs)))
+	return fmt.Sprintf("[OK] Profile saved: %s", name)
+}
+
+func (a *App) LoadProfile(name string) string {
+	dir := profilesDir()
+	filename := strings.ReplaceAll(name, " ", "_")
+	filename = strings.ReplaceAll(filename, "/", "_")
+	filename = strings.ReplaceAll(filename, "\\", "_")
+	filename = strings.ReplaceAll(filename, ".", "_")
+	path := fmt.Sprintf("%s\\%s.json", dir, filename)
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Sprintf("[ERR] Profile not found: %s", name)
+	}
+
+	var profile TweakProfile
+	if err := json.Unmarshal(data, &profile); err != nil {
+		return fmt.Sprintf("[ERR] Failed to parse profile: %v", err)
+	}
+
+	result, _ := json.Marshal(profile.Tweaks)
+	a.emitLog(fmt.Sprintf("[OK] Profile loaded: %s (%d tweaks)", name, len(profile.Tweaks)))
+	return string(result)
+}
+
+func (a *App) DeleteProfile(name string) string {
+	dir := profilesDir()
+	filename := strings.ReplaceAll(name, " ", "_")
+	filename = strings.ReplaceAll(filename, "/", "_")
+	filename = strings.ReplaceAll(filename, "\\", "_")
+	filename = strings.ReplaceAll(filename, ".", "_")
+	path := fmt.Sprintf("%s\\%s.json", dir, filename)
+
+	if err := os.Remove(path); err != nil {
+		return fmt.Sprintf("[ERR] Failed to delete profile: %v", err)
+	}
+
+	a.emitLog(fmt.Sprintf("[OK] Profile deleted: %s", name))
+	return fmt.Sprintf("[OK] Profile deleted: %s", name)
+}
+
+func (a *App) ListProfiles() string {
+	dir := profilesDir()
+	os.MkdirAll(dir, 0755)
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return "[]"
+	}
+
+	names := []string{}
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".json") {
+			name := strings.TrimSuffix(entry.Name(), ".json")
+			name = strings.ReplaceAll(name, "_", " ")
+			names = append(names, name)
+		}
+	}
+
+	result, _ := json.Marshal(names)
+	return string(result)
 }
