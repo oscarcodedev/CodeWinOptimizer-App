@@ -7,6 +7,26 @@ let lang='en',busy=false,catData=[],pickedT=new Set(),pickedA=new Set(),curTab='
 function T(k){return L[lang]?.[k]||L.en?.[k]||k}
 function LO(v){return(typeof v==='object'&&v)?(v[lang]||v['en']||''):(v||'')}
 
+function showConfirm(title,msg){
+  return new Promise(resolve=>{
+    const el=document.getElementById('custom-confirm');
+    const t=document.getElementById('confirm-title');
+    const m=document.getElementById('confirm-msg');
+    const ok=document.getElementById('confirm-ok');
+    const cancel=document.getElementById('confirm-cancel');
+    t.textContent=title||T('confirm');
+    m.textContent=msg;
+    ok.textContent=T('ok');
+    cancel.textContent=T('cancel');
+    el.classList.remove('hidden');
+    const close=(val)=>{el.classList.add('hidden');ok.removeEventListener('click',onOk);cancel.removeEventListener('click',onCancel);resolve(val);};
+    const onOk=()=>close(true);
+    const onCancel=()=>close(false);
+    ok.addEventListener('click',onOk);
+    cancel.addEventListener('click',onCancel);
+  });
+}
+
 /* ========= THEME ========= */
 let themeAccent='#39ff14',themeFont="'Segoe UI',system-ui,sans-serif";
 
@@ -261,7 +281,7 @@ async function boot(){
   document.getElementById('apps-search').addEventListener('input',function(){appsSearch=this.value;drawApps()});
   document.getElementById('btn-clear-selection').addEventListener('click',function(){pickedA.clear();drawApps();refreshUI()});
   document.getElementById('btn-collapse-all').addEventListener('click',function(){const cats=[...new Set(APPS.map(a=>a.cat))];cats.forEach(c=>collapsedCats.add(c));drawApps()});
-  document.getElementById('btn-show-installed').addEventListener('click',function(){showInstalledOnly=!showInstalledOnly;drawApps()});
+  document.getElementById('btn-show-installed').addEventListener('click',function(){showInstalledOnly=!showInstalledOnly;checkInstalled();});
 
   initTheme();
   document.getElementById('btn-clear').addEventListener('click',clearTerm);
@@ -374,13 +394,14 @@ async function doInstall(){
     appendLog('[OK] '+T('installOk'));setTerm(T('installOk'),'ok');
   }catch(e){appendLog('[ERR] '+T('installFail')+': '+e);setTerm(T('installFail'),'err')}
   busy=false;refreshUI();
+  checkInstalled();
 }
 
 async function doUninstall(appId){
   const app=APPS.find(a=>a.id===appId);if(!app)return;
   const name=LO(app.n);
   const pkg=pkgMgr==='winget'?app.w:app.c;
-  if(!confirm(`Uninstall ${name} via ${pkgMgr==='winget'?'WinGet':'Chocolatey'}?`))return;
+  if(!await showConfirm(T('confirm'),`Uninstall ${name} via ${pkgMgr==='winget'?'WinGet':'Chocolatey'}?`))return;
   if(busy)return;busy=true;refreshUI();
   appendLog('--- Uninstalling: '+name+' ('+pkg+') ---');
   setTerm('Uninstalling...','running');
@@ -389,6 +410,7 @@ async function doUninstall(appId){
     appendLog('[OK] '+name+' uninstalled');setTerm('Uninstall complete','ok');
   }catch(e){appendLog('[ERR] Uninstall failed: '+e);setTerm('Uninstall failed','err')}
   busy=false;refreshUI();
+  checkInstalled();
 }
 
 /* ========= TAB: TWEAKS ========= */
@@ -586,7 +608,7 @@ async function toggleProfileMenu(){
     b.addEventListener('click',(e)=>{e.stopPropagation();doLoadProfile(b.dataset.name);document.getElementById('profile-menu').classList.add('hidden');});
   });
   menu.querySelectorAll('.profile-btn-del').forEach(b=>{
-    b.addEventListener('click',(e)=>{e.stopPropagation();if(confirm(`${T('profileDeleteConfirm')} "${b.dataset.name}"?`))doDeleteProfile(b.dataset.name);});
+    b.addEventListener('click',async (e)=>{e.stopPropagation();if(await showConfirm(T('confirm'),`${T('profileDeleteConfirm')} "${b.dataset.name}"?`))doDeleteProfile(b.dataset.name);});
   });
 }
 

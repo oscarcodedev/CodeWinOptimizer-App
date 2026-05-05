@@ -276,6 +276,19 @@ header h1{font-size:1.05em;font-weight:700}
 .context-menu-item{padding:8px 14px;font-size:.82em;color:var(--txt);cursor:pointer;border-radius:6px;transition:all .1s}
 .context-menu-item:hover{background:var(--gn2);color:var(--gn)}
 
+.custom-confirm{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center}
+.custom-confirm.hidden{display:none}
+.custom-confirm-overlay{position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(2px)}
+.custom-confirm-box{position:relative;background:var(--bg2);border:1px solid var(--brd);border-radius:14px;padding:24px 28px;min-width:320px;max-width:420px;box-shadow:0 16px 48px rgba(0,0,0,.8)}
+.custom-confirm-title{font-size:.95em;font-weight:700;color:var(--txt);margin-bottom:10px}
+.custom-confirm-msg{font-size:.85em;color:var(--tx2);line-height:1.5;margin-bottom:22px}
+.custom-confirm-actions{display:flex;justify-content:flex-end;gap:10px}
+.custom-confirm-btn{padding:9px 22px;border-radius:8px;font-size:.82em;font-weight:600;cursor:pointer;transition:all .15s;border:1px solid transparent}
+.custom-confirm-primary{background:var(--gn);color:#000;border-color:var(--gn)}
+.custom-confirm-primary:hover{box-shadow:0 0 14px rgba(57,255,20,.35)}
+.custom-confirm-secondary{background:transparent;color:var(--txt);border-color:var(--brd)}
+.custom-confirm-secondary:hover{border-color:var(--gn);color:var(--gn)}
+
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:#222;border-radius:3px}
