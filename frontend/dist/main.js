@@ -67,8 +67,10 @@ function drawMonitor(){
   document.getElementById('mon-uptime-title').textContent=T('monUptime');
   document.getElementById('mon-network-title').textContent=T('monNetwork');
   document.getElementById('btn-speedtest-text').textContent=T('runSpeedTest');
+  document.getElementById('dns-title').textContent=T('dnsTitle');
   fetchMonitor();
   fetchNetworkLatency();
+  fetchCurrentDNS();
 }
 
 async function fetchMonitor(){
@@ -128,6 +130,56 @@ async function fetchNetworkLatency(){
     const lines=d.map(r=>`${r.host}: ${r.ms>=0?r.ms+' ms':'--'}`).join(' · ');
     document.getElementById('mon-network-val').textContent=lines;
   }catch(e){}
+}
+
+async function fetchCurrentDNS(){
+  try{
+    const raw=await window.go.main.App.GetCurrentDNS();
+    const sel=document.getElementById('dns-select');
+    const currentDiv=document.getElementById('dns-current');
+    if(!sel||!currentDiv)return;
+    const current=raw.trim();
+    const map={
+      '8.8.8.8,8.8.4.4':'google',
+      '1.1.1.1,1.0.0.1':'cloudflare',
+      '1.1.1.2,1.0.0.2':'cloudflare_malware',
+      '1.1.1.3,1.0.0.3':'cloudflare_malware_adult',
+      '208.67.222.222,208.67.220.220':'opendns',
+      '9.9.9.9,149.112.112.112':'quad9',
+      '94.140.14.14,94.140.15.15':'adguard',
+      '94.140.14.15,94.140.15.16':'adguard_full'
+    };
+    if(map[current]){
+      sel.value=map[current];
+      currentDiv.textContent=(lang==='es'?'Actual: ':'Current: ')+current;
+    }else if(current==='DHCP'||current===''){
+      sel.value='dhcp';
+      currentDiv.textContent=(lang==='es'?'Actual: ':'Current: ')+'DHCP / Default';
+    }else{
+      sel.value='dhcp';
+      currentDiv.textContent=(lang==='es'?'Actual: ':'Current: ')+current;
+    }
+  }catch(e){}
+}
+
+async function applyDNS(){
+  if(busy)return;
+  const sel=document.getElementById('dns-select');
+  if(!sel)return;
+  const provider=sel.value;
+  busy=true;
+  setTerm('Changing DNS...','running');
+  appendLog('[CMD] Setting DNS to '+provider+'...');
+  try{
+    const r=await window.go.main.App.SetDNS(provider);
+    appendLog(r);
+    if(r.startsWith('OK')){setTerm('DNS updated','ok')}else{setTerm('DNS error','err')}
+    await fetchCurrentDNS();
+  }catch(e){
+    appendLog('[ERR] '+e);
+    setTerm('DNS error','err');
+  }
+  busy=false;
 }
 
 async function runSpeedTest(){
@@ -272,6 +324,7 @@ async function boot(){
   document.getElementById('btn-run-features').addEventListener('click',doRunFeatures);
   document.getElementById('btn-run-cleanup').addEventListener('click',doCleanup);
   document.getElementById('btn-speedtest')?.addEventListener('click',runSpeedTest);
+  document.getElementById('dns-select')?.addEventListener('change',applyDNS);
   document.getElementById('btn-profile-save')?.addEventListener('click',showSaveProfileModal);
   document.getElementById('btn-profile-load')?.addEventListener('click',toggleProfileMenu);
   document.getElementById('btn-tweaks-clear')?.addEventListener('click',clearTweaksSelection);

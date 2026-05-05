@@ -916,3 +916,68 @@ func (a *App) ListProfiles() string {
 	result, _ := json.Marshal(names)
 	return string(result)
 }
+
+func (a *App) GetCurrentDNS() string {
+	script := `try {
+		$adapter = Get-NetAdapter | Where-Object {$_.Status -eq 'Up'} | Select-Object -First 1
+		if (-not $adapter) { return 'DHCP' }
+		$dns = (Get-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -AddressFamily IPv4).ServerAddresses
+		if ($dns) { $dns -join ',' } else { 'DHCP' }
+	} catch { 'DHCP' }`
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script)
+	cmd.SysProcAttr = getSysProcAttr()
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "DHCP"
+	}
+	return strings.TrimSpace(string(out))
+}
+
+func (a *App) SetDNS(provider string) string {
+	var servers string
+	switch provider {
+	case "google":
+		servers = "8.8.8.8,8.8.4.4"
+	case "cloudflare":
+		servers = "1.1.1.1,1.0.0.1"
+	case "cloudflare_malware":
+		servers = "1.1.1.2,1.0.0.2"
+	case "cloudflare_malware_adult":
+		servers = "1.1.1.3,1.0.0.3"
+	case "opendns":
+		servers = "208.67.222.222,208.67.220.220"
+	case "quad9":
+		servers = "9.9.9.9,149.112.112.112"
+	case "adguard":
+		servers = "94.140.14.14,94.140.15.15"
+	case "adguard_full":
+		servers = "94.140.14.15,94.140.15.16"
+	default:
+		script := `try {
+			$adapter = Get-NetAdapter | Where-Object {$_.Status -eq 'Up'} | Select-Object -First 1
+			if (-not $adapter) { return 'No active adapter found' }
+			Set-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -ResetServerAddresses
+			'OK: DHCP'
+		} catch { 'ERR: ' + $_.Exception.Message }`
+		cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script)
+		cmd.SysProcAttr = getSysProcAttr()
+		out, _ := cmd.CombinedOutput()
+		res := strings.TrimSpace(string(out))
+		a.emitLog(res)
+		return res
+	}
+
+	script := fmt.Sprintf(`try {
+		$adapter = Get-NetAdapter | Where-Object {$_.Status -eq 'Up'} | Select-Object -First 1
+		if (-not $adapter) { return 'No active adapter found' }
+		Set-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -ServerAddresses @("%s")
+		'OK: DNS set to %s'
+	} catch { 'ERR: ' + $_.Exception.Message }`, strings.ReplaceAll(servers, ",", `","`), provider)
+
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script)
+	cmd.SysProcAttr = getSysProcAttr()
+	out, _ := cmd.CombinedOutput()
+	res := strings.TrimSpace(string(out))
+	a.emitLog(res)
+	return res
+}

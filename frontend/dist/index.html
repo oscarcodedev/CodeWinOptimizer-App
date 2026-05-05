@@ -204,6 +204,23 @@
             <div class="network-section-title">Latency (TCP)</div>
             <div class="mon-card-val" id="mon-network-val">--</div>
           </div>
+
+          <!-- DNS Section -->
+          <div class="network-section" id="dns-section" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--brd)">
+            <div class="network-section-title" id="dns-title">DNS — Set to:</div>
+            <select id="dns-select" class="dns-select">
+              <option value="dhcp">DHCP / Default</option>
+              <option value="google">Google</option>
+              <option value="cloudflare">Cloudflare</option>
+              <option value="cloudflare_malware">Cloudflare — Malware</option>
+              <option value="cloudflare_malware_adult">Cloudflare — Malware + Adult</option>
+              <option value="opendns">OpenDNS</option>
+              <option value="quad9">Quad9</option>
+              <option value="adguard">AdGuard — Ads + Trackers</option>
+              <option value="adguard_full">AdGuard — Ads + Trackers + Malware + Adult</option>
+            </select>
+            <div class="dns-current" id="dns-current"></div>
+          </div>
           
           <!-- Speed Test Result Section -->
           <div class="network-section" id="speedtest-result" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--brd)">

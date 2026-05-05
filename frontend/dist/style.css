@@ -239,6 +239,12 @@ header h1{font-size:1.05em;font-weight:700}
 .speedtest-arrow{font-size:.8em;opacity:.7}
 .network-actions{display:flex;align-items:center;margin-top:auto}
 
+/* DNS SELECTOR */
+.dns-select{width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:.8em;font-family:inherit;cursor:pointer;outline:none;margin-top:6px;transition:border-color .15s}
+.dns-select:focus{border-color:var(--gn)}
+.dns-select option{background:var(--bg2);color:var(--txt)}
+.dns-current{font-size:.72em;color:var(--tx3);margin-top:6px}
+
 /* CLEANUP TAB */
 .cleanup-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;padding:10px 16px;background:var(--bg2);border:1px solid var(--brd);border-radius:8px;font-size:.85em;color:var(--tx2)}
 .cleanup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
