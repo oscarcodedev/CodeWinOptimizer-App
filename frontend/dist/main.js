@@ -289,7 +289,7 @@ function switchTab(tab){
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+tab));
   if(tab==='tweaks'){drawTweaks();drawProfileMenu();}
   if(tab==='apps')drawApps();
-  if(tab==='restore'){drawRestore();drawDriverBackup();}
+  if(tab==='restore'){drawRestore();}
   if(tab==='features')drawFeatures();
   if(tab==='theme')drawTheme();
   if(tab==='monitor'){drawMonitor();startMonitorPoll()}else{stopMonitorPoll()}
@@ -301,7 +301,7 @@ let monTimer=null;
 function startMonitorPoll(){stopMonitorPoll();drawMonitor();monTimer=setInterval(()=>{fetchMonitor();fetchNetworkLatency();},3000)}
 function stopMonitorPoll(){if(monTimer){clearInterval(monTimer);monTimer=null}}
 
-function drawAll(){drawRestore();drawDriverBackup();drawApps();drawTweaks();drawFeatures();drawTheme();refreshUI();drawProfileMenu();}
+function drawAll(){drawRestore();drawApps();drawTweaks();drawFeatures();drawTheme();drawMonitor();drawCleanup();refreshUI();drawProfileMenu();}
 
 /* ========= TAB: APPS ========= */
 let collapsedCats=new Set(),appsSearch='',showInstalledOnly=false;
@@ -403,7 +403,7 @@ function catCard(c,ci){
   const n=LO(c.name);const w=c.tweaks.filter(t=>t.commands&&t.commands.length>0);
   return `<div class="cat-card" data-ci="${ci}">
     <div class="cat-head"><div class="cat-head-left"><span class="cat-name">${n}</span></div><div style="display:flex;align-items:center;gap:10px"><span class="cat-badge">${w.length}</span><span class="cat-arrow">▼</span></div></div>
-    <div class="cat-body"><div class="cat-sel-all" data-ci="${ci}"><span>☐</span><span class="sel-lbl">${T('selectAll')}</span></div>${c.tweaks.map(t=>tweakRow(t)).join('')}</div>
+    <div class="cat-body"><div class="cat-sel-all" data-ci="${ci}"><button class="cat-sel-all-btn" type="button"><span class="sel-ico">☐</span><span class="sel-lbl">${T('selectAll')}</span></button></div>${c.tweaks.map(t=>tweakRow(t)).join('')}</div>
   </div>`;
 }
 
@@ -412,17 +412,24 @@ function tweakRow(t){
   const hasW=(t.warnings?.[lang]||t.warnings?.['en']||[]).length>0;
   const chk=pickedT.has(t.id)?'checked':'';
   const disabled=cmds===0?'disabled':'';
-  return `<label class="tweak-row" data-tid="${t.id}">
-    <label class="toggle"><input type="checkbox" data-tid="${t.id}" ${chk} ${disabled}><span class="toggle-slider"></span></label>
-    <div class="tweak-inf"><div class="tweak-inf-name"><span>${n}</span>${hasW?'<span class="warn-dot">●</span>':''}</div><div class="tweak-inf-desc">${d}</div><div class="tweak-inf-meta"><span class="badge badge-${t.impact}">${t.impact}</span>${cmds>0?`<span>${cmds} ${T('cmds')}</span>`:'<span>info</span>'}</div></div>
-  </label>`;
+  const uid='tcb-'+t.id;
+  return `<div class="tweak-row" data-tid="${t.id}">
+    <div class="tweak-left">
+      <label class="toggle"><input type="checkbox" id="${uid}" data-tid="${t.id}" ${chk} ${disabled}><span class="toggle-slider"></span></label>
+      <button class="tweak-more-btn" data-tid="${t.id}" type="button" title="${T('tweakMoreInfo')}">ℹ️</button>
+    </div>
+    <label class="tweak-row-main" for="${uid}">
+      <div class="tweak-inf"><div class="tweak-inf-name"><span>${n}</span>${hasW?'<span class="warn-dot">●</span>':''}</div><div class="tweak-inf-desc">${d}</div><div class="tweak-inf-meta"><span class="badge badge-${t.impact}">${t.impact}</span>${cmds>0?`<span>${cmds} ${T('cmds')}</span>`:'<span>info</span>'}</div></div>
+    </label>
+  </div>`;
 }
 
 function bindTweakEv(){
   document.querySelectorAll('.cat-card').forEach(card=>{card.querySelector('.cat-head').addEventListener('click',function(e){if(e.target.tagName==='INPUT')return;const w=card.classList.contains('expanded');document.querySelectorAll('.cat-card').forEach(c=>c.classList.remove('expanded'));if(!w)card.classList.add('expanded')})});
   document.querySelectorAll('.cat-sel-all').forEach(el=>{el.addEventListener('click',function(e){e.stopPropagation();const ci=parseInt(this.dataset.ci);const cat=catData[ci];if(!cat)return;const tw=cat.tweaks.filter(t=>t.commands&&t.commands.length>0);const all=tw.length>0&&tw.every(t=>pickedT.has(t.id));tw.forEach(t=>all?pickedT.delete(t.id):pickedT.add(t.id));syncTweakCb(ci);refreshUI()})});
   document.querySelectorAll('.tweak-row input[type="checkbox"]').forEach(cb=>{cb.addEventListener('change',function(e){e.stopPropagation();const id=this.dataset.tid;if(this.checked)pickedT.add(id);else pickedT.delete(id);refreshUI()})});
-  document.querySelectorAll('.tweak-row').forEach(row=>{row.addEventListener('contextmenu',function(e){e.preventDefault();showTweakContextMenu(e,this.dataset.tid)})});
+  document.querySelectorAll('.tweak-row-main').forEach(row=>{row.addEventListener('click',function(e){if(e.target.tagName==='INPUT'||e.target.closest('.toggle'))return;const cb=this.closest('.tweak-row').querySelector('.tweak-left input[type="checkbox"]');if(cb&&!cb.disabled){cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'))}})});
+  document.querySelectorAll('.tweak-more-btn').forEach(btn=>{btn.addEventListener('click',function(e){e.stopPropagation();e.preventDefault();const tid=this.dataset.tid;const href=`https://codewinoptimizer.com/docs/tweaks/${tid}`;window.go.main.App.OpenURL(href);appendLog(`[DOCS] Opening: ${href}`)})});
 }
 
 function syncTweakCb(ci){
@@ -430,9 +437,10 @@ function syncTweakCb(ci){
   const cat=catData[ci];if(!cat)return;
   const tw=cat.tweaks.filter(t=>t.commands&&t.commands.length>0);
   const all=tw.length>0&&tw.every(t=>pickedT.has(t.id));
-  const lbl=card.querySelector('.sel-lbl');const ico=card.querySelector('.cat-sel-all span:first-child');
+  const lbl=card.querySelector('.sel-lbl');const ico=card.querySelector('.sel-ico');const btn=card.querySelector('.cat-sel-all-btn');
   if(lbl)lbl.textContent=all?T('deselectAll'):T('selectAll');
   if(ico)ico.textContent=all?'☑':'☐';
+  if(btn)btn.classList.toggle('all-selected',all);
   card.querySelectorAll('.tweak-row input[type="checkbox"]').forEach(cb=>{if(cb.disabled)return;cb.checked=pickedT.has(cb.dataset.tid)});
 }
 
@@ -642,25 +650,6 @@ async function doDeleteProfile(name){
   }catch(e){appendLog('[ERR] Delete profile failed: '+e);}
 }
 
-function showTweakContextMenu(e,tid){
-  const existing=document.getElementById('tweak-context-menu');
-  if(existing)existing.remove();
-  const href=`https://codewinoptimizer.com/docs/tweaks/${tid}`;
-  const menu=document.createElement('div');
-  menu.id='tweak-context-menu';
-  menu.className='context-menu';
-  menu.style.left=e.clientX+'px';
-  menu.style.top=e.clientY+'px';
-  menu.innerHTML=`<div class="context-menu-item" id="ctx-more-info">📖 ${T('tweakMoreInfo')}</div>`;
-  menu.querySelector('#ctx-more-info').addEventListener('click',function(){
-    window.go.main.App.OpenURL(href);
-    appendLog(`[DOCS] Opening: ${href}`);
-    menu.remove();
-  });
-  document.body.appendChild(menu);
-  const close=function(ev){if(!menu.contains(ev.target)){menu.remove();document.removeEventListener('click',close);}};
-  setTimeout(()=>document.addEventListener('click',close),0);
-}
 
 function clearTweaksSelection(){
   const count=pickedT.size;
