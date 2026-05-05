@@ -54,7 +54,7 @@ CodeWinOptimizer is a portable Windows optimization & customization tool — 171
 - Portable only (no installer)
 
 ## SHA256
-32A1C42C286E552ED244BB1EB0EAE77462E3AE5EDCC9E493ADFD8910398284C9
+8D33704E44D37D53C6575022528AEA24F83E369C0D7DD881FD8278167B8FBC33
 
 Verify: `Get-FileHash -Algorithm SHA256 CodeWinOptimizer.exe`
 
