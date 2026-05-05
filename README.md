@@ -94,6 +94,14 @@ Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend r
 - **Uptime:** days/hours since last boot
 - **Network Latency:** TCP ping to 1.1.1.1, 8.8.8.8, google.com
 - **Speed Test:** Professional Speedtest.net measurement via [speedtest-go](https://github.com/showwin/speedtest-go) — ping, download/upload speeds
+- **DNS Selector:** Switch DNS servers directly from the app — Google, Cloudflare, Cloudflare Malware, Cloudflare Malware+Adult, OpenDNS, Quad9, AdGuard (Ads/Trackers), AdGuard Full — or reset to DHCP
+
+### 🔄 Updates
+
+- **3 modes to control Windows Update behavior:**
+  - **Default Settings** — Reset all Windows Update policies to out-of-the-box defaults, remove any customizations, restore wuauserv service
+  - **Security Settings** — Delay feature updates 365 days, install security updates after 4 days, block driver installations via Windows Update (Pro/Enterprise group policy)
+  - **Disable All Updates** — Completely disable Windows Update service (with confirmation dialog due to security risk)
 
 ### 🧹 Cleanup
 
@@ -190,6 +198,8 @@ Output: `build/bin/CodeWinOptimizer.exe`
 - [x] **Driver backup & restore** (DISM export + pnputil restore)
 - [x] **Save/Load tweak profiles** with 3 default profiles: Standard, Gaming, Minimal
 - [x] Clear Selection button for tweaks
+- [x] **DNS selector** in Monitor tab (9 providers + DHCP reset)
+- [x] **Updates tab** — Default Settings, Security Settings, Disable All Updates modes
 
 ### Planned
 
