@@ -18,19 +18,19 @@ Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend r
 
 | Restore                                     | Apps                                     |
 | ------------------------------------------- | ---------------------------------------- |
-| ![Restore](https://i.imgur.com/1ZVIUVs.png) | ![Apps](https://i.imgur.com/rJqpplf.png) |
+| ![Restore](https://i.imgur.com/REsj7bQ.png) | ![Apps](https://i.imgur.com/kMnT9aW.png) |
 
 | Tweaks                                     | Features                                     |
 | ------------------------------------------ | -------------------------------------------- |
-| ![Tweaks](https://i.imgur.com/dGvBRuB.png) | ![Features](https://i.imgur.com/CIAySy3.png) |
+| ![Tweaks](https://i.imgur.com/57wnMc5.png) | ![Features](https://i.imgur.com/blgf8FT.png) |
 
 | Monitor                                     | Cleanup                                     |
 | ------------------------------------------- | ------------------------------------------- |
-| ![Monitor](https://i.imgur.com/ohaeGgS.png) | ![Cleanup](https://i.imgur.com/3gx9upH.png) |
+| ![Monitor](https://i.imgur.com/qMgfBqe.png) | ![Cleanup](https://i.imgur.com/jgOlF4j.png) |
 
 | Appearance                                     |
 | ---------------------------------------------- |
-| ![Appearance](https://i.imgur.com/exoZMYs.png) |
+| ![Appearance](https://i.imgur.com/SQ8IbOl.png) |
 
 </details>
 
