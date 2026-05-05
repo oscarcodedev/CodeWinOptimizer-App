@@ -300,6 +300,23 @@ header h1{font-size:1.05em;font-weight:700}
 ::-webkit-scrollbar-thumb{background:#222;border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:#333}
 
+/* UPDATES TAB */
+.updates-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.update-panel{display:flex;flex-direction:column;gap:10px;padding:20px}
+.update-panel h3{font-size:.95em;margin:0}
+.update-list{margin:0;padding-left:18px;font-size:.8em;color:var(--tx2);line-height:1.6}
+.update-note{font-size:.72em;color:var(--tx3);font-style:italic;margin-top:auto}
+.update-info{font-size:.75em;color:var(--tx2);margin-top:4px}
+.update-info p{margin:2px 0}
+.update-panel-danger{border-color:var(--rd)}
+.update-title-danger{color:var(--rd)}
+.update-list-danger{color:var(--rd)}
+.update-warning{font-size:.72em;color:var(--rd);font-style:italic;margin-top:auto}
+.btn-update-mode{width:100%;padding:10px;border-radius:8px;font-size:.85em;font-weight:600;cursor:pointer;transition:all .15s;border:1px solid var(--brd);background:var(--bg3);color:var(--txt)}
+.btn-update-mode:hover{border-color:var(--gn);box-shadow:0 0 12px rgba(57,255,20,.15)}
+.btn-update-danger{color:var(--rd);border-color:var(--rd)}
+.btn-update-danger:hover{border-color:var(--rd);box-shadow:0 0 12px rgba(255,50,50,.2)}
+
 @media(max-width:640px){
   header,.tabs{padding:12px 14px}
   .tab{padding:10px 14px;font-size:.8em}
@@ -310,4 +327,5 @@ header h1{font-size:1.05em;font-weight:700}
   .app-cat-grid{grid-template-columns:1fr}
   .monitor-grid{grid-template-columns:1fr}
   .cleanup-grid{grid-template-columns:1fr}
+  .updates-grid{grid-template-columns:1fr}
 }

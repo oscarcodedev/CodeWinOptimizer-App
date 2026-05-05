@@ -319,6 +319,7 @@ async function boot(){
 
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){switchTab(this.dataset.tab)}));
   initRestoreListeners();
+  initUpdateListeners();
   document.getElementById('btn-install-apps').addEventListener('click',doInstall);
   document.getElementById('btn-apply-tweaks').addEventListener('click',doApply);
   document.getElementById('btn-run-features').addEventListener('click',doRunFeatures);
@@ -367,6 +368,7 @@ function switchTab(tab){
   if(tab==='theme')drawTheme();
   if(tab==='monitor'){drawMonitor();startMonitorPoll()}else{stopMonitorPoll()}
   if(tab==='cleanup')drawCleanup();
+  if(tab==='updates')drawUpdates();
   refreshUI();
 }
 
@@ -374,7 +376,7 @@ let monTimer=null;
 function startMonitorPoll(){stopMonitorPoll();drawMonitor();monTimer=setInterval(()=>{fetchMonitor();fetchNetworkLatency();},3000)}
 function stopMonitorPoll(){if(monTimer){clearInterval(monTimer);monTimer=null}}
 
-function drawAll(){drawRestore();drawApps();drawTweaks();drawFeatures();drawTheme();drawMonitor();drawCleanup();refreshUI();drawProfileMenu();}
+function drawAll(){drawRestore();drawApps();drawTweaks();drawFeatures();drawTheme();drawMonitor();drawCleanup();drawUpdates();refreshUI();drawProfileMenu();}
 
 /* ========= TAB: APPS ========= */
 let collapsedCats=new Set(),appsSearch='',showInstalledOnly=false;
@@ -584,6 +586,7 @@ function refreshUI(){
   const ab=document.getElementById('btn-apply-tweaks'),at=document.getElementById('btn-apply-text');
   const ib=document.getElementById('btn-install-apps'),it=document.getElementById('btn-install-text');
   refreshRestoreUI();
+  refreshUpdateUI();
 
   const tc=pickedT.size;ab.disabled=busy||tc===0;
   at.textContent=busy?'...':tc>0?T('applyCount').replace('{n}',tc):T('selectFirst');

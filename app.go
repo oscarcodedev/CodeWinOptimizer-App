@@ -981,3 +981,56 @@ func (a *App) SetDNS(provider string) string {
 	a.emitLog(res)
 	return res
 }
+
+func (a *App) SetWindowsUpdate(mode string) string {
+	var script string
+	switch mode {
+	case "default":
+		script = `try {
+			$policies = @(
+				'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU',
+				'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate',
+				'HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UpdatePolicy\PolicyState',
+				'HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings'
+			)
+			foreach ($p in $policies) { if (Test-Path $p) { Remove-Item -Path $p -Recurse -Force -ErrorAction SilentlyContinue } }
+			Set-Service -Name wuauserv -StartupType Automatic -ErrorAction SilentlyContinue
+			Start-Service -Name wuauserv -ErrorAction SilentlyContinue
+			'OK: Windows Update reset to default'
+		} catch { 'ERR: ' + $_.Exception.Message }`
+	case "security":
+		script = `try {
+			$au = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'
+			$wu = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate'
+			if (-not (Test-Path $au)) { New-Item -Path $au -Force | Out-Null }
+			if (-not (Test-Path $wu)) { New-Item -Path $wu -Force | Out-Null }
+			Set-ItemProperty -Path $au -Name 'NoAutoUpdate' -Value 0 -Type DWord -Force
+			Set-ItemProperty -Path $au -Name 'AUOptions' -Value 4 -Type DWord -Force
+			Set-ItemProperty -Path $wu -Name 'DeferFeatureUpdatesPeriodInDays' -Value 365 -Type DWord -Force
+			Set-ItemProperty -Path $wu -Name 'DeferQualityUpdatesPeriodInDays' -Value 4 -Type DWord -Force
+			Set-ItemProperty -Path $wu -Name 'ExcludeWUDriversInQualityUpdate' -Value 1 -Type DWord -Force
+			Set-Service -Name wuauserv -StartupType Automatic -ErrorAction SilentlyContinue
+			Start-Service -Name wuauserv -ErrorAction SilentlyContinue
+			'OK: Security settings applied'
+		} catch { 'ERR: ' + $_.Exception.Message }`
+	case "disable":
+		script = `try {
+			$au = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'
+			if (-not (Test-Path $au)) { New-Item -Path $au -Force | Out-Null }
+			Set-ItemProperty -Path $au -Name 'NoAutoUpdate' -Value 1 -Type DWord -Force
+			Stop-Service -Name wuauserv -Force -ErrorAction SilentlyContinue
+			Set-Service -Name wuauserv -StartupType Disabled -ErrorAction SilentlyContinue
+			'OK: Windows Update disabled'
+		} catch { 'ERR: ' + $_.Exception.Message }`
+	default:
+		return "ERR: Unknown mode"
+	}
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script)
+	cmd.SysProcAttr = getSysProcAttr()
+	out, _ := cmd.CombinedOutput()
+	res := strings.TrimSpace(string(out))
+	a.emitLog(res)
+	return res
+}
+
+

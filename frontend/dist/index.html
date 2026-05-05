@@ -44,6 +44,7 @@
       <button class="tab" data-tab="features"><span class="tab-icon">🛠</span><span id="tab-features-label">Features</span></button>
       <button class="tab" data-tab="monitor"><span class="tab-icon">📊</span><span id="tab-monitor-label">Monitor</span></button>
       <button class="tab" data-tab="cleanup"><span class="tab-icon">🧹</span><span id="tab-cleanup-label">Cleanup</span></button>
+      <button class="tab" data-tab="updates"><span class="tab-icon">🔄</span><span id="tab-updates-label">Updates</span></button>
       <button class="tab" data-tab="theme"><span class="tab-icon">🎨</span><span id="tab-theme-label">Appearance</span></button>
     </nav>
 
@@ -246,6 +247,44 @@
       <div id="cleanup-grid" class="cleanup-grid"></div>
     </div>
 
+    <div class="tab-content" id="tab-updates">
+      <div class="updates-grid">
+        <div class="panel update-panel">
+          <button id="btn-update-default" class="btn-update-mode"><span id="btn-update-default-text">Default Settings</span></button>
+          <h3 id="update-default-title">Default Windows Update Configuration</h3>
+          <ul class="update-list" id="update-default-list">
+            <li>No modifications to Windows defaults</li>
+            <li>Removes any custom update settings</li>
+          </ul>
+          <p class="update-note" id="update-default-note">Note: This resets your Windows Update settings to default out of the box settings. It removes ANY policy or customization that has been done to Windows Update.</p>
+        </div>
+        <div class="panel update-panel">
+          <button id="btn-update-security" class="btn-update-mode"><span id="btn-update-security-text">Security Settings</span></button>
+          <h3 id="update-security-title">Balanced Security Configuration</h3>
+          <ul class="update-list" id="update-security-list">
+            <li>Feature updates delayed by 365 days</li>
+            <li>Security updates installed after 4 days</li>
+            <li>Prevents Windows Update from installing drivers</li>
+          </ul>
+          <div class="update-info">
+            <p><strong>Feature Updates:</strong> New features and potential bugs</p>
+            <p><strong>Security Updates:</strong> Critical security patches</p>
+          </div>
+          <p class="update-note" id="update-security-note">Note: This only applies to Pro systems that can use group policy.</p>
+        </div>
+        <div class="panel update-panel update-panel-danger">
+          <button id="btn-update-disable" class="btn-update-mode btn-update-danger"><span id="btn-update-disable-text">Disable All Updates</span></button>
+          <h3 id="update-disable-title" class="update-title-danger">!! Not Recommended !!</h3>
+          <ul class="update-list update-list-danger" id="update-disable-list">
+            <li>Disables ALL Windows Updates</li>
+            <li>Increases security risks</li>
+            <li>Only use for isolated systems</li>
+          </ul>
+          <p class="update-warning" id="update-disable-warning">Warning: Your system will be vulnerable without security updates.</p>
+        </div>
+      </div>
+    </div>
+
     <div class="tab-content" id="tab-theme">
       <div class="panel">
         <h2 id="theme-title">Appearance</h2>
@@ -313,6 +352,7 @@
   <script src="/js/i18n.js"></script>
   <script src="/js/terminal.js"></script>
   <script src="/js/restore.js"></script>
+  <script src="/js/updates.js"></script>
   <script src="/main.js"></script>
 </body>
 </html>
