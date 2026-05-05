@@ -24,7 +24,7 @@ window.L.en={
   catEssential:'Essential Tweaks',catAdvanced:'Advanced Tweaks',
   profileSave:'Save Profile',profileLoad:'Load Profile',profileDelete:'Delete',profileDeleteConfirm:'Delete profile',profileEmpty:'No saved profiles',
   profileSaveTitle:'Save Tweak Profile',profileName:'Profile Name',profileTweaksSelected:'tweaks selected',profileCancel:'Cancel',
-  tweaksClear:'Clear Selection',
+  tweaksClear:'Clear Selection',tweakMoreInfo:'More Info',
 };
 
 window.L.es={
@@ -51,5 +51,5 @@ window.L.es={
   catEssential:'Tweaks Esenciales',catAdvanced:'Tweaks Avanzados',
   profileSave:'Guardar Perfil',profileLoad:'Cargar Perfil',profileDelete:'Eliminar',profileDeleteConfirm:'Eliminar perfil',profileEmpty:'No hay perfiles guardados',
   profileSaveTitle:'Guardar Perfil de Tweaks',profileName:'Nombre del Perfil',profileTweaksSelected:'tweaks seleccionados',profileCancel:'Cancelar',
-  tweaksClear:'Deseleccionar Todo',
+  tweaksClear:'Deseleccionar Todo',tweakMoreInfo:'Más Info',
 };

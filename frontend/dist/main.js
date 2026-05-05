@@ -422,6 +422,7 @@ function bindTweakEv(){
   document.querySelectorAll('.cat-card').forEach(card=>{card.querySelector('.cat-head').addEventListener('click',function(e){if(e.target.tagName==='INPUT')return;const w=card.classList.contains('expanded');document.querySelectorAll('.cat-card').forEach(c=>c.classList.remove('expanded'));if(!w)card.classList.add('expanded')})});
   document.querySelectorAll('.cat-sel-all').forEach(el=>{el.addEventListener('click',function(e){e.stopPropagation();const ci=parseInt(this.dataset.ci);const cat=catData[ci];if(!cat)return;const tw=cat.tweaks.filter(t=>t.commands&&t.commands.length>0);const all=tw.length>0&&tw.every(t=>pickedT.has(t.id));tw.forEach(t=>all?pickedT.delete(t.id):pickedT.add(t.id));syncTweakCb(ci);refreshUI()})});
   document.querySelectorAll('.tweak-row input[type="checkbox"]').forEach(cb=>{cb.addEventListener('change',function(e){e.stopPropagation();const id=this.dataset.tid;if(this.checked)pickedT.add(id);else pickedT.delete(id);refreshUI()})});
+  document.querySelectorAll('.tweak-row').forEach(row=>{row.addEventListener('contextmenu',function(e){e.preventDefault();showTweakContextMenu(e,this.dataset.tid)})});
 }
 
 function syncTweakCb(ci){
@@ -639,6 +640,26 @@ async function doDeleteProfile(name){
     appendLog(r);
     toggleProfileMenu();
   }catch(e){appendLog('[ERR] Delete profile failed: '+e);}
+}
+
+function showTweakContextMenu(e,tid){
+  const existing=document.getElementById('tweak-context-menu');
+  if(existing)existing.remove();
+  const href=`https://codewinoptimizer.com/docs/tweaks/${tid}`;
+  const menu=document.createElement('div');
+  menu.id='tweak-context-menu';
+  menu.className='context-menu';
+  menu.style.left=e.clientX+'px';
+  menu.style.top=e.clientY+'px';
+  menu.innerHTML=`<div class="context-menu-item" id="ctx-more-info">📖 ${T('tweakMoreInfo')}</div>`;
+  menu.querySelector('#ctx-more-info').addEventListener('click',function(){
+    window.go.main.App.OpenURL(href);
+    appendLog(`[DOCS] Opening: ${href}`);
+    menu.remove();
+  });
+  document.body.appendChild(menu);
+  const close=function(ev){if(!menu.contains(ev.target)){menu.remove();document.removeEventListener('click',close);}};
+  setTimeout(()=>document.addEventListener('click',close),0);
 }
 
 function clearTweaksSelection(){

@@ -1,5 +1,7 @@
 # CodeWinOptimizer
 
+[![Docs](https://img.shields.io/badge/Docs-codewinoptimizer.com-neon?style=flat-square)](https://codewinoptimizer.com/docs) [![GitHub](https://img.shields.io/badge/GitHub-kirii86/CodeWinOptimizer--App-222?style=flat-square&logo=github)](https://github.com/kirii86/CodeWinOptimizer-App)
+
 Windows optimization & customization tool — 171 apps, **140+ tweaks**, real-time monitor, disk cleanup, network speed test, driver backup, and tweak profiles — all in a single portable .exe.
 
 Built with [Wails v2](https://wails.io/) — Go backend + HTML/CSS/JS frontend rendered in WebView2.
