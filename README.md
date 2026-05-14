@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.png" alt="CodeWinOptimizer Logo" width="300">
+</p>
+
 # CodeWinOptimizer
 
 [![Docs](https://img.shields.io/badge/Docs-codewinoptimizer.com-neon?style=flat-square)](https://codewinoptimizer.com/docs) [![GitHub](https://img.shields.io/badge/GitHub-kirii86/CodeWinOptimizer--App-222?style=flat-square&logo=github)](https://github.com/kirii86/CodeWinOptimizer-App)
