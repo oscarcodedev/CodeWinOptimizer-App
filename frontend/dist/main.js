@@ -754,8 +754,8 @@ async function boot() {
     }
   });
 
-  if (window.go?.main?.App) {
-    window.go.main.App.EventsOn("log", function (d) {
+  if (window.runtime?.EventsOn) {
+    window.runtime.EventsOn("log", function (d) {
       appendLog(d);
     });
   }
