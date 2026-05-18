@@ -150,6 +150,10 @@ window.L.en = {
   speedTestComplete: "Speed test complete",
   speedTestFailed: "Speed test failed",
   operationTimeout: "Operation timed out",
+  updateAvailable: "New version available:",
+  updateDownload: "Download {v}",
+  updateCurrent: "You're on the latest version",
+  operationCancelled: "Operation cancelled",
 };
 
 window.L.es = {
@@ -302,4 +306,8 @@ window.L.es = {
   speedTestComplete: "Prueba de velocidad completada",
   speedTestFailed: "Prueba de velocidad fallida",
   operationTimeout: "La operación expiró",
+  updateAvailable: "Nueva versión disponible:",
+  updateDownload: "Descargar {v}",
+  updateCurrent: "Estás en la última versión",
+  operationCancelled: "Operación cancelada",
 };

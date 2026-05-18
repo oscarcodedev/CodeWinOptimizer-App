@@ -101,6 +101,12 @@
         <span>⚠</span>
         <span id="warning-text"></span>
       </div>
+      <div id="update-banner" class="hidden">
+        <span>🚀</span>
+        <span id="update-text"></span>
+        <a href="#" id="update-link" class="update-link"></a>
+        <button id="update-dismiss" class="update-dismiss" title="Dismiss">✕</button>
+      </div>
 
       <nav class="tabs" role="tablist" aria-label="Main navigation">
         <button class="tab active" data-tab="restore">
@@ -288,6 +294,26 @@
       </div>
 
       <div class="tab-content" id="tab-monitor">
+        <div id="health-score-panel" class="health-panel hidden">
+          <div class="health-ring">
+            <svg viewBox="0 0 120 120" class="health-svg">
+              <circle cx="60" cy="60" r="52" fill="none" stroke="#1a1a1a" stroke-width="8"/>
+              <circle cx="60" cy="60" r="52" fill="none" stroke="var(--gn)" stroke-width="8" stroke-linecap="round"
+                stroke-dasharray="327" stroke-dashoffset="327" id="health-ring-fill"
+                transform="rotate(-90 60 60)"/>
+            </svg>
+            <div class="health-ring-text">
+              <span class="health-number" id="health-number">--</span>
+              <span class="health-grade" id="health-grade"></span>
+            </div>
+          </div>
+          <div class="health-details">
+            <div class="health-title" id="health-title">PC Health Score</div>
+            <div class="health-bars" id="health-bars"></div>
+            <div class="health-tips" id="health-tips"></div>
+            <button id="btn-refresh-health" class="btn-secondary" style="margin-top:8px;font-size:.78em">↻ Refresh</button>
+          </div>
+        </div>
         <div id="monitor-grid" class="monitor-grid">
           <div class="mon-card" id="mon-cpu">
             <div class="mon-card-head">
@@ -586,6 +612,7 @@
           <span id="term-title"></span>
           <div class="term-actions">
             <span id="term-status"></span>
+            <button id="btn-cancel" class="btn-cancel hidden">Cancel</button>
             <button id="btn-copy" class="btn-clear">Copy</button>
             <button id="btn-clear" class="btn-clear">Clear</button>
           </div>

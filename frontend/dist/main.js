@@ -2,7 +2,7 @@ const APPS = window.APPS;
 const FEATURES = window.FEATURES;
 const FIXES = window.FIXES;
 const L = window.L;
-let lang = "en",
+let lang = (navigator.language || navigator.userLanguage || "en").startsWith("es") ? "es" : "en",
   busy = false,
   busyTimer = null,
   catData = [],
@@ -17,13 +17,15 @@ function setBusy(v, timeoutMs) {
     busyTimer = null;
   }
   busy = v;
+  const cancelBtn = document.getElementById("btn-cancel");
+  if (cancelBtn) cancelBtn.classList.toggle("hidden", !v);
   if (v && timeoutMs) {
     busyTimer = setTimeout(() => {
       console.warn("[Busy] Operation timed out, resetting busy flag");
       busy = false;
       busyTimer = null;
       refreshUI();
-      setTerm("Operation timed out", "err");
+      setTerm(T("operationTimeout"), "err");
     }, timeoutMs);
   }
   refreshUI();
@@ -638,6 +640,9 @@ async function boot() {
   document
     .getElementById("btn-speedtest")
     ?.addEventListener("click", runSpeedTest);
+  document
+    .getElementById("btn-refresh-health")
+    ?.addEventListener("click", loadHealthScore);
   document.getElementById("dns-select")?.addEventListener("change", applyDNS);
   document
     .getElementById("btn-profile-save")
@@ -739,6 +744,16 @@ async function boot() {
     }
   });
 
+  document.getElementById("btn-cancel")?.addEventListener("click", async function () {
+    try {
+      await window.go.main.App.CancelOperation();
+      setBusy(false);
+      setTerm(T("operationCancelled") || "Cancelled", "err");
+    } catch (e) {
+      console.warn("[Cancel]", e);
+    }
+  });
+
   if (window.go?.main?.App) {
     window.go.main.App.EventsOn("log", function (d) {
       appendLog(d);
@@ -748,6 +763,89 @@ async function boot() {
   checkInstalled();
   switchLang(lang);
   setTerm(T("idle"), "");
+  checkForUpdate();
+}
+
+async function checkForUpdate() {
+  try {
+    const raw = await window.go.main.App.CheckForUpdate();
+    const data = JSON.parse(raw);
+    if (!data.hasUpdate) return;
+    const banner = document.getElementById("update-banner");
+    const text = document.getElementById("update-text");
+    const link = document.getElementById("update-link");
+    if (!banner || !text || !link) return;
+    text.textContent = T("updateAvailable");
+    link.textContent = T("updateDownload").replace("{v}", "v" + data.latest);
+    link.addEventListener("click", function (e) {
+      e.preventDefault();
+      window.go.main.App.OpenURL(data.updateUrl);
+    });
+    document.getElementById("update-dismiss").addEventListener("click", function () {
+      banner.classList.add("hidden");
+    });
+    banner.classList.remove("hidden");
+  } catch (e) {
+    console.warn("[Update] Check failed:", e);
+  }
+}
+
+async function loadHealthScore() {
+  const panel = document.getElementById("health-score-panel");
+  if (!panel) return;
+  try {
+    const raw = await window.go.main.App.GetHealthScore();
+    const d = JSON.parse(raw);
+    if (!d.score && d.score !== 0) return;
+
+    const color = d.score >= 80 ? "var(--gn)" : d.score >= 55 ? "var(--yl)" : "var(--rd)";
+    const ring = document.getElementById("health-ring-fill");
+    const circ = 2 * Math.PI * 52;
+    const offset = circ - (d.score / 100) * circ;
+    ring.style.stroke = color;
+    ring.style.strokeDashoffset = String(offset);
+    ring.style.transition = "stroke-dashoffset 1s ease";
+
+    document.getElementById("health-number").textContent = d.score;
+    document.getElementById("health-number").style.color = color;
+    document.getElementById("health-grade").textContent = d.grade;
+    document.getElementById("health-title").textContent =
+      lang === "es" ? "Salud del PC" : "PC Health Score";
+
+    const maxMap = { ram: 30, cpu: 20, disk: 30, temp: 10, uptime: 10 };
+    const labels = {
+      ram: "RAM", cpu: "CPU", disk: lang === "es" ? "Disco" : "Disk",
+      temp: "Temp", uptime: lang === "es" ? "Activo" : "Uptime",
+    };
+    const bars = document.getElementById("health-bars");
+    bars.replaceChildren();
+    for (const [key, max] of Object.entries(maxMap)) {
+      const val = d.breakdown[key] || 0;
+      const pct = Math.round((val / max) * 100);
+      const cl = pct >= 80 ? "var(--gn)" : pct >= 50 ? "var(--yl)" : "var(--rd)";
+      bars.appendChild(
+        h("div", { className: "health-bar-row" },
+          h("span", { className: "health-bar-label", textContent: labels[key] || key }),
+          h("div", { className: "health-bar-track" },
+            h("div", { className: "health-bar-fill", style: "width:" + pct + "%;background:" + cl }),
+          ),
+          h("span", { className: "health-bar-val", textContent: val + "/" + max }),
+        ),
+      );
+    }
+
+    const tips = document.getElementById("health-tips");
+    tips.replaceChildren();
+    if (d.tips && d.tips.length > 0) {
+      d.tips.forEach(function (t) {
+        tips.appendChild(h("div", { className: "health-tip", textContent: t }));
+      });
+    }
+
+    panel.classList.remove("hidden");
+  } catch (e) {
+    console.warn("[Health] Failed:", e);
+  }
 }
 
 function switchLang(l) {
@@ -783,6 +881,7 @@ function switchTab(tab) {
   if (tab === "monitor") {
     drawMonitor();
     startMonitorPoll();
+    loadHealthScore();
   } else {
     stopMonitorPoll();
   }

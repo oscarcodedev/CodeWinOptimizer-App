@@ -5,14 +5,16 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sync"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/cpu"
@@ -50,9 +52,36 @@ type App struct {
 	tweaksErr  error
 	opMu       sync.Mutex
 	lastOp     time.Time
+	cancelMu   sync.Mutex
+	cancelFunc context.CancelFunc
 }
 
-const minOpInterval = 2 * time.Second
+const (
+	appVersion    = "1.2.0"
+	githubRepo    = "oscarcodedev/CodeWinOptimizer-App"
+	minOpInterval = 2 * time.Second
+)
+
+func (a *App) startOp() context.Context {
+	a.cancelMu.Lock()
+	defer a.cancelMu.Unlock()
+	if a.cancelFunc != nil {
+		a.cancelFunc()
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	a.cancelFunc = cancel
+	return ctx
+}
+
+func (a *App) CancelOperation() {
+	a.cancelMu.Lock()
+	defer a.cancelMu.Unlock()
+	if a.cancelFunc != nil {
+		a.cancelFunc()
+		a.cancelFunc = nil
+		a.emitLog("[WARN] Operation cancelled by user")
+	}
+}
 
 func (a *App) rateLimit(op string) error {
 	a.opMu.Lock()
@@ -137,6 +166,60 @@ func (a *App) GetCategories() []Category {
 	return a.categories
 }
 
+func (a *App) GetVersion() string {
+	return appVersion
+}
+
+func (a *App) CheckForUpdate() string {
+	type releaseInfo struct {
+		TagName string `json:"tag_name"`
+		HTMLURL string `json:"html_url"`
+		Body    string `json:"body"`
+	}
+	type updateResult struct {
+		Current   string `json:"current"`
+		Latest    string `json:"latest"`
+		UpdateURL string `json:"updateUrl"`
+		HasUpdate bool   `json:"hasUpdate"`
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	url := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", githubRepo)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "{}"
+	}
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("User-Agent", "CodeWinOptimizer/"+appVersion)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "{}"
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "{}"
+	}
+
+	var release releaseInfo
+	if err := json.Unmarshal(body, &release); err != nil {
+		return "{}"
+	}
+
+	latest := strings.TrimPrefix(release.TagName, "v")
+	result := updateResult{
+		Current:   appVersion,
+		Latest:    latest,
+		UpdateURL: release.HTMLURL,
+		HasUpdate: latest != appVersion && latest > appVersion,
+	}
+
+	b, _ := json.Marshal(result)
+	return string(b)
+}
+
 func (a *App) CreateRestorePoint(description string) string {
 	if err := a.rateLimit("CreateRestorePoint"); err != nil {
 		return err.Error()
@@ -208,9 +291,15 @@ func (a *App) RunCommands(tweakIDs []string, lang string) string {
 	if err := a.rateLimit("RunCommands"); err != nil {
 		return err.Error()
 	}
+	opCtx := a.startOp()
 	total := len(tweakIDs)
 
 	for i, tweakID := range tweakIDs {
+		if opCtx.Err() != nil {
+			a.emitLog("[WARN] Operation cancelled")
+			return "cancelled"
+		}
+
 		tweak := a.findTweak(tweakID)
 		if tweak == nil || len(tweak.Commands) == 0 {
 			continue
@@ -224,7 +313,7 @@ func (a *App) RunCommands(tweakIDs []string, lang string) string {
 		a.emitLog(fmt.Sprintf("--- [%d/%d] %s ---", i+1, total, name))
 
 		joinedCmd := "[Console]::OutputEncoding = [Text.Encoding]::UTF8; " + strings.Join(tweak.Commands, "; ")
-		cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", joinedCmd)
+		cmd := exec.CommandContext(opCtx, "powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", joinedCmd)
 		cmd.SysProcAttr = getSysProcAttr()
 		output, err := cmd.CombinedOutput()
 
@@ -283,6 +372,7 @@ func (a *App) InstallApps(ids []string, lang string, pkgMgr string) string {
 	if err := a.rateLimit("InstallApps"); err != nil {
 		return err.Error()
 	}
+	opCtx := a.startOp()
 	total := len(ids)
 
 	if pkgMgr == "choco" {
@@ -290,6 +380,11 @@ func (a *App) InstallApps(ids []string, lang string, pkgMgr string) string {
 	}
 
 	for i, id := range ids {
+		if opCtx.Err() != nil {
+			a.emitLog("[WARN] Operation cancelled")
+			return "cancelled"
+		}
+
 		if !safePackageID.MatchString(id) {
 			a.emitLog(fmt.Sprintf("[ERR] Invalid package ID: %s", id))
 			continue
@@ -307,7 +402,7 @@ if (-not $choco) { Write-Host "[ERR] Chocolatey not available — restart app an
 			psCmd = fmt.Sprintf("[Console]::OutputEncoding = [Text.Encoding]::UTF8; winget install --id %s --silent --accept-package-agreements --accept-source-agreements", id)
 		}
 
-		cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCmd)
+		cmd := exec.CommandContext(opCtx, "powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", psCmd)
 		cmd.SysProcAttr = getSysProcAttr()
 		output, err := cmd.CombinedOutput()
 
@@ -654,6 +749,143 @@ try {
 	}
 	result, _ := json.Marshal(merged)
 	return string(result)
+}
+
+func (a *App) GetHealthScore() string {
+	type HealthResult struct {
+		Score       int               `json:"score"`
+		Grade       string            `json:"grade"`
+		Breakdown   map[string]int    `json:"breakdown"`
+		Tips        []string          `json:"tips"`
+	}
+
+	score := 100
+	breakdown := map[string]int{}
+	var tips []string
+
+	// RAM usage (30 points max)
+	ramScore := 30
+	if vmem, err := mem.VirtualMemory(); err == nil {
+		pct := vmem.UsedPercent
+		if pct > 90 {
+			ramScore = 5
+			tips = append(tips, "RAM usage critical (>90%)")
+		} else if pct > 80 {
+			ramScore = 15
+			tips = append(tips, "RAM usage high (>80%)")
+		} else if pct > 60 {
+			ramScore = 22
+		}
+	} else {
+		ramScore = 15
+	}
+	breakdown["ram"] = ramScore
+
+	// CPU usage (20 points max)
+	cpuScore := 20
+	if percents, err := cpu.Percent(time.Second, false); err == nil && len(percents) > 0 {
+		pct := percents[0]
+		if pct > 90 {
+			cpuScore = 2
+			tips = append(tips, "CPU usage very high (>90%)")
+		} else if pct > 70 {
+			cpuScore = 8
+			tips = append(tips, "CPU usage elevated (>70%)")
+		} else if pct > 50 {
+			cpuScore = 14
+		}
+	} else {
+		cpuScore = 10
+	}
+	breakdown["cpu"] = cpuScore
+
+	// Disk space (30 points max — checks system drive)
+	diskScore := 30
+	psCmd := `$d = Get-PSDrive C -ErrorAction SilentlyContinue; if ($d) { [math]::Round($d.Free / 1GB, 1) } else { -1 }`
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", psCmd)
+	cmd.SysProcAttr = getSysProcAttr()
+	if out, err := cmd.CombinedOutput(); err == nil {
+		freeStr := strings.TrimSpace(string(out))
+		var freeGB float64
+		if _, err := fmt.Sscanf(freeStr, "%f", &freeGB); err == nil {
+			if freeGB < 5 {
+				diskScore = 2
+				tips = append(tips, "System drive critically low (<5 GB free)")
+			} else if freeGB < 15 {
+				diskScore = 10
+				tips = append(tips, "System drive low on space (<15 GB free)")
+			} else if freeGB < 30 {
+				diskScore = 20
+				tips = append(tips, "Consider freeing disk space (<30 GB free)")
+			}
+		}
+	} else {
+		diskScore = 15
+	}
+	breakdown["disk"] = diskScore
+
+	// Temperature (10 points max)
+	tempScore := 10
+	psTemp := `try { $t = (Get-CimInstance -Namespace root/wmi MSAcpi_ThermalZoneTemperature -ErrorAction Stop | Select-Object -First 1).CurrentTemperature; [math]::Round(($t - 2732) / 10.0, 1) } catch { -1 }`
+	cmd2 := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", psTemp)
+	cmd2.SysProcAttr = getSysProcAttr()
+	if out, err := cmd2.CombinedOutput(); err == nil {
+		tempStr := strings.TrimSpace(string(out))
+		var temp float64
+		if _, err := fmt.Sscanf(tempStr, "%f", &temp); err == nil && temp > 0 {
+			if temp > 85 {
+				tempScore = 0
+				tips = append(tips, "Temperature critical (>85°C)")
+			} else if temp > 70 {
+				tempScore = 4
+				tips = append(tips, "Temperature high (>70°C)")
+			} else if temp > 60 {
+				tempScore = 7
+			}
+		}
+	}
+	breakdown["temp"] = tempScore
+
+	// Uptime (10 points max)
+	uptimeScore := 10
+	if up, err := host.Uptime(); err == nil {
+		days := up / secondsPerDay
+		if days > 14 {
+			uptimeScore = 3
+			tips = append(tips, "System hasn't rebooted in 14+ days")
+		} else if days > 7 {
+			uptimeScore = 6
+			tips = append(tips, "Consider rebooting (7+ days uptime)")
+		}
+	}
+	breakdown["uptime"] = uptimeScore
+
+	score = ramScore + cpuScore + diskScore + tempScore + uptimeScore
+
+	grade := "A+"
+	switch {
+	case score >= 90:
+		grade = "A+"
+	case score >= 80:
+		grade = "A"
+	case score >= 70:
+		grade = "B"
+	case score >= 55:
+		grade = "C"
+	case score >= 40:
+		grade = "D"
+	default:
+		grade = "F"
+	}
+
+	result := HealthResult{
+		Score:     score,
+		Grade:     grade,
+		Breakdown: breakdown,
+		Tips:      tips,
+	}
+	b, _ := json.Marshal(result)
+	return string(b)
 }
 
 var cleanupScripts = map[string]string{
