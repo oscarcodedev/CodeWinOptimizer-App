@@ -1,352 +1,623 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CodeWinOptimizer</title>
-  <link rel="stylesheet" href="/style.css">
-</head>
-<body>
-  <div id="app">
-    <header>
-      <div class="header-left titlebar-drag">
-        <img class="cwo-logo" src="/logo.png" alt="Logo" width="30" height="30" style="border-radius:6px;">
-        <h1>CodeWinOptimizer</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CodeWinOptimizer</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <div class="header-left titlebar-drag">
+          <img
+            class="cwo-logo"
+            src="/logo.png"
+            alt="Logo"
+            width="30"
+            height="30"
+            style="border-radius: 6px"
+          />
+          <h1>CodeWinOptimizer</h1>
+        </div>
+        <div class="header-right">
+          <div class="support-links">
+            <a
+              href="#"
+              id="link-patreon"
+              class="support-btn support-patreon"
+              title="Support on Patreon"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M14.82 2.41c3.96 0 7.18 3.24 7.18 7.21 0 3.96-3.22 7.18-7.18 7.18-3.97 0-7.21-3.22-7.21-7.18 0-3.97 3.24-7.21 7.21-7.21M2 21.6h3.5V2.41H2V21.6z"
+                />
+              </svg>
+              <span>Patreon</span>
+            </a>
+            <a
+              href="#"
+              id="link-paypal"
+              class="support-btn support-paypal"
+              title="Donate via PayPal"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 2.23A.932.932 0 0 1 5.865 1.5h5.727c3.136 0 5.408 1.733 5.408 4.871 0 4.247-3.575 6.663-7.294 6.663H7.634l-.558 8.303z"
+                />
+                <path
+                  d="M19.535 6.271c0 4.247-3.575 6.663-7.294 6.663h-1.72l-.807 5.996a.641.641 0 0 1-.633.54H6.27l.222-1.66.558-8.302h2.072c3.72 0 7.294-2.416 7.294-6.663a4.907 4.907 0 0 0-.262-1.574c1.756.874 3.381 2.353 3.381 5z"
+                  opacity=".7"
+                />
+              </svg>
+              <span>PayPal</span>
+            </a>
+          </div>
+          <div class="lang-toggle" id="lang-toggle">
+            <button class="lang-btn active" data-lang="en">EN</button>
+            <button class="lang-btn" data-lang="es">ES</button>
+          </div>
+          <div class="win-controls" role="group" aria-label="Window controls">
+            <button
+              class="win-btn win-min"
+              title="Minimize"
+              aria-label="Minimize window"
+            >
+              &#x2014;
+            </button>
+            <button
+              class="win-btn win-max"
+              title="Maximize"
+              aria-label="Maximize window"
+            >
+              &#x25A1;
+            </button>
+            <button
+              class="win-btn win-close"
+              title="Close"
+              aria-label="Close window"
+            >
+              &#x2715;
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div id="admin-warning" class="hidden">
+        <span>⚠</span>
+        <span id="warning-text"></span>
       </div>
-      <div class="header-right">
-        <div class="lang-toggle" id="lang-toggle">
-          <button class="lang-btn active" data-lang="en">EN</button>
-          <button class="lang-btn" data-lang="es">ES</button>
-        </div>
-        <div class="win-controls">
-          <button class="win-btn win-min" title="Minimize">&#x2014;</button>
-          <button class="win-btn win-max" title="Maximize">&#x25A1;</button>
-          <button class="win-btn win-close" title="Close">&#x2715;</button>
-        </div>
-      </div>
-    </header>
 
-    <div id="admin-warning" class="hidden">
-      <span>⚠</span>
-      <span id="warning-text"></span>
-    </div>
-
-    <nav class="tabs">
-      <button class="tab active" data-tab="restore"><span class="tab-icon">🔧</span><span id="tab-restore-label">Restore</span></button>
-      <button class="tab" data-tab="apps"><span class="tab-icon">📦</span><span id="tab-apps-label">Apps</span></button>
-      <button class="tab" data-tab="tweaks"><span class="tab-icon">⚡</span><span id="tab-tweaks-label">Tweaks</span></button>
-      <button class="tab" data-tab="features"><span class="tab-icon">🛠</span><span id="tab-features-label">Features</span></button>
-      <button class="tab" data-tab="monitor"><span class="tab-icon">📊</span><span id="tab-monitor-label">Monitor</span></button>
-      <button class="tab" data-tab="cleanup"><span class="tab-icon">🧹</span><span id="tab-cleanup-label">Cleanup</span></button>
-      <button class="tab" data-tab="updates"><span class="tab-icon">🔄</span><span id="tab-updates-label">Updates</span></button>
-      <button class="tab" data-tab="theme"><span class="tab-icon">🎨</span><span id="tab-theme-label">Appearance</span></button>
-    </nav>
-
-    <div class="tab-content active" id="tab-restore">
-      <div class="restore-panels">
-        <div class="panel restore-panel">
-          <h2 id="restore-title">System Restore Point</h2>
-          <p id="restore-desc">Create a restore point before making changes to your system. This allows you to revert if something goes wrong.</p>
-          <div class="restore-spacer">
-            <input type="text" id="rp-name" class="rp-name-input" maxlength="64" placeholder="Restore point name">
-          </div>
-          <div class="restore-actions">
-            <button id="btn-restore" class="btn-primary">
-              <span id="btn-restore-text">Create Restore Point</span>
-            </button>
-            <button id="btn-regbackup" class="btn-secondary">
-              <span id="btn-regbackup-text">Backup Registry</span>
-            </button>
-          </div>
-          <p class="restore-backup-path">Backups: <a href="#" id="open-backups-link">Documents\CodeWinOptimizer\registry-backups</a></p>
-        </div>
-        <div class="panel restore-panel">
-          <h2 id="driver-backup-title">Driver Backup & Restore</h2>
-          <p id="driver-backup-desc">Export all installed third-party drivers to a folder for safekeeping, or restore them later on a fresh Windows install.</p>
-          <div class="restore-spacer"></div>
-          <div class="restore-actions">
-            <button id="btn-driver-backup" class="btn-primary">
-              <span id="btn-driver-backup-text">Backup All Drivers</span>
-            </button>
-            <button id="btn-driver-restore" class="btn-secondary">
-              <span id="btn-driver-restore-text">Restore from Folder</span>
-            </button>
-          </div>
-          <p class="restore-backup-path">Backups: <a href="#" id="open-drivers-link">Documents\CodeWinOptimizer\driver-backups</a></p>
-        </div>
-      </div>
-    </div>
-
-    <div class="tab-content" id="tab-apps">
-      <div class="actions-bar">
-        <div class="actions-left">
-          <div class="pkg-toggle" id="pkg-toggle">
-            <button class="pkg-btn active" data-pkg="winget">WinGet</button>
-            <button class="pkg-btn" data-pkg="choco">Chocolatey</button>
-          </div>
-          <span id="apps-count-label"></span>
-        </div>
-        <button id="btn-install-apps" class="btn-primary">
-          <span id="btn-install-text">Install Selected</span>
+      <nav class="tabs" role="tablist" aria-label="Main navigation">
+        <button class="tab active" data-tab="restore">
+          <span class="tab-icon">🔧</span
+          ><span id="tab-restore-label">Restore</span>
         </button>
-      </div>
-      <input type="text" id="apps-search" class="apps-search" placeholder="Search apps..." autocomplete="off">
-      <div class="apps-toolbar">
-        <button id="btn-clear-selection" class="app-tool-btn">Clear Selection</button>
-        <button id="btn-collapse-all" class="app-tool-btn">Collapse All</button>
-        <button id="btn-show-installed" class="app-tool-btn">Show Installed</button>
-        <span id="selected-count-label" class="selected-count-label"></span>
-      </div>
-      <div id="apps-grid"></div>
-    </div>
+        <button class="tab" data-tab="apps">
+          <span class="tab-icon">📦</span><span id="tab-apps-label">Apps</span>
+        </button>
+        <button class="tab" data-tab="tweaks">
+          <span class="tab-icon">⚡</span
+          ><span id="tab-tweaks-label">Tweaks</span>
+        </button>
+        <button class="tab" data-tab="features">
+          <span class="tab-icon">🛠</span
+          ><span id="tab-features-label">Features</span>
+        </button>
+        <button class="tab" data-tab="monitor">
+          <span class="tab-icon">📊</span
+          ><span id="tab-monitor-label">Monitor</span>
+        </button>
+        <button class="tab" data-tab="cleanup">
+          <span class="tab-icon">🧹</span
+          ><span id="tab-cleanup-label">Cleanup</span>
+        </button>
+        <button class="tab" data-tab="updates">
+          <span class="tab-icon">🔄</span
+          ><span id="tab-updates-label">Updates</span>
+        </button>
+        <button class="tab" data-tab="theme">
+          <span class="tab-icon">🎨</span
+          ><span id="tab-theme-label">Appearance</span>
+        </button>
+      </nav>
 
-    <div class="tab-content" id="tab-tweaks">
-      <div class="actions-bar">
-        <span id="tweaks-count-label"></span>
-        <div class="actions-left" style="gap:8px">
-          <button class="app-tool-btn profile-quick-btn" data-profile="Standard">Standard</button>
-          <button class="app-tool-btn profile-quick-btn" data-profile="Gaming">Gaming</button>
-          <button class="app-tool-btn profile-quick-btn" data-profile="Minimal">Minimal</button>
-          <button class="app-tool-btn" id="btn-tweaks-clear"><span id="btn-tweaks-clear-text">Clear Selection</span></button>
-          <div class="profile-dropdown" id="profile-dropdown">
-            <button class="app-tool-btn" id="btn-profile-load"><span id="btn-profile-load-text">Load Profile</span> <span style="font-size:.7em">▼</span></button>
-            <div class="profile-dropdown-menu hidden" id="profile-menu"></div>
+      <div class="tab-content active" id="tab-restore">
+        <div class="restore-panels">
+          <div class="panel restore-panel">
+            <h2 id="restore-title">System Restore Point</h2>
+            <p id="restore-desc">
+              Create a restore point before making changes to your system. This
+              allows you to revert if something goes wrong.
+            </p>
+            <div class="restore-spacer">
+              <input
+                type="text"
+                id="rp-name"
+                class="rp-name-input"
+                maxlength="64"
+                placeholder="Restore point name"
+              />
+            </div>
+            <div class="restore-actions">
+              <button id="btn-restore" class="btn-primary">
+                <span id="btn-restore-text">Create Restore Point</span>
+              </button>
+              <button id="btn-regbackup" class="btn-secondary">
+                <span id="btn-regbackup-text">Backup Registry</span>
+              </button>
+            </div>
+            <p class="restore-backup-path">
+              Backups:
+              <a href="#" id="open-backups-link"
+                >Documents\CodeWinOptimizer\registry-backups</a
+              >
+            </p>
           </div>
-          <button class="app-tool-btn" id="btn-profile-save"><span id="btn-profile-save-text">Save Profile</span></button>
-          <button id="btn-apply-tweaks" class="btn-primary">
-            <span id="btn-apply-text">Select tweaks</span>
+          <div class="panel restore-panel">
+            <h2 id="driver-backup-title">Driver Backup & Restore</h2>
+            <p id="driver-backup-desc">
+              Export all installed third-party drivers to a folder for
+              safekeeping, or restore them later on a fresh Windows install.
+            </p>
+            <div class="restore-spacer"></div>
+            <div class="restore-actions">
+              <button id="btn-driver-backup" class="btn-primary">
+                <span id="btn-driver-backup-text">Backup All Drivers</span>
+              </button>
+              <button id="btn-driver-restore" class="btn-secondary">
+                <span id="btn-driver-restore-text">Restore from Folder</span>
+              </button>
+            </div>
+            <p class="restore-backup-path">
+              Backups:
+              <a href="#" id="open-drivers-link"
+                >Documents\CodeWinOptimizer\driver-backups</a
+              >
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-apps">
+        <div class="actions-bar">
+          <div class="actions-left">
+            <div class="pkg-toggle" id="pkg-toggle">
+              <button class="pkg-btn active" data-pkg="winget">WinGet</button>
+              <button class="pkg-btn" data-pkg="choco">Chocolatey</button>
+            </div>
+            <span id="apps-count-label"></span>
+          </div>
+          <button id="btn-install-apps" class="btn-primary">
+            <span id="btn-install-text">Install Selected</span>
           </button>
         </div>
-      </div>
-      <div id="tweaks-grid"></div>
-    </div>
-
-    <div class="tab-content" id="tab-features">
-      <div class="features-panels">
-        <div class="ft-panel">
-          <h3 id="ft-features-title">Windows Features</h3>
-          <div id="ft-features-grid" class="ft-grid"></div>
-          <button id="btn-run-features" class="btn-primary">
-            <span id="btn-features-text">Run Features</span>
+        <input
+          type="text"
+          id="apps-search"
+          class="apps-search"
+          placeholder="Search apps..."
+          autocomplete="off"
+        />
+        <div class="apps-toolbar">
+          <button id="btn-clear-selection" class="app-tool-btn">
+            Clear Selection
           </button>
+          <button id="btn-collapse-all" class="app-tool-btn">
+            Collapse All
+          </button>
+          <button id="btn-show-installed" class="app-tool-btn">
+            Show Installed
+          </button>
+          <span id="selected-count-label" class="selected-count-label"></span>
         </div>
-        <div class="ft-panel">
-          <h3 id="ft-fixes-title">Quick Fixes</h3>
-          <div id="ft-fixes-grid" class="ft-grid"></div>
-        </div>
+        <div id="apps-grid"></div>
       </div>
-    </div>
 
-    <div class="tab-content" id="tab-monitor">
-      <div id="monitor-grid" class="monitor-grid">
-        <div class="mon-card" id="mon-cpu">
-          <div class="mon-card-head">
-            <span class="mon-card-icon">🧠</span>
-            <span class="mon-card-title" id="mon-cpu-title">CPU</span>
+      <div class="tab-content" id="tab-tweaks">
+        <div class="actions-bar">
+          <span id="tweaks-count-label"></span>
+          <div class="actions-left" style="gap: 8px">
+            <button
+              class="app-tool-btn profile-quick-btn"
+              data-profile="Standard"
+            >
+              Standard
+            </button>
+            <button
+              class="app-tool-btn profile-quick-btn"
+              data-profile="Gaming"
+            >
+              Gaming
+            </button>
+            <button
+              class="app-tool-btn profile-quick-btn"
+              data-profile="Minimal"
+            >
+              Minimal
+            </button>
+            <button class="app-tool-btn" id="btn-tweaks-clear">
+              <span id="btn-tweaks-clear-text">Clear Selection</span>
+            </button>
+            <div class="profile-dropdown" id="profile-dropdown">
+              <button class="app-tool-btn" id="btn-profile-load">
+                <span id="btn-profile-load-text">Load Profile</span>
+                <span style="font-size: 0.7em">▼</span>
+              </button>
+              <div class="profile-dropdown-menu hidden" id="profile-menu"></div>
+            </div>
+            <button class="app-tool-btn" id="btn-profile-save">
+              <span id="btn-profile-save-text">Save Profile</span>
+            </button>
+            <button id="btn-apply-tweaks" class="btn-primary">
+              <span id="btn-apply-text">Select tweaks</span>
+            </button>
           </div>
-          <div class="mon-gauge-bar"><div class="mon-gauge-fill" id="mon-cpu-bar"></div></div>
-          <div class="mon-card-val" id="mon-cpu-val">--</div>
-          <div class="mon-card-sub" id="mon-cpu-sub"></div>
         </div>
-        <div class="mon-card" id="mon-ram">
-          <div class="mon-card-head">
-            <span class="mon-card-icon">💾</span>
-            <span class="mon-card-title" id="mon-ram-title">RAM</span>
-          </div>
-          <div class="mon-gauge-bar"><div class="mon-gauge-fill" id="mon-ram-bar" style="background:var(--yl)"></div></div>
-          <div class="mon-card-val" id="mon-ram-val">--</div>
-          <div class="mon-card-sub" id="mon-ram-sub"></div>
-        </div>
-        <div class="mon-card" id="mon-gpu">
-          <div class="mon-card-head">
-            <span class="mon-card-icon">🎮</span>
-            <span class="mon-card-title" id="mon-gpu-title">GPU</span>
-          </div>
-          <div class="mon-card-val" id="mon-gpu-val">--</div>
-          <div class="mon-card-sub" id="mon-gpu-sub"></div>
-        </div>
-        <div class="mon-card" id="mon-disk">
-          <div class="mon-card-head">
-            <span class="mon-card-icon">💿</span>
-            <span class="mon-card-title" id="mon-disk-title">Disk</span>
-          </div>
-          <div class="mon-card-val" id="mon-disk-val">--</div>
-          <div class="mon-card-detail" id="mon-disk-detail"></div>
-        </div>
-        <div class="mon-card" id="mon-temp">
-          <div class="mon-card-head">
-            <span class="mon-card-icon">🌡</span>
-            <span class="mon-card-title" id="mon-temp-title">Temperatures</span>
-          </div>
-          <div class="mon-card-val" id="mon-temp-val">--</div>
-          <div class="mon-card-sub" id="mon-temp-sub"></div>
-        </div>
-        <div class="mon-card" id="mon-uptime">
-          <div class="mon-card-head">
-            <span class="mon-card-icon">🕐</span>
-            <span class="mon-card-title" id="mon-uptime-title">Uptime</span>
-          </div>
-          <div class="mon-card-val" id="mon-uptime-val">--</div>
-        </div>
-        <div class="mon-card mon-wide" id="mon-network">
-          <div class="mon-card-head">
-            <span class="mon-card-icon">🌐</span>
-            <span class="mon-card-title" id="mon-network-title">Network</span>
-          </div>
-          
-          <!-- Latency Section (Real-time) -->
-          <div class="network-section">
-            <div class="network-section-title">Latency (TCP)</div>
-            <div class="mon-card-val" id="mon-network-val">--</div>
-          </div>
+        <div id="tweaks-grid"></div>
+      </div>
 
-          <!-- DNS Section -->
-          <div class="network-section" id="dns-section" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--brd)">
-            <div class="network-section-title" id="dns-title">DNS — Set to:</div>
-            <select id="dns-select" class="dns-select">
-              <option value="dhcp">DHCP / Default</option>
-              <option value="google">Google</option>
-              <option value="cloudflare">Cloudflare</option>
-              <option value="cloudflare_malware">Cloudflare — Malware</option>
-              <option value="cloudflare_malware_adult">Cloudflare — Malware + Adult</option>
-              <option value="opendns">OpenDNS</option>
-              <option value="quad9">Quad9</option>
-              <option value="adguard">AdGuard — Ads + Trackers</option>
-              <option value="adguard_full">AdGuard — Ads + Trackers + Malware + Adult</option>
-            </select>
-            <div class="dns-current" id="dns-current"></div>
+      <div class="tab-content" id="tab-features">
+        <div class="features-panels">
+          <div class="ft-panel">
+            <h3 id="ft-features-title">Windows Features</h3>
+            <div id="ft-features-grid" class="ft-grid"></div>
+            <button id="btn-run-features" class="btn-primary">
+              <span id="btn-features-text">Run Features</span>
+            </button>
           </div>
-          
-          <!-- Speed Test Result Section -->
-          <div class="network-section" id="speedtest-result" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--brd)">
-            <div class="network-section-title">Speed Test Result</div>
-            <div class="speedtest-ping" id="speedtest-ping"></div>
-            <div class="speedtest-speeds" id="speedtest-speeds"></div>
-          </div>
-          
-          <!-- Action Button -->
-          <div class="network-actions" style="margin-top:12px">
-            <button id="btn-speedtest" class="btn-primary" style="padding:8px 16px;font-size:.8em"><span id="btn-speedtest-text">Run Speed Test</span></button>
-            <span class="speedtest-hint" style="font-size:.75em;color:var(--tx3);margin-left:10px">~12 seconds</span>
+          <div class="ft-panel">
+            <h3 id="ft-fixes-title">Quick Fixes</h3>
+            <div id="ft-fixes-grid" class="ft-grid"></div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="tab-content" id="tab-cleanup">
-      <div class="cleanup-bar">
-        <span id="cleanup-desc"></span>
-        <button id="btn-run-cleanup" class="btn-primary"><span id="btn-cleanup-text">Run Cleanup</span></button>
-      </div>
-      <div id="cleanup-grid" class="cleanup-grid"></div>
-    </div>
-
-    <div class="tab-content" id="tab-updates">
-      <div class="updates-grid">
-        <div class="panel update-panel">
-          <button id="btn-update-default" class="btn-update-mode"><span id="btn-update-default-text">Default Settings</span></button>
-          <h3 id="update-default-title">Default Windows Update Configuration</h3>
-          <ul class="update-list" id="update-default-list">
-            <li>No modifications to Windows defaults</li>
-            <li>Removes any custom update settings</li>
-          </ul>
-          <p class="update-note" id="update-default-note">Note: This resets your Windows Update settings to default out of the box settings. It removes ANY policy or customization that has been done to Windows Update.</p>
-        </div>
-        <div class="panel update-panel">
-          <button id="btn-update-security" class="btn-update-mode"><span id="btn-update-security-text">Security Settings</span></button>
-          <h3 id="update-security-title">Balanced Security Configuration</h3>
-          <ul class="update-list" id="update-security-list">
-            <li>Feature updates delayed by 365 days</li>
-            <li>Security updates installed after 4 days</li>
-            <li>Prevents Windows Update from installing drivers</li>
-          </ul>
-          <div class="update-info">
-            <p><strong>Feature Updates:</strong> New features and potential bugs</p>
-            <p><strong>Security Updates:</strong> Critical security patches</p>
+      <div class="tab-content" id="tab-monitor">
+        <div id="monitor-grid" class="monitor-grid">
+          <div class="mon-card" id="mon-cpu">
+            <div class="mon-card-head">
+              <span class="mon-card-icon">🧠</span>
+              <span class="mon-card-title" id="mon-cpu-title">CPU</span>
+            </div>
+            <div class="mon-gauge-bar">
+              <div class="mon-gauge-fill" id="mon-cpu-bar"></div>
+            </div>
+            <div class="mon-card-val" id="mon-cpu-val">--</div>
+            <div class="mon-card-sub" id="mon-cpu-sub"></div>
           </div>
-          <p class="update-note" id="update-security-note">Note: This only applies to Pro systems that can use group policy.</p>
-        </div>
-        <div class="panel update-panel update-panel-danger">
-          <button id="btn-update-disable" class="btn-update-mode btn-update-danger"><span id="btn-update-disable-text">Disable All Updates</span></button>
-          <h3 id="update-disable-title" class="update-title-danger">!! Not Recommended !!</h3>
-          <ul class="update-list update-list-danger" id="update-disable-list">
-            <li>Disables ALL Windows Updates</li>
-            <li>Increases security risks</li>
-            <li>Only use for isolated systems</li>
-          </ul>
-          <p class="update-warning" id="update-disable-warning">Warning: Your system will be vulnerable without security updates.</p>
-        </div>
-      </div>
-    </div>
+          <div class="mon-card" id="mon-ram">
+            <div class="mon-card-head">
+              <span class="mon-card-icon">💾</span>
+              <span class="mon-card-title" id="mon-ram-title">RAM</span>
+            </div>
+            <div class="mon-gauge-bar">
+              <div
+                class="mon-gauge-fill"
+                id="mon-ram-bar"
+                style="background: var(--yl)"
+              ></div>
+            </div>
+            <div class="mon-card-val" id="mon-ram-val">--</div>
+            <div class="mon-card-sub" id="mon-ram-sub"></div>
+          </div>
+          <div class="mon-card" id="mon-gpu">
+            <div class="mon-card-head">
+              <span class="mon-card-icon">🎮</span>
+              <span class="mon-card-title" id="mon-gpu-title">GPU</span>
+            </div>
+            <div class="mon-card-val" id="mon-gpu-val">--</div>
+            <div class="mon-card-sub" id="mon-gpu-sub"></div>
+          </div>
+          <div class="mon-card" id="mon-disk">
+            <div class="mon-card-head">
+              <span class="mon-card-icon">💿</span>
+              <span class="mon-card-title" id="mon-disk-title">Disk</span>
+            </div>
+            <div class="mon-card-val" id="mon-disk-val">--</div>
+            <div class="mon-card-detail" id="mon-disk-detail"></div>
+          </div>
+          <div class="mon-card" id="mon-temp">
+            <div class="mon-card-head">
+              <span class="mon-card-icon">🌡</span>
+              <span class="mon-card-title" id="mon-temp-title"
+                >Temperatures</span
+              >
+            </div>
+            <div class="mon-card-val" id="mon-temp-val">--</div>
+            <div class="mon-card-sub" id="mon-temp-sub"></div>
+          </div>
+          <div class="mon-card" id="mon-uptime">
+            <div class="mon-card-head">
+              <span class="mon-card-icon">🕐</span>
+              <span class="mon-card-title" id="mon-uptime-title">Uptime</span>
+            </div>
+            <div class="mon-card-val" id="mon-uptime-val">--</div>
+          </div>
+          <div class="mon-card mon-wide" id="mon-network">
+            <div class="mon-card-head">
+              <span class="mon-card-icon">🌐</span>
+              <span class="mon-card-title" id="mon-network-title">Network</span>
+            </div>
 
-    <div class="tab-content" id="tab-theme">
-      <div class="panel">
-        <h2 id="theme-title">Appearance</h2>
-        <p id="theme-desc">Customize the look and feel of CodeWinOptimizer.</p>
-        <div class="theme-grid">
-          <div class="theme-colors">
-            <h3 id="theme-colors-label">Accent Color</h3>
-            <div class="color-options" id="color-options">
-              <button class="color-btn active" data-color="#39ff14" style="background:#39ff14" title="Neon Green"></button>
-              <button class="color-btn" data-color="#00ffff" style="background:#00ffff" title="Cyan"></button>
-              <button class="color-btn" data-color="#bf5af2" style="background:#bf5af2" title="Purple"></button>
-              <button class="color-btn" data-color="#ff6b35" style="background:#ff6b35" title="Orange"></button>
-              <button class="color-btn" data-color="#ff2d55" style="background:#ff2d55" title="Pink"></button>
-              <button class="color-btn" data-color="#d4ff00" style="background:#d4ff00" title="Yellow"></button>
+            <!-- Latency Section (Real-time) -->
+            <div class="network-section">
+              <div class="network-section-title">Latency (TCP)</div>
+              <div class="mon-card-val" id="mon-network-val">--</div>
+            </div>
+
+            <!-- DNS Section -->
+            <div
+              class="network-section"
+              id="dns-section"
+              style="
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid var(--brd);
+              "
+            >
+              <div class="network-section-title" id="dns-title">
+                DNS — Set to:
+              </div>
+              <select id="dns-select" class="dns-select">
+                <option value="dhcp">DHCP / Default</option>
+                <option value="google">Google</option>
+                <option value="cloudflare">Cloudflare</option>
+                <option value="cloudflare_malware">Cloudflare — Malware</option>
+                <option value="cloudflare_malware_adult">
+                  Cloudflare — Malware + Adult
+                </option>
+                <option value="opendns">OpenDNS</option>
+                <option value="quad9">Quad9</option>
+                <option value="adguard">AdGuard — Ads + Trackers</option>
+                <option value="adguard_full">
+                  AdGuard — Ads + Trackers + Malware + Adult
+                </option>
+              </select>
+              <div class="dns-current" id="dns-current"></div>
+            </div>
+
+            <!-- Speed Test Result Section -->
+            <div
+              class="network-section"
+              id="speedtest-result"
+              style="
+                display: none;
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid var(--brd);
+              "
+            >
+              <div class="network-section-title">Speed Test Result</div>
+              <div class="speedtest-ping" id="speedtest-ping"></div>
+              <div class="speedtest-speeds" id="speedtest-speeds"></div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="network-actions" style="margin-top: 12px">
+              <button
+                id="btn-speedtest"
+                class="btn-primary"
+                style="padding: 8px 16px; font-size: 0.8em"
+              >
+                <span id="btn-speedtest-text">Run Speed Test</span>
+              </button>
+              <span
+                class="speedtest-hint"
+                style="font-size: 0.75em; color: var(--tx3); margin-left: 10px"
+                >~12 seconds</span
+              >
             </div>
           </div>
-          <div class="theme-fonts">
-            <h3 id="theme-fonts-label">Font</h3>
-            <select id="theme-font-select" class="theme-select">
-              <option value="'Segoe UI',system-ui,sans-serif">Segoe UI (Default)</option>
-              <option value="'Cascadia Code','Consolas',monospace">Cascadia Code</option>
-              <option value="'Inter',system-ui,sans-serif">Inter</option>
-              <option value="'JetBrains Mono',monospace">JetBrains Mono</option>
-              <option value="Arial,sans-serif">Arial</option>
-              <option value="'Trebuchet MS',sans-serif">Trebuchet MS</option>
-            </select>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-cleanup">
+        <div class="cleanup-bar">
+          <span id="cleanup-desc"></span>
+          <button id="btn-run-cleanup" class="btn-primary">
+            <span id="btn-cleanup-text">Run Cleanup</span>
+          </button>
+        </div>
+        <div id="cleanup-grid" class="cleanup-grid"></div>
+      </div>
+
+      <div class="tab-content" id="tab-updates">
+        <div class="updates-grid">
+          <div class="panel update-panel">
+            <button id="btn-update-default" class="btn-update-mode">
+              <span id="btn-update-default-text">Default Settings</span>
+            </button>
+            <h3 id="update-default-title">
+              Default Windows Update Configuration
+            </h3>
+            <ul class="update-list" id="update-default-list">
+              <li>No modifications to Windows defaults</li>
+              <li>Removes any custom update settings</li>
+            </ul>
+            <p class="update-note" id="update-default-note">
+              Note: This resets your Windows Update settings to default out of
+              the box settings. It removes ANY policy or customization that has
+              been done to Windows Update.
+            </p>
+          </div>
+          <div class="panel update-panel">
+            <button id="btn-update-security" class="btn-update-mode">
+              <span id="btn-update-security-text">Security Settings</span>
+            </button>
+            <h3 id="update-security-title">Balanced Security Configuration</h3>
+            <ul class="update-list" id="update-security-list">
+              <li>Feature updates delayed by 365 days</li>
+              <li>Security updates installed after 4 days</li>
+              <li>Prevents Windows Update from installing drivers</li>
+            </ul>
+            <div class="update-info">
+              <p>
+                <strong>Feature Updates:</strong> New features and potential
+                bugs
+              </p>
+              <p>
+                <strong>Security Updates:</strong> Critical security patches
+              </p>
+            </div>
+            <p class="update-note" id="update-security-note">
+              Note: This only applies to Pro systems that can use group policy.
+            </p>
+          </div>
+          <div class="panel update-panel update-panel-danger">
+            <button
+              id="btn-update-disable"
+              class="btn-update-mode btn-update-danger"
+            >
+              <span id="btn-update-disable-text">Disable All Updates</span>
+            </button>
+            <h3 id="update-disable-title" class="update-title-danger">
+              !! Not Recommended !!
+            </h3>
+            <ul class="update-list update-list-danger" id="update-disable-list">
+              <li>Disables ALL Windows Updates</li>
+              <li>Increases security risks</li>
+              <li>Only use for isolated systems</li>
+            </ul>
+            <p class="update-warning" id="update-disable-warning">
+              Warning: Your system will be vulnerable without security updates.
+            </p>
           </div>
         </div>
-        <div class="theme-actions">
-          <button id="btn-theme-apply" class="btn-primary"><span id="btn-theme-apply-text">Apply</span></button>
-          <button id="btn-theme-reset" class="btn-secondary"><span id="btn-theme-reset-text">Reset Defaults</span></button>
+      </div>
+
+      <div class="tab-content" id="tab-theme">
+        <div class="panel">
+          <h2 id="theme-title">Appearance</h2>
+          <p id="theme-desc">
+            Customize the look and feel of CodeWinOptimizer.
+          </p>
+          <div class="theme-grid">
+            <div class="theme-colors">
+              <h3 id="theme-colors-label">Accent Color</h3>
+              <div class="color-options" id="color-options">
+                <button
+                  class="color-btn active"
+                  data-color="#39ff14"
+                  style="background: #39ff14"
+                  title="Neon Green"
+                ></button>
+                <button
+                  class="color-btn"
+                  data-color="#00ffff"
+                  style="background: #00ffff"
+                  title="Cyan"
+                ></button>
+                <button
+                  class="color-btn"
+                  data-color="#bf5af2"
+                  style="background: #bf5af2"
+                  title="Purple"
+                ></button>
+                <button
+                  class="color-btn"
+                  data-color="#ff6b35"
+                  style="background: #ff6b35"
+                  title="Orange"
+                ></button>
+                <button
+                  class="color-btn"
+                  data-color="#ff2d55"
+                  style="background: #ff2d55"
+                  title="Pink"
+                ></button>
+                <button
+                  class="color-btn"
+                  data-color="#d4ff00"
+                  style="background: #d4ff00"
+                  title="Yellow"
+                ></button>
+              </div>
+            </div>
+            <div class="theme-fonts">
+              <h3 id="theme-fonts-label">Font</h3>
+              <select id="theme-font-select" class="theme-select">
+                <option value="'Segoe UI',system-ui,sans-serif">
+                  Segoe UI (Default)
+                </option>
+                <option value="'Cascadia Code','Consolas',monospace">
+                  Cascadia Code
+                </option>
+                <option value="'Inter',system-ui,sans-serif">Inter</option>
+                <option value="'JetBrains Mono',monospace">
+                  JetBrains Mono
+                </option>
+                <option value="Arial,sans-serif">Arial</option>
+                <option value="'Trebuchet MS',sans-serif">Trebuchet MS</option>
+              </select>
+            </div>
+          </div>
+          <div class="theme-actions">
+            <button id="btn-theme-apply" class="btn-primary">
+              <span id="btn-theme-apply-text">Apply</span>
+            </button>
+            <button id="btn-theme-reset" class="btn-secondary">
+              <span id="btn-theme-reset-text">Reset Defaults</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="terminal" class="collapsed">
+        <div class="term-header">
+          <span class="term-toggle">▼</span>
+          <span class="term-brand"
+            >CodeWinOptimizer &middot; v1.0.0 &middot; OscarDev</span
+          >
+          <span id="term-title"></span>
+          <div class="term-actions">
+            <span id="term-status"></span>
+            <button id="btn-copy" class="btn-clear">Copy</button>
+            <button id="btn-clear" class="btn-clear">Clear</button>
+          </div>
+        </div>
+        <pre id="term-log"></pre>
+      </div>
+    </div>
+
+    <div id="custom-confirm" class="custom-confirm hidden">
+      <div class="custom-confirm-overlay"></div>
+      <div class="custom-confirm-box">
+        <div class="custom-confirm-title" id="confirm-title">Confirm</div>
+        <div class="custom-confirm-msg" id="confirm-msg"></div>
+        <div class="custom-confirm-actions">
+          <button
+            class="custom-confirm-btn custom-confirm-secondary"
+            id="confirm-cancel"
+          >
+            Cancel
+          </button>
+          <button
+            class="custom-confirm-btn custom-confirm-primary"
+            id="confirm-ok"
+          >
+            OK
+          </button>
         </div>
       </div>
     </div>
 
-    <div id="terminal" class="collapsed">
-      <div class="term-header">
-        <span class="term-toggle">▼</span>
-        <span class="term-brand">CodeWinOptimizer &middot; v1.0.0 &middot; OscarDev</span>
-        <span id="term-title"></span>
-        <div class="term-actions">
-          <span id="term-status"></span>
-          <button id="btn-copy" class="btn-clear">Copy</button>
-          <button id="btn-clear" class="btn-clear">Clear</button>
-        </div>
-      </div>
-      <pre id="term-log"></pre>
-    </div>
-  </div>
-
-  <div id="custom-confirm" class="custom-confirm hidden">
-    <div class="custom-confirm-overlay"></div>
-    <div class="custom-confirm-box">
-      <div class="custom-confirm-title" id="confirm-title">Confirm</div>
-      <div class="custom-confirm-msg" id="confirm-msg"></div>
-      <div class="custom-confirm-actions">
-        <button class="custom-confirm-btn custom-confirm-secondary" id="confirm-cancel">Cancel</button>
-        <button class="custom-confirm-btn custom-confirm-primary" id="confirm-ok">OK</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="/wailsjs/runtime/runtime.js" type="module"></script>
-  <script src="/js/data.js"></script>
-  <script src="/js/i18n.js"></script>
-  <script src="/js/terminal.js"></script>
-  <script src="/js/restore.js"></script>
-  <script src="/js/updates.js"></script>
-  <script src="/main.js"></script>
-</body>
+    <script src="/wailsjs/runtime/runtime.js" type="module"></script>
+    <script src="/js/data.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/terminal.js"></script>
+    <script src="/js/restore.js"></script>
+    <script src="/js/updates.js"></script>
+    <script src="/main.js"></script>
+  </body>
 </html>

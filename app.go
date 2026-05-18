@@ -9,6 +9,8 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -43,24 +45,57 @@ type Tweak struct {
 type App struct {
 	ctx        context.Context
 	categories []Category
+	tweakMap   map[string]*Tweak
+	tweaksErr  error
 }
 
 func NewApp() *App {
 	a := &App{}
-	a.loadTweaks()
+	a.tweaksErr = a.loadTweaks()
 	return a
 }
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	wailsRuntime.LogInfo(ctx, "CodeWinOptimizer started")
+	if a.tweaksErr != nil {
+		wailsRuntime.LogError(ctx, a.tweaksErr.Error())
+		wailsRuntime.EventsEmit(ctx, "log", "[ERR] "+a.tweaksErr.Error()+" — tweaks will be unavailable")
+	}
 	a.ensureDefaultProfiles()
 }
 
-func (a *App) loadTweaks() {
-	if err := json.Unmarshal(tweaksJSON, &a.categories); err != nil {
-		panic("Failed to load embedded tweaks.json: " + err.Error())
+func (a *App) runPS(script string) string {
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script)
+	cmd.SysProcAttr = getSysProcAttr()
+	output, err := cmd.CombinedOutput()
+	out := strings.TrimSpace(string(output))
+	if err != nil {
+		if out != "" {
+			a.emitLog(out)
+		}
+		a.emitLog(fmt.Sprintf("[ERR] %v", err))
+	} else if out != "" {
+		a.emitLog(out)
+	} else {
+		a.emitLog("[OK] Command completed")
 	}
+	return out
+}
+
+func (a *App) loadTweaks() error {
+	if err := json.Unmarshal(tweaksJSON, &a.categories); err != nil {
+		a.categories = []Category{}
+		a.tweakMap = map[string]*Tweak{}
+		return fmt.Errorf("failed to load tweaks.json: %w", err)
+	}
+	a.tweakMap = make(map[string]*Tweak, 256)
+	for i := range a.categories {
+		for j := range a.categories[i].Tweaks {
+			a.tweakMap[a.categories[i].Tweaks[j].ID] = &a.categories[i].Tweaks[j]
+		}
+	}
+	return nil
 }
 
 func (a *App) emitLog(msg string) {
@@ -199,6 +234,12 @@ func ensureChoco(a *App) {
 	} else {
 		a.emitLog("[OK] Chocolatey installed")
 	}
+	verify := exec.Command("powershell", "-NoProfile", "-Command",
+		`if (Get-Command choco -ErrorAction SilentlyContinue) { exit 0 }; if (Get-Command "C:\ProgramData\chocolatey\bin\choco.exe" -ErrorAction SilentlyContinue) { exit 0 }; exit 1`)
+	verify.SysProcAttr = getSysProcAttr()
+	if verify.Run() != nil {
+		a.emitLog("[ERR] Chocolatey installation could not be verified — choco command not found after install")
+	}
 }
 
 func (a *App) InstallApps(ids []string, lang string, pkgMgr string) string {
@@ -209,6 +250,10 @@ func (a *App) InstallApps(ids []string, lang string, pkgMgr string) string {
 	}
 
 	for i, id := range ids {
+		if !safePackageID.MatchString(id) {
+			a.emitLog(fmt.Sprintf("[ERR] Invalid package ID: %s", id))
+			continue
+		}
 		a.emitLog(fmt.Sprintf("--- [%d/%d] Installing: %s ---", i+1, total, id))
 
 		var psCmd string
@@ -244,6 +289,10 @@ if (-not $choco) { Write-Host "[ERR] Chocolatey not available — restart app an
 }
 
 func (a *App) UninstallApp(id string, pkgMgr string) string {
+	if !safePackageID.MatchString(id) {
+		a.emitLog(fmt.Sprintf("[ERR] Invalid package ID: %s", id))
+		return "[ERR] Invalid package ID"
+	}
 	var psCmd string
 	if pkgMgr == "choco" {
 		ensureChoco(a)
@@ -276,39 +325,66 @@ if (-not $choco) { Write-Host "[ERR] Chocolatey not available — restart app an
 }
 
 func (a *App) OpenURL(url string) {
+	if !strings.HasPrefix(url, "https://") && !strings.HasPrefix(url, "http://") {
+		a.emitLog(fmt.Sprintf("[ERR] Blocked URL with unsafe scheme: %s", url))
+		return
+	}
 	wailsRuntime.BrowserOpenURL(a.ctx, url)
 }
 
+func openExplorerAt(dir string) {
+	os.MkdirAll(dir, 0755)
+	cmd := exec.Command("explorer", dir)
+	if err := cmd.Start(); err == nil {
+		cmd.Process.Release()
+	}
+}
+
 func (a *App) OpenFolder() {
-	backupDir := fmt.Sprintf("%s\\CodeWinOptimizer\\registry-backups", os.Getenv("USERPROFILE"))
-	os.MkdirAll(backupDir, 0755)
-	exec.Command("explorer", backupDir).Start()
+	openExplorerAt(filepath.Join(os.Getenv("USERPROFILE"), "CodeWinOptimizer", "registry-backups"))
 }
 
 func (a *App) OpenDriverFolder() {
-	backupDir := fmt.Sprintf("%s\\CodeWinOptimizer\\driver-backups", os.Getenv("USERPROFILE"))
-	os.MkdirAll(backupDir, 0755)
-	exec.Command("explorer", backupDir).Start()
+	openExplorerAt(filepath.Join(os.Getenv("USERPROFILE"), "CodeWinOptimizer", "driver-backups"))
 }
 
-func (a *App) ExecPowerShell(script string) string {
-	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script)
-	cmd.SysProcAttr = getSysProcAttr()
-	output, err := cmd.CombinedOutput()
-	out := strings.TrimSpace(string(output))
+var featureCommands = map[string]string{
+	"netfx":          `dism /online /enable-feature /featurename:NetFx3 /all /quiet /norestart; Write-Host "[OK] .NET Framework enabled"`,
+	"hyperv":         `dism /online /enable-feature /featurename:Microsoft-Hyper-V-All /all /quiet /norestart; Write-Host "[OK] Hyper-V enabled"`,
+	"f8disable":      `bcdedit /set {default} bootmenupolicy standard; Write-Host "[OK] F8 legacy disabled"`,
+	"f8enable":       `bcdedit /set {default} bootmenupolicy legacy; Write-Host "[OK] F8 legacy enabled"`,
+	"legacymedia":    `dism /online /enable-feature /featurename:WindowsMediaPlayer /all /quiet /norestart; dism /online /enable-feature /featurename:DirectPlay /all /quiet /norestart; Write-Host "[OK] Legacy media enabled"`,
+	"nfs":            `dism /online /enable-feature /featurename:ServicesForNFS-ClientOnly /all /quiet /norestart; dism /online /enable-feature /featurename:ClientForNFS-Infrastructure /all /quiet /norestart; Write-Host "[OK] NFS enabled"`,
+	"regbackupsched": `$dir = "$env:SystemDrive\RegistryBackup"; New-Item -ItemType Directory -Path $dir -Force -ErrorAction SilentlyContinue | Out-Null; $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-Command reg export HKLM '$dir\HKLM_$(Get-Date -Format yyyyMMdd_HHmmss).reg' /y"; $trigger = New-ScheduledTaskTrigger -Daily -At 00:30; Register-ScheduledTask -TaskName "CodeWinOptimizer_RegistryBackup" -Action $action -Trigger $trigger -Force -ErrorAction Stop | Out-Null; Write-Host "[OK] Daily registry backup scheduled at 00:30"`,
+	"sandbox":        `dism /online /enable-feature /featurename:Containers-DisposableClientVM /all /quiet /norestart; Write-Host "[OK] Windows Sandbox enabled"`,
+	"wsl":            `dism /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /quiet /norestart; dism /online /enable-feature /featurename:VirtualMachinePlatform /all /quiet /norestart; Write-Host "[OK] WSL enabled"`,
+}
 
-	if err != nil {
-		if out != "" {
-			a.emitLog(out)
-		}
-		a.emitLog(fmt.Sprintf("[ERR] %v", err))
-	} else if out != "" {
-		a.emitLog(out)
-	} else {
-		a.emitLog("[OK] Command completed")
+var fixCommands = map[string]string{
+	"autologin": `$regPath = "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"; $user = (Get-CimInstance -Class Win32_ComputerSystem | Select-Object -ExpandProperty Username); Set-ItemProperty -Path $regPath -Name "AutoAdminLogon" -Value "1" -Force; Set-ItemProperty -Path $regPath -Name "DefaultUserName" -Value $user -Force; Set-ItemProperty -Path $regPath -Name "DefaultPassword" -Value "" -Force; Write-Host "Autologin enabled for $user"`,
+	"netreset":  `netsh int ip reset; netsh winsock reset; ipconfig /flushdns; Write-Host "Network stack reset complete"`,
+	"ntp":       `w32tm /config /syncfromflags:manual /manualpeerlist:"time.windows.com" /reliable:YES /update; net stop w32time; net start w32time; w32tm /resync /force; Write-Host "NTP sync enabled"`,
+	"sfc":       `DISM /Online /Cleanup-Image /RestoreHealth; sfc /scannow; Write-Host "System scan complete"`,
+	"wureset":   `net stop wuauserv; net stop cryptSvc; net stop bits; net stop msiserver; Remove-Item -Recurse -Force "$env:windir\SoftwareDistribution" -ErrorAction SilentlyContinue; net start wuauserv; net start cryptSvc; net start bits; net start msiserver; Write-Host "Windows Update cache reset"`,
+	"wingetre":  `Write-Host "Reinstalling WinGet..."; try{Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe -ErrorAction Stop; Write-Host "WinGet reinstalled successfully"}catch{Write-Host "ERR: WinGet reinstall failed -- $($_.Exception.Message)"}`,
+}
+
+func (a *App) RunFeature(id string) string {
+	script, ok := featureCommands[id]
+	if !ok {
+		a.emitLog(fmt.Sprintf("[ERR] Unknown feature: %s", id))
+		return "[ERR] Unknown feature"
 	}
+	return a.runPS(script)
+}
 
-	return out
+func (a *App) RunFix(id string) string {
+	script, ok := fixCommands[id]
+	if !ok {
+		a.emitLog(fmt.Sprintf("[ERR] Unknown fix: %s", id))
+		return "[ERR] Unknown fix"
+	}
+	return a.runPS(script)
 }
 
 func (a *App) Quit() {
@@ -354,18 +430,7 @@ Start-Process explorer.exe -ArgumentList $dir`, dir)
 }
 
 func (a *App) findTweak(id string) *Tweak {
-	for _, cat := range a.categories {
-		for j := range cat.Tweaks {
-			if cat.Tweaks[j].ID == id {
-				return &cat.Tweaks[j]
-			}
-		}
-	}
-	return nil
-}
-
-func (a *App) SelectLanguage(lang string) string {
-	return "ok"
+	return a.tweakMap[id]
 }
 
 func (a *App) CheckAdmin() bool {
@@ -420,9 +485,9 @@ func (a *App) GetSystemInfo() string {
 	ramUsed := 0.0
 	ramPct := 0.0
 	if vmem, err := mem.VirtualMemory(); err == nil {
-		ramTotal = math.Round(float64(vmem.Total)/1024/1024/1024*10) / 10
-		ramFree = math.Round(float64(vmem.Available)/1024/1024/1024*10) / 10
-		ramUsed = math.Round(float64(vmem.Used)/1024/1024/1024*10) / 10
+		ramTotal = math.Round(float64(vmem.Total)/bytesPerGiB*10) / 10
+		ramFree = math.Round(float64(vmem.Available)/bytesPerGiB*10) / 10
+		ramUsed = math.Round(float64(vmem.Used)/bytesPerGiB*10) / 10
 		ramPct = math.Round(vmem.UsedPercent*10) / 10
 	}
 
@@ -430,9 +495,9 @@ func (a *App) GetSystemInfo() string {
 	uptimeStr := ""
 	if up, err := host.Uptime(); err == nil {
 		uptimeSec := uint64(up)
-		days := uptimeSec / 86400
-		hours := (uptimeSec % 86400) / 3600
-		minutes := (uptimeSec % 3600) / 60
+		days := uptimeSec / secondsPerDay
+		hours := (uptimeSec % secondsPerDay) / secondsPerHour
+		minutes := (uptimeSec % secondsPerHour) / secondsPerMinute
 		uptimeStr = fmt.Sprintf("%dd %dh %dm", days, hours, minutes)
 	}
 
@@ -492,7 +557,7 @@ try {
 	}
 } catch {}
 
-[PSCustomObject]@{ 
+[PSCustomObject]@{
 	gpus = @($gpuList);
 	disks = @($diskList);
 	temps = @($tempList);
@@ -522,9 +587,9 @@ try {
 		Pct     float64 `json:"pct"`
 	}
 	type FullOut struct {
-		CPU    CPUOut  `json:"cpu"`
-		RAM    RAMOut  `json:"ram"`
-		Uptime string  `json:"uptime"`
+		CPU    CPUOut `json:"cpu"`
+		RAM    RAMOut `json:"ram"`
+		Uptime string `json:"uptime"`
 	}
 
 	fo := FullOut{
@@ -533,14 +598,19 @@ try {
 		Uptime: uptimeStr,
 	}
 
-	foJSON, _ := json.Marshal(fo)
-
-	// Merge: strip closing } from foJSON, strip opening { from psJSON
-	foStr := strings.TrimSuffix(string(foJSON), "}")
-	psStr := strings.TrimPrefix(psJSON, "{")
-	result := foStr + "," + psStr
-
-	return result
+	merged := map[string]interface{}{
+		"cpu":    fo.CPU,
+		"ram":    fo.RAM,
+		"uptime": fo.Uptime,
+	}
+	var psData map[string]interface{}
+	if err := json.Unmarshal([]byte(psJSON), &psData); err == nil {
+		for k, v := range psData {
+			merged[k] = v
+		}
+	}
+	result, _ := json.Marshal(merged)
+	return string(result)
 }
 
 var cleanupScripts = map[string]string{
@@ -552,22 +622,30 @@ var cleanupScripts = map[string]string{
 	"dnscache":   "try{ipconfig /flushdns 2>$null|Out-Null;Write-Host \"[OK] DNS cache flushed\"}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
 	"memorydump": "try{$d=\"$env:WINDIR\\MEMORY.DMP\";$c=0;if(Test-Path $d){$s=(Get-Item $d).Length;$c+=$s;Remove-Item -Force $d -ErrorAction SilentlyContinue};$d2=\"$env:WINDIR\\Minidump\";if(Test-Path $d2){$s=(Get-ChildItem -Force $d2 -ErrorAction SilentlyContinue|Measure-Object -Property Length -Sum).Sum;$c+=$s;Remove-Item -Force \"$d2\\*\" -ErrorAction SilentlyContinue};Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
 }
-var cleanupNamesES = map[string]string{"temp":"Archivos temporales","recycle":"Papelera","prefetch":"Archivos Prefetch","winupdate":"Cache Windows Update","thumbnails":"Cache miniaturas","dnscache":"Cache DNS","memorydump":"Volcados de memoria"}
+var cleanupNamesES = map[string]string{"temp": "Archivos temporales", "recycle": "Papelera", "prefetch": "Archivos Prefetch", "winupdate": "Cache Windows Update", "thumbnails": "Cache miniaturas", "dnscache": "Cache DNS", "memorydump": "Volcados de memoria"}
 
 func (a *App) CleanupRun(tasks []string, lang string) string {
 	for _, id := range tasks {
 		ps, ok := cleanupScripts[id]
-		if !ok { continue }
+		if !ok {
+			continue
+		}
 		name := id
 		if lang == "es" {
-			if n, ok := cleanupNamesES[id]; ok { name = n }
+			if n, ok := cleanupNamesES[id]; ok {
+				name = n
+			}
 		}
 		a.emitLog(fmt.Sprintf("--- %s ---", name))
 		cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", "[Console]::OutputEncoding = [Text.Encoding]::UTF8; "+ps)
 		cmd.SysProcAttr = getSysProcAttr()
 		out, err := cmd.CombinedOutput()
-		if err != nil { a.emitLog(fmt.Sprintf("[ERR] %v", err)) }
-		if len(out) > 0 { a.emitLog(strings.TrimSpace(string(out))) }
+		if err != nil {
+			a.emitLog(fmt.Sprintf("[ERR] %v", err))
+		}
+		if len(out) > 0 {
+			a.emitLog(strings.TrimSpace(string(out)))
+		}
 	}
 	a.emitLog("=== Complete ===")
 	return ""
@@ -604,12 +682,12 @@ func (a *App) GetNetworkLatency() string {
 
 func (a *App) RunSpeedTest() string {
 	type Result struct {
-		PingMs       float64 `json:"pingMs"`
-		DownloadMbps float64 `json:"downloadMbps"`
-		UploadMbps   float64 `json:"uploadMbps"`
-		ServerName   string  `json:"serverName"`
-		ServerSponsor string `json:"serverSponsor"`
-		ServerCountry string `json:"serverCountry"`
+		PingMs        float64 `json:"pingMs"`
+		DownloadMbps  float64 `json:"downloadMbps"`
+		UploadMbps    float64 `json:"uploadMbps"`
+		ServerName    string  `json:"serverName"`
+		ServerSponsor string  `json:"serverSponsor"`
+		ServerCountry string  `json:"serverCountry"`
 	}
 	res := Result{}
 
@@ -622,9 +700,9 @@ func (a *App) RunSpeedTest() string {
 	a.emitLog("[NET] Finding best Speedtest.net server...")
 
 	// Use speedtest-go library for professional measurements
-	var speedtest = speedtest.New()
+	client := speedtest.New()
 
-	serverList, err := speedtest.FetchServers()
+	serverList, err := client.FetchServers()
 	if err != nil {
 		a.emitLog(fmt.Sprintf("[ERR] Failed to fetch servers: %v", err))
 		b, _ := json.Marshal(res)
@@ -655,13 +733,13 @@ func (a *App) RunSpeedTest() string {
 	a.emitLog("[NET] Running download test...")
 	s.DownloadTest()
 	// speedtest-go returns bytes/sec. Convert to Mbps: *8 / 1000 / 1000
-	res.DownloadMbps = math.Round(float64(s.DLSpeed)*8/1000/1000*100) / 100
+	res.DownloadMbps = math.Round(float64(s.DLSpeed)*bitsPerByte/bitsPerMegabit*100) / 100
 	a.emitLog(fmt.Sprintf("[NET] Download: %.2f Mbps", res.DownloadMbps))
 
 	// Upload test
 	a.emitLog("[NET] Running upload test...")
 	s.UploadTest()
-	res.UploadMbps = math.Round(float64(s.ULSpeed)*8/1000/1000*100) / 100
+	res.UploadMbps = math.Round(float64(s.ULSpeed)*bitsPerByte/bitsPerMegabit*100) / 100
 	a.emitLog(fmt.Sprintf("[NET] Upload: %.2f Mbps", res.UploadMbps))
 
 	b, _ := json.Marshal(res)
@@ -700,6 +778,12 @@ if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq 3010) {
 }
 
 func (a *App) RestoreDrivers(folderPath string) string {
+	expectedBase := filepath.Join(os.Getenv("USERPROFILE"), "CodeWinOptimizer", "driver-backups")
+	absPath, err := filepath.Abs(folderPath)
+	if err != nil || !strings.HasPrefix(absPath, expectedBase) {
+		a.emitLog(fmt.Sprintf("[ERR] Invalid driver folder path: %s", folderPath))
+		return "[ERR] Invalid folder path — must be inside driver-backups directory"
+	}
 	psCmd := fmt.Sprintf(`[Console]::OutputEncoding = [Text.Encoding]::UTF8
 $dir = "%s"
 if (-not (Test-Path $dir)) { Write-Host "[ERR] Folder not found: $dir"; exit 1 }
@@ -827,15 +911,43 @@ func (a *App) ensureDefaultProfiles() {
 	}
 }
 
+const (
+	bytesPerGiB      = 1024 * 1024 * 1024
+	secondsPerDay    = 86400
+	secondsPerHour   = 3600
+	secondsPerMinute = 60
+	bitsPerByte      = 8
+	bitsPerMegabit   = 1_000_000
+)
+
+var safeProfileName = regexp.MustCompile(`[^a-zA-Z0-9_-]`)
+var safePackageID = regexp.MustCompile(`^[a-zA-Z0-9._-]+$`)
+
+func sanitizeProfileName(name string) (string, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "", fmt.Errorf("profile name cannot be empty")
+	}
+	safe := safeProfileName.ReplaceAllString(name, "_")
+	safe = filepath.Base(safe)
+	if safe == "." || safe == ".." || safe == "" {
+		return "", fmt.Errorf("invalid profile name: %s", name)
+	}
+	if len(safe) > 64 {
+		safe = safe[:64]
+	}
+	return safe, nil
+}
+
 func (a *App) SaveProfile(name string, tweakIDs []string) string {
 	dir := profilesDir()
 	os.MkdirAll(dir, 0755)
 
-	filename := strings.ReplaceAll(name, " ", "_")
-	filename = strings.ReplaceAll(filename, "/", "_")
-	filename = strings.ReplaceAll(filename, "\\", "_")
-	filename = strings.ReplaceAll(filename, ".", "_")
-	path := fmt.Sprintf("%s\\%s.json", dir, filename)
+	filename, err := sanitizeProfileName(name)
+	if err != nil {
+		return fmt.Sprintf("[ERR] %v", err)
+	}
+	path := filepath.Join(dir, filename+".json")
 
 	profile := TweakProfile{
 		Name:      name,
@@ -858,11 +970,11 @@ func (a *App) SaveProfile(name string, tweakIDs []string) string {
 
 func (a *App) LoadProfile(name string) string {
 	dir := profilesDir()
-	filename := strings.ReplaceAll(name, " ", "_")
-	filename = strings.ReplaceAll(filename, "/", "_")
-	filename = strings.ReplaceAll(filename, "\\", "_")
-	filename = strings.ReplaceAll(filename, ".", "_")
-	path := fmt.Sprintf("%s\\%s.json", dir, filename)
+	filename, err := sanitizeProfileName(name)
+	if err != nil {
+		return fmt.Sprintf("[ERR] %v", err)
+	}
+	path := filepath.Join(dir, filename+".json")
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -881,11 +993,11 @@ func (a *App) LoadProfile(name string) string {
 
 func (a *App) DeleteProfile(name string) string {
 	dir := profilesDir()
-	filename := strings.ReplaceAll(name, " ", "_")
-	filename = strings.ReplaceAll(filename, "/", "_")
-	filename = strings.ReplaceAll(filename, "\\", "_")
-	filename = strings.ReplaceAll(filename, ".", "_")
-	path := fmt.Sprintf("%s\\%s.json", dir, filename)
+	filename, err := sanitizeProfileName(name)
+	if err != nil {
+		return fmt.Sprintf("[ERR] %v", err)
+	}
+	path := filepath.Join(dir, filename+".json")
 
 	if err := os.Remove(path); err != nil {
 		return fmt.Sprintf("[ERR] Failed to delete profile: %v", err)
@@ -1032,5 +1144,3 @@ func (a *App) SetWindowsUpdate(mode string) string {
 	a.emitLog(res)
 	return res
 }
-
-
