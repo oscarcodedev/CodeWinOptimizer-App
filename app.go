@@ -111,7 +111,7 @@ func (a *App) startup(ctx context.Context) {
 
 func (a *App) GetSystemLang() string {
 	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command",
-		"(Get-Culture).TwoLetterISOLanguageName")
+		"(Get-UICulture).TwoLetterISOLanguageName")
 	cmd.SysProcAttr = getSysProcAttr()
 	out, err := cmd.CombinedOutput()
 	if err != nil {
