@@ -126,12 +126,16 @@ function saveTheme() {
 }
 
 function drawTheme() {
-  document.getElementById("tab-theme-label").textContent = T("tabTheme");
-  document.getElementById("theme-title").textContent = T("themeTitle");
-  document.getElementById("theme-colors-label").textContent = T("themeColors");
-  document.getElementById("theme-fonts-label").textContent = T("themeFonts");
-  document.getElementById("btn-theme-apply-text").textContent = T("themeApply");
-  document.getElementById("btn-theme-reset-text").textContent = T("themeReset");
+  const cl = document.getElementById("settings-color-label");
+  const fl = document.getElementById("settings-font-label");
+  const ll = document.getElementById("settings-lang-label");
+  const rt = document.getElementById("btn-theme-reset-text");
+  const ut = document.getElementById("btn-check-update-text");
+  if (cl) cl.textContent = T("themeColors");
+  if (fl) fl.textContent = T("themeFonts");
+  if (ll) ll.textContent = lang === "es" ? "Idioma" : "Language";
+  if (rt) rt.textContent = T("themeReset");
+  if (ut) ut.textContent = T("checkUpdates");
   document
     .querySelectorAll(".color-btn")
     .forEach((b) =>
@@ -580,23 +584,42 @@ function initTheme() {
   );
   document
     .getElementById("theme-font-select")
-    .addEventListener("change", function () {
+    ?.addEventListener("change", function () {
       themeFont = this.value;
       applyTheme();
       saveTheme();
     });
-  document.getElementById("btn-theme-apply").addEventListener("click", () => {
-    applyTheme();
-    saveTheme();
-    setTerm("Theme applied", "ok");
-  });
-  document.getElementById("btn-theme-reset").addEventListener("click", () => {
+  document.getElementById("btn-theme-reset")?.addEventListener("click", () => {
     themeAccent = "#39ff14";
     themeFont = "'Segoe UI',system-ui,sans-serif";
     applyTheme();
     saveTheme();
     drawTheme();
     setTerm("Theme reset", "ok");
+  });
+
+  // Settings gear toggle
+  const settingsBtn = document.getElementById("btn-settings");
+  const settingsPanel = document.getElementById("settings-panel");
+  if (settingsBtn && settingsPanel) {
+    settingsBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const open = !settingsPanel.classList.contains("hidden");
+      settingsPanel.classList.toggle("hidden");
+      settingsBtn.classList.toggle("active", !open);
+    });
+    document.addEventListener("click", function (e) {
+      if (!settingsPanel.contains(e.target) && e.target !== settingsBtn) {
+        settingsPanel.classList.add("hidden");
+        settingsBtn.classList.remove("active");
+      }
+    });
+  }
+
+  // Check for updates button
+  document.getElementById("btn-check-update")?.addEventListener("click", () => {
+    setTerm(lang === "es" ? "Buscando actualizaciones..." : "Checking for updates...", "running");
+    checkForUpdate(true);
   });
 }
 
@@ -712,6 +735,12 @@ async function boot() {
     }),
   );
   document
+    .getElementById("link-docs")
+    ?.addEventListener("click", function (e) {
+      e.preventDefault();
+      window.go?.main?.App?.OpenURL("https://codewinoptimizer.com/docs");
+    });
+  document
     .getElementById("link-patreon")
     ?.addEventListener("click", function (e) {
       e.preventDefault();
@@ -773,27 +802,54 @@ async function boot() {
   checkForUpdate();
 }
 
-async function checkForUpdate() {
+let pendingUpdateUrl = "";
+async function checkForUpdate(manual) {
   try {
     const raw = await window.go.main.App.CheckForUpdate();
     const data = JSON.parse(raw);
-    if (!data.hasUpdate) return;
+    if (!data.hasUpdate) {
+      if (manual) setTerm(T("updateCurrent"), "ok");
+      return;
+    }
+    pendingUpdateUrl = data.downloadUrl || "";
     const banner = document.getElementById("update-banner");
     const text = document.getElementById("update-text");
     const link = document.getElementById("update-link");
     if (!banner || !text || !link) return;
     text.textContent = T("updateAvailable");
     link.textContent = T("updateDownload").replace("{v}", "v" + data.latest);
-    link.addEventListener("click", function (e) {
+    link.onclick = async function (e) {
       e.preventDefault();
-      window.go.main.App.OpenURL(data.updateUrl);
-    });
-    document.getElementById("update-dismiss").addEventListener("click", function () {
+      if (!pendingUpdateUrl) {
+        window.go.main.App.OpenURL(data.updateUrl);
+        return;
+      }
+      link.textContent = T("updating");
+      link.style.pointerEvents = "none";
+      try {
+        const r = await window.go.main.App.DownloadUpdate(pendingUpdateUrl);
+        const res = JSON.parse(r);
+        if (!res.ok) {
+          appendLog("[ERR] Update failed: " + (res.error || "unknown"));
+          setTerm(T("updateFailed"), "err");
+          link.textContent = T("updateDownload").replace("{v}", "v" + data.latest);
+          link.style.pointerEvents = "";
+        }
+      } catch (err) {
+        appendLog("[ERR] Update error: " + err);
+        setTerm(T("updateFailed"), "err");
+        link.textContent = T("updateDownload").replace("{v}", "v" + data.latest);
+        link.style.pointerEvents = "";
+      }
+    };
+    document.getElementById("update-dismiss").onclick = function () {
       banner.classList.add("hidden");
-    });
+    };
     banner.classList.remove("hidden");
+    if (manual) setTerm(T("updateAvailable") + " v" + data.latest, "ok");
   } catch (e) {
     console.warn("[Update] Check failed:", e);
+    if (manual) setTerm(T("connectionFailed"), "err");
   }
 }
 
@@ -884,7 +940,6 @@ function switchTab(tab) {
     drawRestore();
   }
   if (tab === "features") drawFeatures();
-  if (tab === "theme") drawTheme();
   if (tab === "monitor") {
     drawMonitor();
     startMonitorPoll();

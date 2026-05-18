@@ -28,6 +28,18 @@
           <div class="support-links">
             <a
               href="#"
+              id="link-docs"
+              class="support-btn support-docs"
+              title="Documentation"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+              <span>Docs</span>
+            </a>
+            <a
+              href="#"
               id="link-patreon"
               class="support-btn support-patreon"
               title="Support on Patreon"
@@ -67,9 +79,51 @@
               <span>PayPal</span>
             </a>
           </div>
-          <div class="lang-toggle" id="lang-toggle">
-            <button class="lang-btn active" data-lang="en">EN</button>
-            <button class="lang-btn" data-lang="es">ES</button>
+          <div class="settings-wrapper">
+            <button class="settings-btn" id="btn-settings" title="Settings">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </button>
+            <div class="settings-panel hidden" id="settings-panel">
+              <div class="settings-section">
+                <h4 class="settings-label" id="settings-lang-label">Language</h4>
+                <div class="lang-toggle" id="lang-toggle">
+                  <button class="lang-btn active" data-lang="en">EN</button>
+                  <button class="lang-btn" data-lang="es">ES</button>
+                </div>
+              </div>
+              <div class="settings-section">
+                <h4 class="settings-label" id="settings-color-label">Accent Color</h4>
+                <div class="color-options" id="color-options">
+                  <button class="color-btn active" data-color="#39ff14" style="background:#39ff14" title="Neon Green"></button>
+                  <button class="color-btn" data-color="#00ffff" style="background:#00ffff" title="Cyan"></button>
+                  <button class="color-btn" data-color="#bf5af2" style="background:#bf5af2" title="Purple"></button>
+                  <button class="color-btn" data-color="#ff6b35" style="background:#ff6b35" title="Orange"></button>
+                  <button class="color-btn" data-color="#ff2d55" style="background:#ff2d55" title="Pink"></button>
+                  <button class="color-btn" data-color="#d4ff00" style="background:#d4ff00" title="Yellow"></button>
+                </div>
+              </div>
+              <div class="settings-section">
+                <h4 class="settings-label" id="settings-font-label">Font</h4>
+                <select id="theme-font-select" class="theme-select">
+                  <option value="'Segoe UI',system-ui,sans-serif">Segoe UI (Default)</option>
+                  <option value="'Cascadia Code','Consolas',monospace">Cascadia Code</option>
+                  <option value="'Inter',system-ui,sans-serif">Inter</option>
+                  <option value="'JetBrains Mono',monospace">JetBrains Mono</option>
+                  <option value="Arial,sans-serif">Arial</option>
+                  <option value="'Trebuchet MS',sans-serif">Trebuchet MS</option>
+                </select>
+              </div>
+              <div class="settings-section settings-section-actions">
+                <button id="btn-check-update" class="btn-secondary settings-update-btn">
+                  <span id="btn-check-update-text">Check for Updates</span>
+                </button>
+                <button id="btn-theme-reset" class="btn-secondary settings-reset-btn">
+                  <span id="btn-theme-reset-text">Reset Defaults</span>
+                </button>
+              </div>
+            </div>
           </div>
           <div class="win-controls" role="group" aria-label="Window controls">
             <button
@@ -135,10 +189,6 @@
         <button class="tab" data-tab="updates">
           <span class="tab-icon">🔄</span
           ><span id="tab-updates-label">Updates</span>
-        </button>
-        <button class="tab" data-tab="theme">
-          <span class="tab-icon">🎨</span
-          ><span id="tab-theme-label">Appearance</span>
         </button>
       </nav>
 
@@ -526,88 +576,11 @@
         </div>
       </div>
 
-      <div class="tab-content" id="tab-theme">
-        <div class="panel">
-          <h2 id="theme-title">Appearance</h2>
-          <p id="theme-desc">
-            Customize the look and feel of CodeWinOptimizer.
-          </p>
-          <div class="theme-grid">
-            <div class="theme-colors">
-              <h3 id="theme-colors-label">Accent Color</h3>
-              <div class="color-options" id="color-options">
-                <button
-                  class="color-btn active"
-                  data-color="#39ff14"
-                  style="background: #39ff14"
-                  title="Neon Green"
-                ></button>
-                <button
-                  class="color-btn"
-                  data-color="#00ffff"
-                  style="background: #00ffff"
-                  title="Cyan"
-                ></button>
-                <button
-                  class="color-btn"
-                  data-color="#bf5af2"
-                  style="background: #bf5af2"
-                  title="Purple"
-                ></button>
-                <button
-                  class="color-btn"
-                  data-color="#ff6b35"
-                  style="background: #ff6b35"
-                  title="Orange"
-                ></button>
-                <button
-                  class="color-btn"
-                  data-color="#ff2d55"
-                  style="background: #ff2d55"
-                  title="Pink"
-                ></button>
-                <button
-                  class="color-btn"
-                  data-color="#d4ff00"
-                  style="background: #d4ff00"
-                  title="Yellow"
-                ></button>
-              </div>
-            </div>
-            <div class="theme-fonts">
-              <h3 id="theme-fonts-label">Font</h3>
-              <select id="theme-font-select" class="theme-select">
-                <option value="'Segoe UI',system-ui,sans-serif">
-                  Segoe UI (Default)
-                </option>
-                <option value="'Cascadia Code','Consolas',monospace">
-                  Cascadia Code
-                </option>
-                <option value="'Inter',system-ui,sans-serif">Inter</option>
-                <option value="'JetBrains Mono',monospace">
-                  JetBrains Mono
-                </option>
-                <option value="Arial,sans-serif">Arial</option>
-                <option value="'Trebuchet MS',sans-serif">Trebuchet MS</option>
-              </select>
-            </div>
-          </div>
-          <div class="theme-actions">
-            <button id="btn-theme-apply" class="btn-primary">
-              <span id="btn-theme-apply-text">Apply</span>
-            </button>
-            <button id="btn-theme-reset" class="btn-secondary">
-              <span id="btn-theme-reset-text">Reset Defaults</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       <div id="terminal" class="collapsed">
         <div class="term-header">
           <span class="term-toggle">▼</span>
           <span class="term-brand"
-            >CodeWinOptimizer &middot; v1.0.0 &middot; OscarDev</span
+            >CodeWinOptimizer &middot; v1.1.0 &middot; OscarDev</span
           >
           <span id="term-title"></span>
           <div class="term-actions">

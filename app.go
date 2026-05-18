@@ -57,7 +57,7 @@ type App struct {
 }
 
 const (
-	appVersion    = "1.0.0"
+	appVersion    = "1.1.0"
 	githubRepo    = "oscarcodedev/CodeWinOptimizer-App"
 	minOpInterval = 2 * time.Second
 )
@@ -190,16 +190,21 @@ func (a *App) GetVersion() string {
 }
 
 func (a *App) CheckForUpdate() string {
+	type assetInfo struct {
+		Name               string `json:"name"`
+		BrowserDownloadURL string `json:"browser_download_url"`
+	}
 	type releaseInfo struct {
-		TagName string `json:"tag_name"`
-		HTMLURL string `json:"html_url"`
-		Body    string `json:"body"`
+		TagName string      `json:"tag_name"`
+		HTMLURL string      `json:"html_url"`
+		Assets  []assetInfo `json:"assets"`
 	}
 	type updateResult struct {
-		Current   string `json:"current"`
-		Latest    string `json:"latest"`
-		UpdateURL string `json:"updateUrl"`
-		HasUpdate bool   `json:"hasUpdate"`
+		Current     string `json:"current"`
+		Latest      string `json:"latest"`
+		UpdateURL   string `json:"updateUrl"`
+		DownloadURL string `json:"downloadUrl"`
+		HasUpdate   bool   `json:"hasUpdate"`
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
@@ -228,15 +233,112 @@ func (a *App) CheckForUpdate() string {
 	}
 
 	latest := strings.TrimPrefix(release.TagName, "v")
+
+	// Find .exe asset download URL
+	var downloadURL string
+	for _, asset := range release.Assets {
+		if strings.HasSuffix(strings.ToLower(asset.Name), ".exe") {
+			downloadURL = asset.BrowserDownloadURL
+			break
+		}
+	}
+
 	result := updateResult{
-		Current:   appVersion,
-		Latest:    latest,
-		UpdateURL: release.HTMLURL,
-		HasUpdate: latest != appVersion && latest > appVersion,
+		Current:     appVersion,
+		Latest:      latest,
+		UpdateURL:   release.HTMLURL,
+		DownloadURL: downloadURL,
+		HasUpdate:   latest != appVersion && latest > appVersion,
 	}
 
 	b, _ := json.Marshal(result)
 	return string(b)
+}
+
+func (a *App) DownloadUpdate(downloadURL string) string {
+	if downloadURL == "" {
+		return `{"ok":false,"error":"no download URL"}`
+	}
+
+	a.emitLog("[UPDATE] Downloading update...")
+
+	// Get current executable path
+	exePath, err := os.Executable()
+	if err != nil {
+		return fmt.Sprintf(`{"ok":false,"error":"%s"}`, err.Error())
+	}
+	exePath, _ = filepath.EvalSymlinks(exePath)
+
+	// Download to temp file next to current exe
+	tmpPath := exePath + ".update"
+	client := &http.Client{Timeout: 5 * time.Minute}
+	resp, err := client.Get(downloadURL)
+	if err != nil {
+		return fmt.Sprintf(`{"ok":false,"error":"download failed: %s"}`, err.Error())
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Sprintf(`{"ok":false,"error":"HTTP %d"}`, resp.StatusCode)
+	}
+
+	out, err := os.Create(tmpPath)
+	if err != nil {
+		return fmt.Sprintf(`{"ok":false,"error":"create temp: %s"}`, err.Error())
+	}
+
+	written, err := io.Copy(out, resp.Body)
+	out.Close()
+	if err != nil {
+		os.Remove(tmpPath)
+		return fmt.Sprintf(`{"ok":false,"error":"write failed: %s"}`, err.Error())
+	}
+
+	a.emitLog(fmt.Sprintf("[UPDATE] Downloaded %.2f MB", float64(written)/(1024*1024)))
+
+	// Create PowerShell updater script
+	scriptPath := filepath.Join(os.TempDir(), "cwo-updater.ps1")
+	pid := os.Getpid()
+	script := fmt.Sprintf(`
+$ErrorActionPreference = 'Stop'
+Start-Sleep -Milliseconds 500
+$proc = Get-Process -Id %d -ErrorAction SilentlyContinue
+if ($proc) {
+    $proc.WaitForExit(10000) | Out-Null
+}
+Start-Sleep -Milliseconds 500
+$old = '%s'
+$tmp = '%s'
+Remove-Item -Path $old -Force -ErrorAction SilentlyContinue
+Move-Item -Path $tmp -Destination $old -Force
+Start-Process -FilePath $old
+Remove-Item -Path '%s' -Force -ErrorAction SilentlyContinue
+`, pid, exePath, tmpPath, scriptPath)
+
+	if err := os.WriteFile(scriptPath, []byte(script), 0644); err != nil {
+		os.Remove(tmpPath)
+		return fmt.Sprintf(`{"ok":false,"error":"script: %s"}`, err.Error())
+	}
+
+	// Launch updater and quit
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive",
+		"-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", scriptPath)
+	cmd.SysProcAttr = getSysProcAttr()
+	if err := cmd.Start(); err != nil {
+		os.Remove(tmpPath)
+		os.Remove(scriptPath)
+		return fmt.Sprintf(`{"ok":false,"error":"launch updater: %s"}`, err.Error())
+	}
+
+	a.emitLog("[UPDATE] Restarting...")
+
+	// Quit the app
+	go func() {
+		time.Sleep(300 * time.Millisecond)
+		wailsRuntime.Quit(a.ctx)
+	}()
+
+	return `{"ok":true}`
 }
 
 func (a *App) CreateRestorePoint(description string) string {

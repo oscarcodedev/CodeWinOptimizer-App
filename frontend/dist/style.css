@@ -123,6 +123,15 @@ header h1 {
   background: rgba(0, 161, 222, 0.18);
   box-shadow: 0 0 12px rgba(0, 161, 222, 0.2);
 }
+.support-docs {
+  color: var(--gn);
+  background: var(--gn2);
+  border-color: rgba(57, 255, 20, 0.2);
+}
+.support-docs:hover {
+  background: rgba(57, 255, 20, 0.18);
+  box-shadow: 0 0 12px rgba(57, 255, 20, 0.2);
+}
 
 /* LANGUAGE TOGGLE */
 .lang-toggle {
@@ -148,6 +157,90 @@ header h1 {
 .lang-btn.active {
   background: var(--gn);
   color: #0a0a0a;
+}
+
+/* SETTINGS GEAR */
+.settings-wrapper {
+  position: relative;
+}
+.settings-btn {
+  background: none;
+  border: 1px solid #222;
+  border-radius: 6px;
+  color: var(--tx3);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.settings-btn:hover,
+.settings-btn.active {
+  color: var(--gn);
+  border-color: var(--gn);
+  background: var(--gn2);
+}
+.settings-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 10px;
+  padding: 14px;
+  z-index: 1000;
+  box-shadow: 0 8px 32px rgba(0,0,0,.6);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.settings-panel.hidden {
+  display: none;
+}
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.settings-label {
+  font-size: .72em;
+  font-weight: 600;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin: 0;
+}
+.settings-section .lang-toggle {
+  align-self: flex-start;
+}
+.settings-section .color-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.settings-section .theme-select {
+  width: 100%;
+  font-size: .8em;
+}
+.settings-section-actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #1a1a1a;
+}
+.settings-update-btn,
+.settings-reset-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: .7em !important;
+  padding: 6px 6px !important;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 /* WINDOW CONTROLS */

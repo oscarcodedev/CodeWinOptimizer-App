@@ -154,6 +154,9 @@ window.L.en = {
   updateDownload: "Download {v}",
   updateCurrent: "You're on the latest version",
   operationCancelled: "Operation cancelled",
+  checkUpdates: "Check Updates",
+  updating: "Downloading update...",
+  updateFailed: "Update failed",
 };
 
 window.L.es = {
@@ -310,4 +313,7 @@ window.L.es = {
   updateDownload: "Descargar {v}",
   updateCurrent: "Estás en la última versión",
   operationCancelled: "Operación cancelada",
+  checkUpdates: "Buscar Actualizaciones",
+  updating: "Descargando actualización...",
+  updateFailed: "Actualización fallida",
 };
