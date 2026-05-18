@@ -2,7 +2,7 @@ const APPS = window.APPS;
 const FEATURES = window.FEATURES;
 const FIXES = window.FIXES;
 const L = window.L;
-let lang = (navigator.language || navigator.userLanguage || "en").startsWith("es") ? "es" : "en",
+let lang = "en",
   busy = false,
   busyTimer = null,
   catData = [],
@@ -761,6 +761,12 @@ async function boot() {
   }
   checkAdmin();
   checkInstalled();
+  try {
+    const sysLang = await window.go.main.App.GetSystemLang();
+    if (sysLang === "es") lang = "es";
+  } catch (e) {
+    console.warn("[Lang] Detection failed:", e);
+  }
   switchLang(lang);
   setTerm(T("idle"), "");
   checkForUpdate();

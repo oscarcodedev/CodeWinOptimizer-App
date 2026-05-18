@@ -109,6 +109,21 @@ func (a *App) startup(ctx context.Context) {
 	a.ensureDefaultProfiles()
 }
 
+func (a *App) GetSystemLang() string {
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command",
+		"(Get-Culture).TwoLetterISOLanguageName")
+	cmd.SysProcAttr = getSysProcAttr()
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "en"
+	}
+	lang := strings.TrimSpace(string(out))
+	if lang == "es" {
+		return "es"
+	}
+	return "en"
+}
+
 func (a *App) runPS(script string) string {
 	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script)
 	cmd.SysProcAttr = getSysProcAttr()
