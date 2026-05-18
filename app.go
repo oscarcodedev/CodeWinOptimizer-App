@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 	"regexp"
 	"strings"
 	"time"
@@ -47,6 +48,20 @@ type App struct {
 	categories []Category
 	tweakMap   map[string]*Tweak
 	tweaksErr  error
+	opMu       sync.Mutex
+	lastOp     time.Time
+}
+
+const minOpInterval = 2 * time.Second
+
+func (a *App) rateLimit(op string) error {
+	a.opMu.Lock()
+	defer a.opMu.Unlock()
+	if time.Since(a.lastOp) < minOpInterval {
+		return fmt.Errorf("rate limited: please wait before running %s again", op)
+	}
+	a.lastOp = time.Now()
+	return nil
 }
 
 func NewApp() *App {
@@ -98,8 +113,24 @@ func (a *App) loadTweaks() error {
 	return nil
 }
 
+// sanitizeLog removes control characters and ANSI escape sequences from log output
+// to prevent potential UI manipulation if log rendering ever changes from textContent.
+func sanitizeLog(s string) string {
+	// Strip ANSI escape sequences (colors, cursor movement, etc.)
+	s = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`).ReplaceAllString(s, "")
+	// Strip other control characters except newline, carriage return, tab
+	var b strings.Builder
+	b.Grow(len(s))
+	for _, r := range s {
+		if r == '\n' || r == '\r' || r == '\t' || r >= 32 {
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
+}
+
 func (a *App) emitLog(msg string) {
-	wailsRuntime.EventsEmit(a.ctx, "log", msg)
+	wailsRuntime.EventsEmit(a.ctx, "log", sanitizeLog(msg))
 }
 
 func (a *App) GetCategories() []Category {
@@ -107,6 +138,9 @@ func (a *App) GetCategories() []Category {
 }
 
 func (a *App) CreateRestorePoint(description string) string {
+	if err := a.rateLimit("CreateRestorePoint"); err != nil {
+		return err.Error()
+	}
 	// Sanitize description for PowerShell double-quoted string
 	desc := strings.NewReplacer(
 		"`", "``",
@@ -171,6 +205,9 @@ try {
 }
 
 func (a *App) RunCommands(tweakIDs []string, lang string) string {
+	if err := a.rateLimit("RunCommands"); err != nil {
+		return err.Error()
+	}
 	total := len(tweakIDs)
 
 	for i, tweakID := range tweakIDs {
@@ -243,6 +280,9 @@ func ensureChoco(a *App) {
 }
 
 func (a *App) InstallApps(ids []string, lang string, pkgMgr string) string {
+	if err := a.rateLimit("InstallApps"); err != nil {
+		return err.Error()
+	}
 	total := len(ids)
 
 	if pkgMgr == "choco" {
@@ -392,6 +432,9 @@ func (a *App) Quit() {
 }
 
 func (a *App) BackupRegistry() string {
+	if err := a.rateLimit("BackupRegistry"); err != nil {
+		return err.Error()
+	}
 	backupDir := fmt.Sprintf("%s\\CodeWinOptimizer\\registry-backups", os.Getenv("USERPROFILE"))
 	ts := time.Now().Format("2006-01-02_150405")
 	dir := fmt.Sprintf("%s\\%s", backupDir, ts)
@@ -625,6 +668,9 @@ var cleanupScripts = map[string]string{
 var cleanupNamesES = map[string]string{"temp": "Archivos temporales", "recycle": "Papelera", "prefetch": "Archivos Prefetch", "winupdate": "Cache Windows Update", "thumbnails": "Cache miniaturas", "dnscache": "Cache DNS", "memorydump": "Volcados de memoria"}
 
 func (a *App) CleanupRun(tasks []string, lang string) string {
+	if err := a.rateLimit("CleanupRun"); err != nil {
+		return err.Error()
+	}
 	for _, id := range tasks {
 		ps, ok := cleanupScripts[id]
 		if !ok {
@@ -681,6 +727,9 @@ func (a *App) GetNetworkLatency() string {
 }
 
 func (a *App) RunSpeedTest() string {
+	if err := a.rateLimit("RunSpeedTest"); err != nil {
+		return "{}"
+	}
 	type Result struct {
 		PingMs        float64 `json:"pingMs"`
 		DownloadMbps  float64 `json:"downloadMbps"`
@@ -747,6 +796,9 @@ func (a *App) RunSpeedTest() string {
 }
 
 func (a *App) BackupDrivers() string {
+	if err := a.rateLimit("BackupDrivers"); err != nil {
+		return err.Error()
+	}
 	backupDir := fmt.Sprintf("%s\\CodeWinOptimizer\\driver-backups", os.Getenv("USERPROFILE"))
 	ts := time.Now().Format("2006-01-02_150405")
 	dir := fmt.Sprintf("%s\\%s", backupDir, ts)
@@ -778,6 +830,9 @@ if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq 3010) {
 }
 
 func (a *App) RestoreDrivers(folderPath string) string {
+	if err := a.rateLimit("RestoreDrivers"); err != nil {
+		return err.Error()
+	}
 	expectedBase := filepath.Join(os.Getenv("USERPROFILE"), "CodeWinOptimizer", "driver-backups")
 	absPath, err := filepath.Abs(folderPath)
 	if err != nil || !strings.HasPrefix(absPath, expectedBase) {
@@ -1095,6 +1150,9 @@ func (a *App) SetDNS(provider string) string {
 }
 
 func (a *App) SetWindowsUpdate(mode string) string {
+	if err := a.rateLimit("SetWindowsUpdate"); err != nil {
+		return err.Error()
+	}
 	var script string
 	switch mode {
 	case "default":

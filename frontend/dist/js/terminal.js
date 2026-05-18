@@ -25,7 +25,7 @@ function setTerm(t, c) {
 }
 function clearTerm() {
   const l = document.getElementById("term-log");
-  if (l) l.innerHTML = "";
+  if (l) l.replaceChildren();
   setTerm(T("idle"), "");
 }
 async function copyTerm() {

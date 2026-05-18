@@ -7,7 +7,7 @@ function drawUpdates() {
   document.getElementById("update-default-title").textContent =
     T("updateDefaultTitle");
   const defList = document.getElementById("update-default-list");
-  defList.innerHTML = "";
+  defList.replaceChildren();
   [T("updateDefaultItem1"), T("updateDefaultItem2")].forEach((t) => {
     const li = document.createElement("li");
     li.textContent = t;
@@ -22,7 +22,7 @@ function drawUpdates() {
     "updateSecurityTitle",
   );
   const secList = document.getElementById("update-security-list");
-  secList.innerHTML = "";
+  secList.replaceChildren();
   [
     T("updateSecurityItem1"),
     T("updateSecurityItem2"),
@@ -40,7 +40,7 @@ function drawUpdates() {
   document.getElementById("update-disable-title").textContent =
     T("updateDisableTitle");
   const disList = document.getElementById("update-disable-list");
-  disList.innerHTML = "";
+  disList.replaceChildren();
   [
     T("updateDisableItem1"),
     T("updateDisableItem2"),

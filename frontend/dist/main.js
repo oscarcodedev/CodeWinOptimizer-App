@@ -36,9 +36,29 @@ function LO(v) {
   return typeof v === "object" && v ? v[lang] || v["en"] || "" : v || "";
 }
 function esc(s) {
-  const d = document.createElement("div");
-  d.textContent = s;
-  return d.innerHTML;
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+function h(tag, props, ...children) {
+  const el = document.createElement(tag);
+  if (props)
+    for (const [k, v] of Object.entries(props)) {
+      if (v == null || v === false) continue;
+      if (k === "className") el.className = v;
+      else if (k === "textContent") el.textContent = v;
+      else if (k === "style") el.style.cssText = v;
+      else if (k === "checked" || k === "disabled") el[k] = !!v;
+      else el.setAttribute(k, v);
+    }
+  for (const c of children.flat(Infinity)) {
+    if (c == null || c === false) continue;
+    el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return el;
 }
 
 function showConfirm(title, msg) {
@@ -172,7 +192,7 @@ async function fetchMonitor() {
       document.getElementById("mon-disk-val").textContent =
         d.disks[0].pct + "% used";
       const diskEl = document.getElementById("mon-disk-detail");
-      diskEl.innerHTML = "";
+      diskEl.replaceChildren();
       d.disks.forEach((dk) => {
         const pct = Math.min(Math.max(Number(dk.pct) || 0, 0), 100);
         const cl =
@@ -197,7 +217,7 @@ async function fetchMonitor() {
     }
     if (d.temps && d.temps.length > 0) {
       const tempEl = document.getElementById("mon-temp-val");
-      tempEl.innerHTML = "";
+      tempEl.replaceChildren();
       d.temps.forEach((t, i) => {
         if (i > 0) tempEl.append(" ");
         const tmp = Number(t.temp) || 0;
@@ -318,7 +338,7 @@ async function runSpeedTest() {
       d.pingMs != null && d.pingMs > 0 ? d.pingMs.toFixed(0) + " ms" : "--";
 
     const pingEl = document.getElementById("speedtest-ping");
-    pingEl.innerHTML = "";
+    pingEl.replaceChildren();
     const pingItem = document.createElement("div");
     pingItem.className = "speedtest-ping-item";
     const pingLbl = document.createElement("span");
@@ -344,22 +364,27 @@ async function runSpeedTest() {
       pingEl.appendChild(srvItem);
     }
 
-    // Format speeds: UI gets HTML, log gets plain text
-    function fmtSpeedUI(val) {
-      if (!val || val <= 0) return "--";
-      if (val >= 1000) {
-        return (
-          (val / 1000).toFixed(2) +
-          ' <span style="font-size:.7em;font-weight:500;color:var(--tx3)">Gbps</span>'
-        );
-      }
-      return (
-        val.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }) +
-        ' <span style="font-size:.7em;font-weight:500;color:var(--tx3)">Mbps</span>'
+    // Format speeds: UI builds DOM nodes, log returns plain text
+    function fmtSpeedNode(val) {
+      if (!val || val <= 0) return document.createTextNode("--");
+      const num =
+        val >= 1000
+          ? (val / 1000).toFixed(2)
+          : val.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            });
+      const unit = val >= 1000 ? "Gbps" : "Mbps";
+      const frag = document.createDocumentFragment();
+      frag.appendChild(document.createTextNode(num + " "));
+      frag.appendChild(
+        h(
+          "span",
+          { style: "font-size:.7em;font-weight:500;color:var(--tx3)" },
+          unit,
+        ),
       );
+      return frag;
     }
     function fmtSpeedLog(val) {
       if (!val || val <= 0) return "--";
@@ -372,15 +397,23 @@ async function runSpeedTest() {
       );
     }
 
-    const downUI = fmtSpeedUI(d.downloadMbps);
-    const upUI = fmtSpeedUI(d.uploadMbps);
     const downLog = fmtSpeedLog(d.downloadMbps);
     const upLog = fmtSpeedLog(d.uploadMbps);
 
-    document.getElementById("speedtest-speeds").innerHTML = `
-      <div class="speedtest-down"><span class="speedtest-arrow">↓</span>${downUI}</div>
-      <div class="speedtest-up"><span class="speedtest-arrow">↑</span>${upUI}</div>
-    `;
+    document.getElementById("speedtest-speeds").replaceChildren(
+      h(
+        "div",
+        { className: "speedtest-down" },
+        h("span", { className: "speedtest-arrow", textContent: "↓" }),
+        fmtSpeedNode(d.downloadMbps),
+      ),
+      h(
+        "div",
+        { className: "speedtest-up" },
+        h("span", { className: "speedtest-arrow", textContent: "↑" }),
+        fmtSpeedNode(d.uploadMbps),
+      ),
+    );
 
     // Show result section
     document.getElementById("speedtest-result").style.display = "block";
@@ -468,18 +501,32 @@ function drawCleanup() {
       ? T("cleanupBtnCount").replace("{n}", cleanPicked.size)
       : T("cleanupBtn");
   const g = document.getElementById("cleanup-grid");
-  g.innerHTML = CLEANUP_TASKS.map((t) => {
-    const sel = cleanPicked.has(t.id) ? " selected" : "";
-    const chk = cleanPicked.has(t.id) ? "checked" : "";
-    return `<label class="cleanup-item${sel}">
-      <label class="toggle"><input type="checkbox" data-cid="${t.id}" ${chk}><span class="toggle-slider"></span></label>
-      <span style="font-size:1.2em">${t.icon}</span>
-      <div class="cleanup-item-body">
-        <div class="cleanup-item-name">${LO(t.n)}</div>
-        <div class="cleanup-item-desc">${LO(t.d)}</div>
-      </div>
-    </label>`;
-  }).join("");
+  g.replaceChildren(
+    ...CLEANUP_TASKS.map((t) => {
+      const sel = cleanPicked.has(t.id);
+      return h(
+        "label",
+        { className: "cleanup-item" + (sel ? " selected" : "") },
+        h(
+          "label",
+          { className: "toggle" },
+          h("input", {
+            type: "checkbox",
+            "data-cid": t.id,
+            checked: sel,
+          }),
+          h("span", { className: "toggle-slider" }),
+        ),
+        h("span", { style: "font-size:1.2em", textContent: t.icon }),
+        h(
+          "div",
+          { className: "cleanup-item-body" },
+          h("div", { className: "cleanup-item-name", textContent: LO(t.n) }),
+          h("div", { className: "cleanup-item-desc", textContent: LO(t.d) }),
+        ),
+      );
+    }),
+  );
   g.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
     cb.addEventListener("change", function () {
       if (this.checked) cleanPicked.add(this.dataset.cid);
@@ -558,8 +605,14 @@ async function boot() {
   try {
     catData = await window.go.main.App.GetCategories();
   } catch (e) {
-    document.getElementById("tweaks-grid").innerHTML =
-      '<div style="padding:20px;color:var(--rd)">Connection failed</div>';
+    document
+      .getElementById("tweaks-grid")
+      .replaceChildren(
+        h(
+          "div",
+          { style: "padding:20px;color:var(--rd)", textContent: T("connectionFailed") },
+        ),
+      );
     return;
   }
 
@@ -794,45 +847,61 @@ function drawApps() {
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
   });
   const grid = document.getElementById("apps-grid");
-  grid.innerHTML = allCats
-    .map((c, ci) => {
-      const apps = APPS.filter(
-        (a) =>
-          a.cat === c &&
-          (!q ||
-            LO(a.n).toLowerCase().includes(q) ||
-            (a.id && a.id.includes(q))) &&
-          (!showInstalledOnly || installedSet.has(a.id)),
-      );
-      if (apps.length === 0) return "";
-      const collapsed = collapsedCats.has(c);
-      return `<div class="app-cat-section${collapsed ? " collapsed" : ""}" data-cat="${c}">
-      <div class="app-cat-title"><span class="app-cat-arrow">▼</span>${T("cat" + c)}<span class="app-cat-sel-all" data-ci="${ci}">${T("selectAll")}</span><span style="font-weight:400;color:var(--tx3);margin-left:auto">${apps.length} apps</span></div>
-       <div class="app-cat-grid">${apps
-         .map((a) => {
-           const sel = pickedA.has(a.id) ? " selected" : "";
-           const chk = pickedA.has(a.id) ? "checked" : "";
-           const pkg = pkgMgr === "winget" ? a.w : a.c;
-           const noPkg = !pkg;
-           const isInst = installedSet.has(a.id);
-           const icls = isInst ? " installed" : "";
-           return `<div class="app-card${sel}${icls}" data-aid="${esc(a.id)}">
-           <label class="toggle"><input type="checkbox" data-aid="${esc(a.id)}" ${chk} ${noPkg || isInst ? "disabled" : ""}><span class="toggle-slider"></span></label>
-           ${a.img ? `<img class="app-icon" src="${esc(a.img)}" alt="">` : `<span class="app-icon">${esc(a.icon)}</span>`}
-           <div class="app-info">
-             <div class="app-name">${esc(LO(a.n))}${isInst ? ` <span class="app-inst-badge">${T("installed")}</span>` : ""}</div>
-             <div class="app-desc">${esc(LO(a.d))}</div>
-             <div class="app-actions">
-              <button class="app-btn app-btn-uninstall" data-aid="${a.id}" data-action="uninstall" ${noPkg && !isInst ? "disabled" : ""}>${T("uninstall")}</button>
-              <button class="app-btn app-btn-web" data-aid="${a.id}" data-action="web">${T("website")}</button>
-            </div>
-          </div>
-        </div>`;
-         })
-         .join("")}</div>
-    </div>`;
-    })
-    .join("");
+  grid.replaceChildren(
+    ...allCats
+      .map((c, ci) => {
+        const apps = APPS.filter(
+          (a) =>
+            a.cat === c &&
+            (!q ||
+              LO(a.n).toLowerCase().includes(q) ||
+              (a.id && a.id.includes(q))) &&
+            (!showInstalledOnly || installedSet.has(a.id)),
+        );
+        if (apps.length === 0) return null;
+        const collapsed = collapsedCats.has(c);
+        return h(
+          "div",
+          { className: "app-cat-section" + (collapsed ? " collapsed" : ""), "data-cat": c },
+          h("div", { className: "app-cat-title" },
+            h("span", { className: "app-cat-arrow", textContent: "▼" }),
+            T("cat" + c),
+            h("span", { className: "app-cat-sel-all", "data-ci": String(ci), textContent: T("selectAll") }),
+            h("span", { style: "font-weight:400;color:var(--tx3);margin-left:auto", textContent: apps.length + " apps" }),
+          ),
+          h("div", { className: "app-cat-grid" },
+            apps.map((a) => {
+              const pkg = pkgMgr === "winget" ? a.w : a.c;
+              const noPkg = !pkg;
+              const isInst = installedSet.has(a.id);
+              return h(
+                "div",
+                { className: "app-card" + (pickedA.has(a.id) ? " selected" : "") + (isInst ? " installed" : ""), "data-aid": a.id },
+                h("label", { className: "toggle" },
+                  h("input", { type: "checkbox", "data-aid": a.id, checked: pickedA.has(a.id), disabled: noPkg || isInst }),
+                  h("span", { className: "toggle-slider" }),
+                ),
+                a.img
+                  ? h("img", { className: "app-icon", src: a.img, alt: "" })
+                  : h("span", { className: "app-icon", textContent: a.icon }),
+                h("div", { className: "app-info" },
+                  h("div", { className: "app-name" },
+                    LO(a.n),
+                    isInst ? h("span", { className: "app-inst-badge", textContent: T("installed") }) : null,
+                  ),
+                  h("div", { className: "app-desc", textContent: LO(a.d) }),
+                  h("div", { className: "app-actions" },
+                    h("button", { className: "app-btn app-btn-uninstall", "data-aid": a.id, "data-action": "uninstall", disabled: noPkg && !isInst, textContent: T("uninstall") }),
+                    h("button", { className: "app-btn app-btn-web", "data-aid": a.id, "data-action": "web", textContent: T("website") }),
+                  ),
+                ),
+              );
+            }),
+          ),
+        );
+      })
+      .filter(Boolean),
+  );
 
   grid.querySelectorAll(".app-card").forEach((card) => {
     card.addEventListener("click", function (e) {
@@ -966,17 +1035,33 @@ async function doUninstall(appId) {
 function drawTweaks() {
   document.getElementById("tab-tweaks-label").textContent = T("tabTweaks");
   const grid = document.getElementById("tweaks-grid");
-  grid.innerHTML = catData.map((c, ci) => catCard(c, ci)).join("");
+  grid.replaceChildren(...catData.map((c, ci) => catCard(c, ci)));
   bindTweakEv();
 }
 
 function catCard(c, ci) {
   const n = LO(c.name);
   const w = c.tweaks.filter((t) => t.commands && t.commands.length > 0);
-  return `<div class="cat-card" data-ci="${ci}">
-    <div class="cat-head"><div class="cat-head-left"><span class="cat-name">${n}</span></div><div style="display:flex;align-items:center;gap:10px"><span class="cat-badge">${w.length}</span><span class="cat-arrow">▼</span></div></div>
-    <div class="cat-body"><div class="cat-sel-all" data-ci="${ci}"><button class="cat-sel-all-btn" type="button"><span class="sel-ico">☐</span><span class="sel-lbl">${T("selectAll")}</span></button></div>${c.tweaks.map((t) => tweakRow(t)).join("")}</div>
-  </div>`;
+  return h("div", { className: "cat-card", "data-ci": String(ci) },
+    h("div", { className: "cat-head" },
+      h("div", { className: "cat-head-left" },
+        h("span", { className: "cat-name", textContent: n }),
+      ),
+      h("div", { style: "display:flex;align-items:center;gap:10px" },
+        h("span", { className: "cat-badge", textContent: String(w.length) }),
+        h("span", { className: "cat-arrow", textContent: "▼" }),
+      ),
+    ),
+    h("div", { className: "cat-body" },
+      h("div", { className: "cat-sel-all", "data-ci": String(ci) },
+        h("button", { className: "cat-sel-all-btn", type: "button" },
+          h("span", { className: "sel-ico", textContent: "☐" }),
+          h("span", { className: "sel-lbl", textContent: T("selectAll") }),
+        ),
+      ),
+      c.tweaks.map((t) => tweakRow(t)),
+    ),
+  );
 }
 
 function tweakRow(t) {
@@ -984,18 +1069,31 @@ function tweakRow(t) {
   const d = LO(t.description);
   const cmds = (t.commands || []).length;
   const hasW = (t.warnings?.[lang] || t.warnings?.["en"] || []).length > 0;
-  const chk = pickedT.has(t.id) ? "checked" : "";
-  const disabled = cmds === 0 ? "disabled" : "";
   const uid = "tcb-" + t.id;
-  return `<div class="tweak-row" data-tid="${t.id}">
-    <div class="tweak-left">
-      <label class="toggle"><input type="checkbox" id="${uid}" data-tid="${t.id}" ${chk} ${disabled}><span class="toggle-slider"></span></label>
-      <button class="tweak-more-btn" data-tid="${t.id}" type="button" title="${T("tweakMoreInfo")}">ℹ️</button>
-    </div>
-    <label class="tweak-row-main" for="${uid}">
-      <div class="tweak-inf"><div class="tweak-inf-name"><span>${n}</span>${hasW ? '<span class="warn-dot">●</span>' : ""}</div><div class="tweak-inf-desc">${d}</div><div class="tweak-inf-meta"><span class="badge badge-${t.impact}">${t.impact}</span>${cmds > 0 ? `<span>${cmds} ${T("cmds")}</span>` : "<span>info</span>"}</div></div>
-    </label>
-  </div>`;
+  return h("div", { className: "tweak-row", "data-tid": t.id },
+    h("div", { className: "tweak-left" },
+      h("label", { className: "toggle" },
+        h("input", { type: "checkbox", id: uid, "data-tid": t.id, checked: pickedT.has(t.id), disabled: cmds === 0 }),
+        h("span", { className: "toggle-slider" }),
+      ),
+      h("button", { className: "tweak-more-btn", "data-tid": t.id, type: "button", title: T("tweakMoreInfo"), textContent: "ℹ️" }),
+    ),
+    h("label", { className: "tweak-row-main", for: uid },
+      h("div", { className: "tweak-inf" },
+        h("div", { className: "tweak-inf-name" },
+          h("span", { textContent: n }),
+          hasW ? h("span", { className: "warn-dot", textContent: "●" }) : null,
+        ),
+        h("div", { className: "tweak-inf-desc", textContent: d }),
+        h("div", { className: "tweak-inf-meta" },
+          h("span", { className: "badge badge-" + t.impact, textContent: t.impact }),
+          cmds > 0
+            ? h("span", null, cmds + " " + T("cmds"))
+            : h("span", null, "info"),
+        ),
+      ),
+    ),
+  );
 }
 
 function bindTweakEv() {
@@ -1106,15 +1204,35 @@ function drawFeatures() {
       ? T("runFeatures") + " (" + pickedF.size + ")"
       : T("runFeatures");
 
-  document.getElementById("ft-features-grid").innerHTML = FEATURES.map((f) => {
-    const chk = pickedF.has(f.id) ? "checked" : "";
-    return `<label class="ft-row"><label class="toggle"><input type="checkbox" data-fid="${esc(f.id)}" ${chk}><span class="toggle-slider"></span></label><span>${esc(LO(f.n))}</span></label>`;
-  }).join("");
+  document.getElementById("ft-features-grid").replaceChildren(
+    ...FEATURES.map((f) =>
+      h(
+        "label",
+        { className: "ft-row" },
+        h(
+          "label",
+          { className: "toggle" },
+          h("input", {
+            type: "checkbox",
+            "data-fid": f.id,
+            checked: pickedF.has(f.id),
+          }),
+          h("span", { className: "toggle-slider" }),
+        ),
+        h("span", { textContent: LO(f.n) }),
+      ),
+    ),
+  );
 
-  document.getElementById("ft-fixes-grid").innerHTML = FIXES.map(
-    (f) =>
-      `<button class="ft-fix-btn" data-fix="${esc(f.id)}">${esc(LO(f.n))}</button>`,
-  ).join("");
+  document.getElementById("ft-fixes-grid").replaceChildren(
+    ...FIXES.map((f) =>
+      h("button", {
+        className: "ft-fix-btn",
+        "data-fix": f.id,
+        textContent: LO(f.n),
+      }),
+    ),
+  );
 
   document
     .querySelectorAll('#ft-features-grid input[type="checkbox"]')
@@ -1267,7 +1385,7 @@ async function toggleProfileMenu() {
     console.warn("[Profiles] Failed to list profiles:", e);
   }
 
-  menu.innerHTML = "";
+  menu.replaceChildren();
   if (profiles.length === 0) {
     const empty = document.createElement("div");
     empty.className = "profile-dropdown-item disabled";
