@@ -762,8 +762,9 @@ async function boot() {
   checkAdmin();
   checkInstalled();
   try {
-    const sysLang = await window.go.main.App.GetSystemLang();
-    if (sysLang === "es") lang = "es";
+    const sysLang = (await window.go.main.App.GetSystemLang()).trim();
+    console.log("[Lang] Detected system language:", JSON.stringify(sysLang));
+    if (sysLang.startsWith("es")) lang = "es";
   } catch (e) {
     console.warn("[Lang] Detection failed:", e);
   }

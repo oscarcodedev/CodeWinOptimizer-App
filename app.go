@@ -111,14 +111,18 @@ func (a *App) startup(ctx context.Context) {
 
 func (a *App) GetSystemLang() string {
 	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command",
-		"(Get-UICulture).TwoLetterISOLanguageName")
+		`try{(Get-WinUserLanguageList)[0].LanguageTag.Substring(0,2)}catch{(Get-UICulture).TwoLetterISOLanguageName}`)
 	cmd.SysProcAttr = getSysProcAttr()
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "en"
 	}
-	lang := strings.TrimSpace(string(out))
-	if lang == "es" {
+	result := strings.TrimSpace(string(out))
+	// Log for debugging
+	if a.ctx != nil {
+		wailsRuntime.LogInfo(a.ctx, fmt.Sprintf("Detected system language: %q", result))
+	}
+	if strings.HasPrefix(result, "es") {
 		return "es"
 	}
 	return "en"
