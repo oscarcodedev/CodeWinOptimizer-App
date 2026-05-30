@@ -869,6 +869,26 @@ header h1 {
 .tweak-row:last-child {
   border-bottom: none;
 }
+.tweak-row-info {
+  background: rgba(255, 200, 80, 0.05);
+  border-left: 3px solid #f5b942;
+  padding-left: 10px;
+  border-radius: 4px;
+  margin-top: 6px;
+}
+.tweak-row-info .tweak-row-main {
+  cursor: default;
+}
+.tweak-info-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 18px;
+  color: #f5b942;
+  font-weight: 700;
+  font-size: 0.95em;
+}
 .tweak-left {
   display: flex;
   flex-direction: column;

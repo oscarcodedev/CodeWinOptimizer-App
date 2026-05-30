@@ -1231,15 +1231,20 @@ function tweakRow(t) {
   const cmds = (t.commands || []).length;
   const hasW = (t.warnings?.[lang] || t.warnings?.["en"] || []).length > 0;
   const uid = "tcb-" + t.id;
-  return h("div", { className: "tweak-row", "data-tid": t.id },
+  const isInfo = cmds === 0;
+  return h("div", { className: "tweak-row" + (isInfo ? " tweak-row-info" : ""), "data-tid": t.id },
     h("div", { className: "tweak-left" },
-      h("label", { className: "toggle" },
-        h("input", { type: "checkbox", id: uid, "data-tid": t.id, checked: pickedT.has(t.id), disabled: cmds === 0 }),
-        h("span", { className: "toggle-slider" }),
-      ),
-      h("button", { className: "tweak-more-btn", "data-tid": t.id, type: "button", title: T("tweakMoreInfo"), textContent: "ℹ️" }),
+      isInfo
+        ? h("span", { className: "tweak-info-ico", textContent: "ℹ" })
+        : h("label", { className: "toggle" },
+            h("input", { type: "checkbox", id: uid, "data-tid": t.id, checked: pickedT.has(t.id) }),
+            h("span", { className: "toggle-slider" }),
+          ),
+      isInfo
+        ? null
+        : h("button", { className: "tweak-more-btn", "data-tid": t.id, type: "button", title: T("tweakMoreInfo"), textContent: "ℹ️" }),
     ),
-    h("label", { className: "tweak-row-main", for: uid },
+    h("label", { className: "tweak-row-main", for: isInfo ? null : uid },
       h("div", { className: "tweak-inf" },
         h("div", { className: "tweak-inf-name" },
           h("span", { textContent: n }),
@@ -1248,9 +1253,9 @@ function tweakRow(t) {
         h("div", { className: "tweak-inf-desc", textContent: d }),
         h("div", { className: "tweak-inf-meta" },
           h("span", { className: "badge badge-" + t.impact, textContent: t.impact }),
-          cmds > 0
-            ? h("span", null, cmds + " " + T("cmds"))
-            : h("span", null, "info"),
+          isInfo
+            ? h("span", null, "info")
+            : h("span", null, cmds + " " + T("cmds")),
         ),
       ),
     ),
