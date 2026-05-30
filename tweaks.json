@@ -47,7 +47,9 @@
           "es": "Reduce retransmisiones de paquetes en redes congestionadas"
         },
         "impact": "medium",
-        "commands": ["netsh int tcp set global ecncapability=enabled"],
+        "commands": [
+          "netsh int tcp set global ecncapability=enabled"
+        ],
         "warnings": {
           "en": [],
           "es": []
@@ -68,7 +70,9 @@
           "es": "Optimiza automáticamente el rendimiento de la conexión"
         },
         "impact": "medium",
-        "commands": ["netsh int tcp set global autotuninglevel=experimental"],
+        "commands": [
+          "netsh int tcp set global autotuninglevel=experimental"
+        ],
         "warnings": {
           "en": [],
           "es": []
@@ -89,7 +93,9 @@
           "es": "Reduce overhead de CPU"
         },
         "impact": "high",
-        "commands": ["netsh int tcp set global rsc=disabled"],
+        "commands": [
+          "netsh int tcp set global rsc=disabled"
+        ],
         "warnings": {
           "en": [],
           "es": []
@@ -134,7 +140,9 @@
           "es": "Distribuye carga de red entre múltiples núcleos"
         },
         "impact": "low",
-        "commands": ["netsh int tcp set global rss=disabled"],
+        "commands": [
+          "netsh int tcp set global rss=disabled"
+        ],
         "warnings": {
           "en": [],
           "es": []
@@ -155,7 +163,9 @@
           "es": "Mejora el rendimiento de UDP"
         },
         "impact": "medium",
-        "commands": ["netsh int udp set global uro=enabled"],
+        "commands": [
+          "netsh int udp set global uro=enabled"
+        ],
         "warnings": {
           "en": [],
           "es": []
@@ -234,7 +244,9 @@
           "es": "Reduce latencia de acceso a memoria"
         },
         "impact": "medium",
-        "commands": ["Disable-MMAgent -MemoryCompression"],
+        "commands": [
+          "Disable-MMAgent -MemoryCompression"
+        ],
         "warnings": {
           "en": [],
           "es": []
@@ -257,6 +269,7 @@
         "impact": "high",
         "commands": [
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\"",
+          "New-Item -Path $path -Force | Out-Null",
           "New-ItemProperty -Path $path -Name \"FeatureSettings\" -PropertyType DWord -Value 1 -Force",
           "New-ItemProperty -Path $path -Name \"FeatureSettingsOverride\" -PropertyType DWord -Value 3 -Force",
           "New-ItemProperty -Path $path -Name \"FeatureSettingsOverrideMask\" -PropertyType DWord -Value 3 -Force"
@@ -332,8 +345,11 @@
         },
         "impact": "high",
         "commands": [
-          "wmic computersystem where name=\"%computername%\" set AutomaticManagedPagefile=False",
-          "wmic pagefileset where name=\"C:\\\\pagefile.sys\" set InitialSize=32768,MaximumSize=32768"
+          "$cs = Get-CimInstance -ClassName Win32_ComputerSystem",
+          "if ($cs.AutomaticManagedPagefile) { Set-CimInstance -InputObject $cs -Property @{AutomaticManagedPagefile=$false} }",
+          "$pf = Get-CimInstance -ClassName Win32_PageFileSetting -Filter \"Name='C:\\\\pagefile.sys'\"",
+          "if ($pf) { Set-CimInstance -InputObject $pf -Property @{InitialSize=32768; MaximumSize=32768} } else { New-CimInstance -ClassName Win32_PageFileSetting -Property @{Name='C:\\pagefile.sys'; InitialSize=32768; MaximumSize=32768} | Out-Null }",
+          "Write-Host '[OK] Page file set to 32GB fixed. Restart required.'"
         ],
         "warnings": {
           "en": [
@@ -468,8 +484,10 @@
         "impact": "high",
         "commands": [
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\"",
+          "New-Item -Path $path -Force | Out-Null",
           "New-ItemProperty -Path $path -Name \"TdrDelay\" -PropertyType DWord -Value 10 -Force",
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\"",
+          "New-Item -Path $path -Force | Out-Null",
           "New-ItemProperty -Path $path -Name \"TdrLevel\" -PropertyType DWord -Value 0 -Force"
         ],
         "warnings": {
@@ -498,12 +516,14 @@
         "impact": "high",
         "commands": [
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\"",
+          "New-Item -Path $path -Force | Out-Null",
           "New-ItemProperty -Path $path -Name \"PerfLevelSrc\" -PropertyType DWord -Value 8738 -Force",
           "New-ItemProperty -Path $path -Name \"PowerMizerEnable\" -PropertyType DWord -Value 0 -Force",
           "New-ItemProperty -Path $path -Name \"PowerMizerLevel\" -PropertyType DWord -Value 1 -Force",
           "New-ItemProperty -Path $path -Name \"PowerMizerLevelAC\" -PropertyType DWord -Value 1 -Force",
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\\Scheduler\"",
-          "New-ItemProperty -Path $path -Name \"EnablePreemption\" -PropertyType DWord -Value 0 -Force"
+          "New-Item -Path $path -Force | Out-Null",
+          "New-ItemProperty -Path $path -Name \"EnablePreemption\" -PropertyType DWord -Value 0 -Force | Out-Null"
         ],
         "warnings": {
           "en": [],
@@ -527,6 +547,7 @@
         "impact": "high",
         "commands": [
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\"",
+          "New-Item -Path $path -Force | Out-Null",
           "New-ItemProperty -Path $path -Name \"EnableUlps\" -PropertyType DWord -Value 0 -Force",
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\\UMD\"",
           "New-Item -Path $path -Force | Out-Null",
@@ -636,10 +657,7 @@
         },
         "impact": "medium",
         "commands": [
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:HypervisorPlatform",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:VirtualMachinePlatform",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:Microsoft-Windows-Subsystem-Linux",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:Client-ProjFS"
+          "$ErrorActionPreference='Continue'; $features = @('HypervisorPlatform','VirtualMachinePlatform','Microsoft-Windows-Subsystem-Linux','Client-ProjFS'); foreach ($f in $features) { $w = Get-WindowsOptionalFeature -Online -FeatureName $f -ErrorAction SilentlyContinue; if (-not $w) { Write-Host \"[SKIP] $f - not available on this system\"; continue } if ($w.State -eq 'Disabled' -or $w.State -eq 'DisabledWithPayloadRemoved') { Write-Host \"[OK] $f - already disabled\"; continue } try { Disable-WindowsOptionalFeature -Online -FeatureName $f -NoRestart -WarningAction SilentlyContinue -ErrorAction Stop | Out-Null; Write-Host \"[OK] Disabled $f\" } catch { Write-Host \"[ERR] $f - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [
@@ -666,10 +684,7 @@
         },
         "impact": "medium",
         "commands": [
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:IIS-WebServer",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:IIS-WebServerRole",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:IIS-WebServerManagementTools",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:IIS-ManagementConsole"
+          "$ErrorActionPreference='Continue'; $features = @('IIS-WebServer','IIS-WebServerRole','IIS-WebServerManagementTools','IIS-ManagementConsole'); foreach ($f in $features) { $w = Get-WindowsOptionalFeature -Online -FeatureName $f -ErrorAction SilentlyContinue; if (-not $w) { Write-Host \"[SKIP] $f - not available on this system\"; continue } if ($w.State -eq 'Disabled' -or $w.State -eq 'DisabledWithPayloadRemoved') { Write-Host \"[OK] $f - already disabled\"; continue } try { Disable-WindowsOptionalFeature -Online -FeatureName $f -NoRestart -WarningAction SilentlyContinue -ErrorAction Stop | Out-Null; Write-Host \"[OK] Disabled $f\" } catch { Write-Host \"[ERR] $f - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [],
@@ -692,12 +707,7 @@
         },
         "impact": "low",
         "commands": [
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:Internet-Explorer-Optional-amd64",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:WindowsMediaPlayer",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:DirectPlay",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:LegacyComponents",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:MicrosoftWindowsPowerShellV2",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:MicrosoftWindowsPowerShellV2Root"
+          "$ErrorActionPreference='Continue'; $features = @('Internet-Explorer-Optional-amd64','WindowsMediaPlayer','DirectPlay','LegacyComponents','MicrosoftWindowsPowerShellV2','MicrosoftWindowsPowerShellV2Root'); foreach ($f in $features) { $w = Get-WindowsOptionalFeature -Online -FeatureName $f -ErrorAction SilentlyContinue; if (-not $w) { Write-Host \"[SKIP] $f - not available on this system\"; continue } if ($w.State -eq 'Disabled' -or $w.State -eq 'DisabledWithPayloadRemoved') { Write-Host \"[OK] $f - already disabled\"; continue } try { Disable-WindowsOptionalFeature -Online -FeatureName $f -NoRestart -WarningAction SilentlyContinue -ErrorAction Stop | Out-Null; Write-Host \"[OK] Disabled $f\" } catch { Write-Host \"[ERR] $f - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [],
@@ -720,9 +730,7 @@
         },
         "impact": "high",
         "commands": [
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:SMB1Protocol",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:SMB1Protocol-Client",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:SMB1Protocol-Server"
+          "$ErrorActionPreference='Continue'; $features = @('SMB1Protocol','SMB1Protocol-Client','SMB1Protocol-Server'); foreach ($f in $features) { $w = Get-WindowsOptionalFeature -Online -FeatureName $f -ErrorAction SilentlyContinue; if (-not $w) { Write-Host \"[SKIP] $f - not available on this system\"; continue } if ($w.State -eq 'Disabled' -or $w.State -eq 'DisabledWithPayloadRemoved') { Write-Host \"[OK] $f - already disabled\"; continue } try { Disable-WindowsOptionalFeature -Online -FeatureName $f -NoRestart -WarningAction SilentlyContinue -ErrorAction Stop | Out-Null; Write-Host \"[OK] Disabled $f\" } catch { Write-Host \"[ERR] $f - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [
@@ -749,10 +757,7 @@
         },
         "impact": "low",
         "commands": [
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:TelnetClient",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:TFTP",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:SNMP",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:SimpleTCP"
+          "$ErrorActionPreference='Continue'; $features = @('TelnetClient','TFTP','SNMP','SimpleTCP'); foreach ($f in $features) { $w = Get-WindowsOptionalFeature -Online -FeatureName $f -ErrorAction SilentlyContinue; if (-not $w) { Write-Host \"[SKIP] $f - not available on this system\"; continue } if ($w.State -eq 'Disabled' -or $w.State -eq 'DisabledWithPayloadRemoved') { Write-Host \"[OK] $f - already disabled\"; continue } try { Disable-WindowsOptionalFeature -Online -FeatureName $f -NoRestart -WarningAction SilentlyContinue -ErrorAction Stop | Out-Null; Write-Host \"[OK] Disabled $f\" } catch { Write-Host \"[ERR] $f - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [],
@@ -775,10 +780,7 @@
         },
         "impact": "low",
         "commands": [
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:MSMQ-Container",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:MSMQ-Server",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:MSMQ-HTTP",
-          "Dism.exe /Online /Disable-Feature /NoRestart /featurename:MSMQ-Triggers"
+          "$ErrorActionPreference='Continue'; $features = @('MSMQ-Container','MSMQ-Server','MSMQ-HTTP','MSMQ-Triggers'); foreach ($f in $features) { $w = Get-WindowsOptionalFeature -Online -FeatureName $f -ErrorAction SilentlyContinue; if (-not $w) { Write-Host \"[SKIP] $f - not available on this system\"; continue } if ($w.State -eq 'Disabled' -or $w.State -eq 'DisabledWithPayloadRemoved') { Write-Host \"[OK] $f - already disabled\"; continue } try { Disable-WindowsOptionalFeature -Online -FeatureName $f -NoRestart -WarningAction SilentlyContinue -ErrorAction Stop | Out-Null; Write-Host \"[OK] Disabled $f\" } catch { Write-Host \"[ERR] $f - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [],
@@ -801,11 +803,7 @@
         },
         "impact": "low",
         "commands": [
-          "Dism.exe /Online /Enable-Feature /NoRestart /featurename:NetFx3",
-          "Dism.exe /Online /Enable-Feature /NoRestart /featurename:NetFx4-AdvSrvs",
-          "Dism.exe /Online /Enable-Feature /NoRestart /featurename:Printing-PrintToPDFServices-Features",
-          "Dism.exe /Online /Enable-Feature /NoRestart /featurename:SearchEngine-Client-Package",
-          "Dism.exe /Online /Enable-Feature /NoRestart /featurename:Windows-Defender-Default-Definitions"
+          "$ErrorActionPreference='Continue'; $features = @('NetFx3','NetFx4-AdvSrvs','Printing-PrintToPDFServices-Features','SearchEngine-Client-Package','Windows-Defender-Default-Definitions'); foreach ($f in $features) { $w = Get-WindowsOptionalFeature -Online -FeatureName $f -ErrorAction SilentlyContinue; if (-not $w) { Write-Host \"[SKIP] $f - not available on this system\"; continue } if ($w.State -eq 'Enabled') { Write-Host \"[OK] $f - already enabled\"; continue } try { Enable-WindowsOptionalFeature -Online -FeatureName $f -NoRestart -WarningAction SilentlyContinue -ErrorAction Stop | Out-Null; Write-Host \"[OK] Enabled $f\" } catch { Write-Host \"[ERR] $f - $($_.Exception.Message) (may require Windows install media for source files)\" } }"
         ],
         "warnings": {
           "en": [],
@@ -828,8 +826,7 @@
         },
         "impact": "low",
         "commands": [
-          "Dism.exe /Online /Get-Features /Format:Table | Select-String 'Disabled'",
-          "Dism.exe /Online /Get-Features"
+          "Get-WindowsOptionalFeature -Online | Where-Object { $_.State -eq 'Disabled' -or $_.State -eq 'DisabledWithPayloadRemoved' } | Sort-Object FeatureName | Format-Table FeatureName,State -AutoSize"
         ],
         "warnings": {
           "en": [],
@@ -1187,7 +1184,9 @@
           "es": "Paso requerido para aplicar optimizaciones del algoritmo de Nagle a la NIC correcta"
         },
         "impact": "low",
-        "commands": ["Get-NetAdapter | Select-Object Name, InterfaceGuid"],
+        "commands": [
+          "Get-NetAdapter | Select-Object Name, InterfaceGuid"
+        ],
         "warnings": {
           "en": [],
           "es": []
@@ -1659,6 +1658,7 @@
         "impact": "medium",
         "commands": [
           "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
+          "New-Item -Path $path -Force | Out-Null",
           "New-ItemProperty -Path $path -Name \"GPU Priority\" -PropertyType DWord -Value 8 -Force"
         ],
         "warnings": {
@@ -1683,6 +1683,7 @@
         "impact": "medium",
         "commands": [
           "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
+          "New-Item -Path $path -Force | Out-Null",
           "New-ItemProperty -Path $path -Name \"Scheduling Category\" -PropertyType String -Value \"High\" -Force"
         ],
         "warnings": {
@@ -1707,6 +1708,7 @@
         "impact": "medium",
         "commands": [
           "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
+          "New-Item -Path $path -Force | Out-Null",
           "New-ItemProperty -Path $path -Name \"SFIO Priority\" -PropertyType String -Value \"High\" -Force"
         ],
         "warnings": {
@@ -1731,6 +1733,7 @@
         "impact": "medium",
         "commands": [
           "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
+          "New-Item -Path $path -Force | Out-Null",
           "New-ItemProperty -Path $path -Name \"Priority\" -PropertyType DWord -Value 6 -Force"
         ],
         "warnings": {
@@ -1901,6 +1904,7 @@
         "impact": "medium",
         "commands": [
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\"",
+          "New-Item -Path $path -Force | Out-Null",
           "New-ItemProperty -Path $path -Name \"DpcWatchdogProfileOffset\" -PropertyType DWord -Value 10000 -Force"
         ],
         "warnings": {
@@ -2025,6 +2029,7 @@
         "impact": "medium",
         "commands": [
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\"",
+          "New-Item -Path $path -Force | Out-Null",
           "New-ItemProperty -Path $path -Name \"IRQ8Priority\" -PropertyType DWord -Value 1 -Force",
           "New-ItemProperty -Path $path -Name \"IRQ16Priority\" -PropertyType DWord -Value 2 -Force"
         ],
@@ -2101,11 +2106,13 @@
           "New-ItemProperty -Path $path -Name \"DisableDynamicTick\" -PropertyType DWord -Value 1 -Force",
           "# Configure DPC Watchdog",
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\"",
+          "New-Item -Path $path -Force | Out-Null",
           "New-ItemProperty -Path $path -Name \"DpcWatchdogProfileOffset\" -PropertyType DWord -Value 10000 -Force",
           "# Configure Win32PrioritySeparation for Gaming",
           "New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" -Name \"Win32PrioritySeparation\" -PropertyType DWord -Value 38 -Force",
           "# Configure IRQ Priorities",
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\"",
+          "New-Item -Path $path -Force | Out-Null",
           "New-ItemProperty -Path $path -Name \"IRQ8Priority\" -PropertyType DWord -Value 1 -Force",
           "New-ItemProperty -Path $path -Name \"IRQ16Priority\" -PropertyType DWord -Value 2 -Force",
           "# Set Timer Resolution via bcdedit",
@@ -2114,7 +2121,9 @@
           "Write-Host \"All latency optimizations applied. Please restart Windows.\""
         ],
         "warnings": {
-          "en": ["Restart Windows for all changes to take effect properly."],
+          "en": [
+            "Restart Windows for all changes to take effect properly."
+          ],
           "es": [
             "Reinicia Windows para que todos los cambios tomen efecto apropiadamente."
           ]
@@ -2178,13 +2187,20 @@
           "reg add \"HKLM\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection\" /v AllowTelemetry /t REG_DWORD /d 0 /f"
         ],
         "warnings": {
-          "en": ["May affect Windows Update delivery optimization"],
-          "es": ["Puede afectar la optimizacion de entrega de Windows Update"]
+          "en": [
+            "May affect Windows Update delivery optimization"
+          ],
+          "es": [
+            "Puede afectar la optimizacion de entrega de Windows Update"
+          ]
         }
       },
       {
         "id": "disable-cortana",
-        "name": { "en": "🗣 Disable Cortana", "es": "🗣 Desactivar Cortana" },
+        "name": {
+          "en": "🗣 Disable Cortana",
+          "es": "🗣 Desactivar Cortana"
+        },
         "description": {
           "en": "Disables Cortana voice assistant and web search integration in taskbar.",
           "es": "Desactiva el asistente de voz Cortana y la integracion de busqueda web."
@@ -2201,7 +2217,10 @@
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v ConnectedSearchUseWeb /t REG_DWORD /d 0 /f",
           "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Search\" /v BingSearchEnabled /t REG_DWORD /d 0 /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "disable-advertising-id",
@@ -2223,7 +2242,10 @@
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AdvertisingInfo\" /v DisabledByGroupPolicy /t REG_DWORD /d 1 /f",
           "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo\" /v Enabled /t REG_DWORD /d 0 /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "disable-activity-history",
@@ -2245,7 +2267,10 @@
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v PublishUserActivities /t REG_DWORD /d 0 /f",
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v UploadUserActivities /t REG_DWORD /d 0 /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       }
     ]
   },
@@ -2277,8 +2302,12 @@
           "powercfg /setactive e9a42b02-d5df-448d-aa00-03f14749eb61"
         ],
         "warnings": {
-          "en": ["Increases power consumption on laptops"],
-          "es": ["Aumenta el consumo de energia en portatiles"]
+          "en": [
+            "Increases power consumption on laptops"
+          ],
+          "es": [
+            "Aumenta el consumo de energia en portatiles"
+          ]
         }
       },
       {
@@ -2296,7 +2325,9 @@
           "es": "Libera GBs de espacio, reduce escrituras en SSD"
         },
         "impact": "medium",
-        "commands": ["powercfg /hibernate off"],
+        "commands": [
+          "powercfg /hibernate off"
+        ],
         "warnings": {
           "en": [
             "Fast startup will also be disabled",
@@ -2327,8 +2358,12 @@
           "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects\" /v VisualFXSetting /t REG_DWORD /d 2 /f"
         ],
         "warnings": {
-          "en": ["Removes transparency and animations"],
-          "es": ["Elimina transparencias y animaciones"]
+          "en": [
+            "Removes transparency and animations"
+          ],
+          "es": [
+            "Elimina transparencias y animaciones"
+          ]
         }
       },
       {
@@ -2349,7 +2384,10 @@
         "commands": [
           "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Serialize\" /v StartupDelayInMSec /t REG_DWORD /d 0 /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "disable-background-apps",
@@ -2371,8 +2409,12 @@
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy\" /v LetAppsRunInBackground /t REG_DWORD /d 2 /f"
         ],
         "warnings": {
-          "en": ["May prevent notifications from UWP apps"],
-          "es": ["Puede evitar notificaciones de apps UWP"]
+          "en": [
+            "May prevent notifications from UWP apps"
+          ],
+          "es": [
+            "Puede evitar notificaciones de apps UWP"
+          ]
         }
       }
     ]
@@ -2406,8 +2448,12 @@
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR\" /v AllowGameDVR /t REG_DWORD /d 0 /f"
         ],
         "warnings": {
-          "en": ["Disables Game Bar shortcuts (Win+G)"],
-          "es": ["Desactiva atajos de Game Bar (Win+G)"]
+          "en": [
+            "Disables Game Bar shortcuts (Win+G)"
+          ],
+          "es": [
+            "Desactiva atajos de Game Bar (Win+G)"
+          ]
         }
       },
       {
@@ -2428,7 +2474,10 @@
         "commands": [
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Personalization\" /v NoLockScreen /t REG_DWORD /d 1 /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "disable-news-interests",
@@ -2449,11 +2498,17 @@
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds\" /v EnableFeeds /t REG_DWORD /d 0 /f",
           "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Feeds\" /v ShellFeedsTaskbarViewMode /t REG_DWORD /d 2 /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "disable-widgets",
-        "name": { "en": "🧩 Disable Widgets", "es": "🧩 Desactivar Widgets" },
+        "name": {
+          "en": "🧩 Disable Widgets",
+          "es": "🧩 Desactivar Widgets"
+        },
         "description": {
           "en": "Disables the Windows 11 Widgets board.",
           "es": "Desactiva el panel de Widgets de Windows 11."
@@ -2467,11 +2522,17 @@
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh\" /v AllowNewsAndInterests /t REG_DWORD /d 0 /f",
           "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v TaskbarDa /t REG_DWORD /d 0 /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "disable-onedrive",
-        "name": { "en": "☁ Disable OneDrive", "es": "☁ Desactivar OneDrive" },
+        "name": {
+          "en": "☁ Disable OneDrive",
+          "es": "☁ Desactivar OneDrive"
+        },
         "description": {
           "en": "Prevents OneDrive from running and syncing.",
           "es": "Evita que OneDrive se ejecute y sincronice."
@@ -2499,7 +2560,10 @@
   {
     "id": "essential",
     "icon": "✅",
-    "name": { "en": "Essential Tweaks", "es": "Tweaks Esenciales" },
+    "name": {
+      "en": "Essential Tweaks",
+      "es": "Tweaks Esenciales"
+    },
     "tweaks": [
       {
         "id": "disable-consumerfeatures",
@@ -2520,7 +2584,10 @@
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent\" /v DisableWindowsConsumerFeatures /t REG_DWORD /d 1 /f",
           "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SystemPaneSuggestionsEnabled /t REG_DWORD /d 0 /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "run-disk-cleanup",
@@ -2537,10 +2604,16 @@
           "es": "Libera espacio en disco"
         },
         "impact": "low",
-        "commands": ["cleanmgr /sagerun:1"],
+        "commands": [
+          "cleanmgr /sagerun:1"
+        ],
         "warnings": {
-          "en": ["May take a few minutes to complete"],
-          "es": ["Puede tardar unos minutos en completarse"]
+          "en": [
+            "May take a few minutes to complete"
+          ],
+          "es": [
+            "Puede tardar unos minutos en completarse"
+          ]
         }
       },
       {
@@ -2561,7 +2634,10 @@
         "commands": [
           "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings\" /v TaskbarEndTask /t REG_DWORD /d 1 /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "disable-folder-discovery",
@@ -2581,7 +2657,10 @@
         "commands": [
           "reg add \"HKCU\\SOFTWARE\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\Bags\\AllFolders\\Shell\" /v FolderType /t REG_SZ /d NotSpecified /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "disable-location-tracking",
@@ -2604,8 +2683,12 @@
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\LocationAndSensors\" /v DisableLocationScripting /t REG_DWORD /d 1 /f"
         ],
         "warnings": {
-          "en": ["Location-dependent apps (Maps, Weather) will not work"],
-          "es": ["Apps que dependen de ubicación (Mapas, Clima) no funcionarán"]
+          "en": [
+            "Location-dependent apps (Maps, Weather) will not work"
+          ],
+          "es": [
+            "Apps que dependen de ubicación (Mapas, Clima) no funcionarán"
+          ]
         }
       },
       {
@@ -2626,7 +2709,10 @@
         "commands": [
           "reg add \"HKCU\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer\" /v DisableSearchBoxSuggestions /t REG_DWORD /d 1 /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "disable-powershell7-telemetry",
@@ -2648,8 +2734,12 @@
           "[Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', '1', 'Machine')"
         ],
         "warnings": {
-          "en": ["Only affects PowerShell 7+"],
-          "es": ["Solo afecta a PowerShell 7+"]
+          "en": [
+            "Only affects PowerShell 7+"
+          ],
+          "es": [
+            "Solo afecta a PowerShell 7+"
+          ]
         }
       },
       {
@@ -2671,8 +2761,12 @@
           "Checkpoint-Computer -Description 'CodeWinOptimizer Essential Tweaks' -RestorePointType MODIFY_SETTINGS"
         ],
         "warnings": {
-          "en": ["May fail if System Restore is disabled"],
-          "es": ["Puede fallar si la Restauración del Sistema está desactivada"]
+          "en": [
+            "May fail if System Restore is disabled"
+          ],
+          "es": [
+            "Puede fallar si la Restauración del Sistema está desactivada"
+          ]
         }
       },
       {
@@ -2694,7 +2788,9 @@
           "$services = @('DiagTrack', 'dmwappushservice', 'MapsBroker', 'WMPNetworkSvc', 'Fax', 'WbioSrvc'); foreach ($s in $services) { Set-Service $s -StartupType Manual -ErrorAction SilentlyContinue }"
         ],
         "warnings": {
-          "en": ["Some services may be needed by specific hardware"],
+          "en": [
+            "Some services may be needed by specific hardware"
+          ],
           "es": [
             "Algunos servicios pueden ser necesarios para hardware específico"
           ]
@@ -2719,8 +2815,12 @@
           "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v Start_ShowClassicMode /t REG_DWORD /d 1 /f"
         ],
         "warnings": {
-          "en": ["Only affects Windows 11"],
-          "es": ["Solo afecta a Windows 11"]
+          "en": [
+            "Only affects Windows 11"
+          ],
+          "es": [
+            "Solo afecta a Windows 11"
+          ]
         }
       },
       {
@@ -2742,7 +2842,10 @@
           "Remove-Item -Path \"$env:TEMP\\*\" -Recurse -Force -ErrorAction SilentlyContinue",
           "Remove-Item -Path \"$env:WINDIR\\Temp\\*\" -Recurse -Force -ErrorAction SilentlyContinue"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "disable-wpbt",
@@ -2763,8 +2866,12 @@
           "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v DisableWpbtExecution /t REG_DWORD /d 1 /f"
         ],
         "warnings": {
-          "en": ["Some OEM utilities may not work"],
-          "es": ["Algunas utilidades de OEM pueden no funcionar"]
+          "en": [
+            "Some OEM utilities may not work"
+          ],
+          "es": [
+            "Algunas utilidades de OEM pueden no funcionar"
+          ]
         }
       }
     ]
@@ -2796,8 +2903,12 @@
           "$hosts = '127.0.0.1 lmlicenses.wip4.adobe.com', '127.0.0.1 lmlicenses.wip4.adobe.com', '127.0.0.1 na1r.services.adobe.com', '127.0.0.1 hlrcv.stage.adobe.com', '127.0.0.1 practivate.adobe.com', '127.0.0.1 activate.adobe.com', '127.0.0.1 activate-sjc0.adobe.com', '127.0.0.1 activate.wip3.adobe.com'; $file = '$env:SystemRoot\\System32\\drivers\\etc\\hosts'; foreach ($line in $hosts) { if (-not (Select-String -Path $file -Pattern $line.Replace('127.0.0.1 ', '') -Quiet)) { Add-Content -Path $file -Value $line } }"
         ],
         "warnings": {
-          "en": ["May break Adobe software activation"],
-          "es": ["Puede romper la activación de software Adobe"]
+          "en": [
+            "May break Adobe software activation"
+          ],
+          "es": [
+            "Puede romper la activación de software Adobe"
+          ]
         }
       },
       {
@@ -2819,8 +2930,12 @@
           "Write-Host '[INFO] Brave debloating requires manual policy configuration - see https://support.brave.com/hc/en-us/articles/360039248271-Group-Policy'"
         ],
         "warnings": {
-          "en": ["Manual configuration required via Brave policies"],
-          "es": ["Configuración manual requerida mediante políticas de Brave"]
+          "en": [
+            "Manual configuration required via Brave policies"
+          ],
+          "es": [
+            "Configuración manual requerida mediante políticas de Brave"
+          ]
         }
       },
       {
@@ -2842,8 +2957,12 @@
           "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation\" /v RealTimeIsUniversal /t REG_DWORD /d 1 /f"
         ],
         "warnings": {
-          "en": ["May cause time issues if not dual-booting"],
-          "es": ["Puede causar problemas de hora si no hay dual-boot"]
+          "en": [
+            "May cause time issues if not dual-booting"
+          ],
+          "es": [
+            "Puede causar problemas de hora si no hay dual-boot"
+          ]
         }
       },
       {
@@ -2865,8 +2984,12 @@
           "reg add \"HKCU\\SOFTWARE\\Microsoft\\Terminal Server Client\" /v AuthenticationLevelOverride /t REG_DWORD /d 0 /f"
         ],
         "warnings": {
-          "en": ["Reduces security for RDP connections"],
-          "es": ["Reduce seguridad para conexiones RDP"]
+          "en": [
+            "Reduces security for RDP connections"
+          ],
+          "es": [
+            "Reduce seguridad para conexiones RDP"
+          ]
         }
       },
       {
@@ -2887,7 +3010,14 @@
         "commands": [
           "reg add \"HKCU\\SOFTWARE\\Classes\\CLSID\\{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}\\ShellFolder\" /v Attributes /t REG_DWORD /d 0xf090013d /f"
         ],
-        "warnings": { "en": ["Windows 11 only"], "es": ["Solo Windows 11"] }
+        "warnings": {
+          "en": [
+            "Windows 11 only"
+          ],
+          "es": [
+            "Solo Windows 11"
+          ]
+        }
       },
       {
         "id": "disable-home",
@@ -2907,7 +3037,10 @@
         "commands": [
           "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v LaunchTo /t REG_DWORD /d 1 /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "prefer-ipv4",
@@ -2928,8 +3061,12 @@
           "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip6\\Parameters\" /v DisabledComponents /t REG_DWORD /d 0x20 /f"
         ],
         "warnings": {
-          "en": ["May break IPv6-only services"],
-          "es": ["Puede romper servicios solo IPv6"]
+          "en": [
+            "May break IPv6-only services"
+          ],
+          "es": [
+            "Puede romper servicios solo IPv6"
+          ]
         }
       },
       {
@@ -2952,8 +3089,12 @@
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot\" /v TurnOffWindowsCopilot /t REG_DWORD /d 1 /f"
         ],
         "warnings": {
-          "en": ["Copilot will be completely unavailable"],
-          "es": ["Copilot estará completamente disponible"]
+          "en": [
+            "Copilot will be completely unavailable"
+          ],
+          "es": [
+            "Copilot estará completamente disponible"
+          ]
         }
       },
       {
@@ -2977,7 +3118,10 @@
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v ShoppingListEnabled /t REG_DWORD /d 0 /f",
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v ShowPDFDefaultRecommendationsEnabled /t REG_DWORD /d 0 /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "remove-edge",
@@ -3026,8 +3170,12 @@
           "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\PushNotifications\" /v ToastEnabled /t REG_DWORD /d 0 /f"
         ],
         "warnings": {
-          "en": ["You will not receive ANY notifications"],
-          "es": ["No recibirás NINGUNA notificación"]
+          "en": [
+            "You will not receive ANY notifications"
+          ],
+          "es": [
+            "No recibirás NINGUNA notificación"
+          ]
         }
       },
       {
@@ -3049,8 +3197,12 @@
           "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Device Metadata\\PreventDeviceMetadataFromNetwork\" /v value /t REG_DWORD /d 1 /f"
         ],
         "warnings": {
-          "en": ["May affect other hardware auto-installation"],
-          "es": ["Puede afectar otras instalaciones automáticas de hardware"]
+          "en": [
+            "May affect other hardware auto-installation"
+          ],
+          "es": [
+            "Puede afectar otras instalaciones automáticas de hardware"
+          ]
         }
       },
       {
@@ -3071,7 +3223,14 @@
         "commands": [
           "reg add \"HKCU\\SOFTWARE\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32\" /f /ve"
         ],
-        "warnings": { "en": ["Windows 11 only"], "es": ["Solo Windows 11"] }
+        "warnings": {
+          "en": [
+            "Windows 11 only"
+          ],
+          "es": [
+            "Solo Windows 11"
+          ]
+        }
       },
       {
         "id": "disable-storage-sense",
@@ -3091,11 +3250,17 @@
         "commands": [
           "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\StorageSense\" /v AllowStorageSenseGlobal /t REG_DWORD /d 0 /f"
         ],
-        "warnings": { "en": [], "es": [] }
+        "warnings": {
+          "en": [],
+          "es": []
+        }
       },
       {
         "id": "disable-teredo",
-        "name": { "en": "🌍 Teredo - Disable", "es": "🌍 Teredo - Desactivar" },
+        "name": {
+          "en": "🌍 Teredo - Disable",
+          "es": "🌍 Teredo - Desactivar"
+        },
         "description": {
           "en": "Completely disables Teredo tunneling protocol.",
           "es": "Desactiva completamente el protocolo de tunelización Teredo."
@@ -3110,8 +3275,12 @@
           "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip6\\Parameters\" /v DisabledComponents /t REG_DWORD /d 1 /f"
         ],
         "warnings": {
-          "en": ["Will break Xbox LIVE and some IPv6-dependent games"],
-          "es": ["Romperá Xbox LIVE y algunos juegos que dependen de IPv6"]
+          "en": [
+            "Will break Xbox LIVE and some IPv6-dependent games"
+          ],
+          "es": [
+            "Romperá Xbox LIVE y algunos juegos que dependen de IPv6"
+          ]
         }
       },
       {
@@ -3133,8 +3302,12 @@
           "$apps = @('Microsoft.Windows.PinballDelivery', 'Microsoft.MicrosoftSolitaireCollection', 'Microsoft.Windows.YourPhone', 'Microsoft.ZuneMusic', 'Microsoft.ZuneVideo', 'Microsoft.WindowsMaps', 'Microsoft.People', 'Microsoft.Microsoft3DViewer', 'Microsoft.WindowsCamera', 'Microsoft.WindowsFeedbackHub', 'Microsoft.GetHelp', 'Microsoft.Getstarted', 'Microsoft.MicrosoftOfficeHub', 'Microsoft.MixedReality.Portal', 'Microsoft.SkypeApp', 'Microsoft.WindowsAlarms', 'Microsoft.WindowsCalculator', 'Microsoft.WindowsCommunicationsApps', 'Microsoft.WindowsSoundRecorder', 'Microsoft.XboxApp', 'Microsoft.XboxGameOverlay', 'Microsoft.XboxGamingOverlay', 'Microsoft.XboxIdentityProvider', 'Microsoft.XboxSpeechToTextOverlay', 'Microsoft.Xbox.TCUI', 'Microsoft.YourPhone'); foreach ($app in $apps) { Get-AppxPackage -Name $app -ErrorAction SilentlyContinue | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq $app } | Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue }"
         ],
         "warnings": {
-          "en": ["Removed apps cannot be easily restored"],
-          "es": ["Las apps eliminadas no se pueden restaurar fácilmente"]
+          "en": [
+            "Removed apps cannot be easily restored"
+          ],
+          "es": [
+            "Las apps eliminadas no se pueden restaurar fácilmente"
+          ]
         }
       },
       {
@@ -3156,8 +3329,12 @@
           "$xboxApps = @('Microsoft.XboxApp', 'Microsoft.XboxGameOverlay', 'Microsoft.XboxGamingOverlay', 'Microsoft.XboxIdentityProvider', 'Microsoft.XboxSpeechToTextOverlay', 'Microsoft.Xbox.TCUI'); foreach ($app in $xboxApps) { Get-AppxPackage -Name $app -ErrorAction SilentlyContinue | Remove-AppxPackage -ErrorAction SilentlyContinue }"
         ],
         "warnings": {
-          "en": ["Xbox Game Bar and related features will not work"],
-          "es": ["Xbox Game Bar y funciones relacionadas no funcionarán"]
+          "en": [
+            "Xbox Game Bar and related features will not work"
+          ],
+          "es": [
+            "Xbox Game Bar y funciones relacionadas no funcionarán"
+          ]
         }
       }
     ]
