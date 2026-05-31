@@ -269,7 +269,7 @@
         "impact": "high",
         "commands": [
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"FeatureSettings\" -PropertyType DWord -Value 1 -Force",
           "New-ItemProperty -Path $path -Name \"FeatureSettingsOverride\" -PropertyType DWord -Value 3 -Force",
           "New-ItemProperty -Path $path -Name \"FeatureSettingsOverrideMask\" -PropertyType DWord -Value 3 -Force"
@@ -400,7 +400,7 @@
         "impact": "high",
         "commands": [
           "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\csrss.exe\\PerfOptions\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"CpuPriorityClass\" -PropertyType DWord -Value 4 -Force",
           "New-ItemProperty -Path $path -Name \"IoPriority\" -PropertyType DWord -Value 3 -Force"
         ],
@@ -484,10 +484,10 @@
         "impact": "high",
         "commands": [
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"TdrDelay\" -PropertyType DWord -Value 10 -Force",
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"TdrLevel\" -PropertyType DWord -Value 0 -Force"
         ],
         "warnings": {
@@ -516,13 +516,13 @@
         "impact": "high",
         "commands": [
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"PerfLevelSrc\" -PropertyType DWord -Value 8738 -Force",
           "New-ItemProperty -Path $path -Name \"PowerMizerEnable\" -PropertyType DWord -Value 0 -Force",
           "New-ItemProperty -Path $path -Name \"PowerMizerLevel\" -PropertyType DWord -Value 1 -Force",
           "New-ItemProperty -Path $path -Name \"PowerMizerLevelAC\" -PropertyType DWord -Value 1 -Force",
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\\Scheduler\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"EnablePreemption\" -PropertyType DWord -Value 0 -Force | Out-Null"
         ],
         "warnings": {
@@ -547,10 +547,10 @@
         "impact": "high",
         "commands": [
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"EnableUlps\" -PropertyType DWord -Value 0 -Force",
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\\UMD\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"Main3D_DEF\" -PropertyType String -Value \"1\" -Force",
           "New-ItemProperty -Path $path -Name \"Main3D\" -PropertyType String -Value \"1\" -Force"
         ],
@@ -803,11 +803,15 @@
         },
         "impact": "low",
         "commands": [
-          "$ErrorActionPreference='Continue'; $features = @('NetFx3','NetFx4-AdvSrvs','Printing-PrintToPDFServices-Features','SearchEngine-Client-Package','Windows-Defender-Default-Definitions'); foreach ($f in $features) { $w = Get-WindowsOptionalFeature -Online -FeatureName $f -ErrorAction SilentlyContinue; if (-not $w) { Write-Host \"[SKIP] $f - not available on this system\"; continue } if ($w.State -eq 'Enabled') { Write-Host \"[OK] $f - already enabled\"; continue } try { Enable-WindowsOptionalFeature -Online -FeatureName $f -NoRestart -WarningAction SilentlyContinue -ErrorAction Stop | Out-Null; Write-Host \"[OK] Enabled $f\" } catch { Write-Host \"[ERR] $f - $($_.Exception.Message) (may require Windows install media for source files)\" } }"
+          "$ErrorActionPreference='Continue'; $features = @('NetFx3','NetFx4-AdvSrvs','Printing-PrintToPDFServices-Features','SearchEngine-Client-Package'); foreach ($f in $features) { $w = Get-WindowsOptionalFeature -Online -FeatureName $f -ErrorAction SilentlyContinue; if (-not $w) { Write-Host \"[SKIP] $f - not available on this system\"; continue } if ($w.State -eq 'Enabled') { Write-Host \"[OK] $f - already enabled\"; continue } try { Enable-WindowsOptionalFeature -Online -FeatureName $f -NoRestart -WarningAction SilentlyContinue -ErrorAction Stop | Out-Null; Write-Host \"[OK] Enabled $f\" } catch { $msg = $_.Exception.Message; if ($msg -match '0x800f081f' -or $msg -match '0x80072ee6' -or $msg -match 'source files' -or $msg -match 'archivos de origen') { Write-Host \"[INFO] $f - payload removed; enable via Windows Update or 'DISM /Online /Enable-Feature /FeatureName:$f /Source:<install.wim>'\" } else { Write-Host \"[ERR] $f - $msg\" } } }"
         ],
         "warnings": {
-          "en": [],
-          "es": []
+          "en": [
+            "Windows Defender signatures cannot be enabled via DISM. Update Defender separately with: Update-MpSignature -UpdateSource MicrosoftUpdateServer"
+          ],
+          "es": [
+            "Las definiciones de Windows Defender no se pueden habilitar por DISM. Actualízalas con: Update-MpSignature -UpdateSource MicrosoftUpdateServer"
+          ]
         }
       },
       {
@@ -884,15 +888,7 @@
         },
         "impact": "medium",
         "commands": [
-          "netsh advfirewall firewall set rule group=\"Connect\" new enable=no",
-          "netsh advfirewall firewall set rule group=\"Contact Support\" new enable=no",
-          "netsh advfirewall firewall set rule group=\"Cortana\" new enable=no",
-          "netsh advfirewall firewall set rule group=\"DiagTrack\" new enable=no",
-          "netsh advfirewall firewall set rule group=\"Feedback Hub\" new enable=no",
-          "netsh advfirewall firewall set rule group=\"Microsoft Photos\" new enable=no",
-          "netsh advfirewall firewall set rule group=\"OneNote\" new enable=no",
-          "netsh advfirewall firewall set rule group=\"Remote Assistance\" new enable=no",
-          "netsh advfirewall firewall set rule group=\"Windows Spotlight\" new enable=no"
+          "$ErrorActionPreference='Continue'; $groupList = @(@{Primary='Connect'; Aliases=@('Connect','Connect','Conectar')},@{Primary='Contact Support'; Aliases=@('Contact Support','Contact Support','Soporte técnico')},@{Primary='Cortana'; Aliases=@('Cortana','Cortana')},@{Primary='DiagTrack'; Aliases=@('DiagTrack','DiagTrack')},@{Primary='Feedback Hub'; Aliases=@('Feedback Hub','Feedback Hub','Centro de comentarios','Hub de comentarios')},@{Primary='Microsoft Photos'; Aliases=@('Microsoft Photos','Microsoft Photos','Microsoft Fotos','Fotos')},@{Primary='OneNote'; Aliases=@('OneNote','OneNote')},@{Primary='Remote Assistance'; Aliases=@('Remote Assistance','Remote Assistance','Asistencia remota')},@{Primary='Windows Spotlight'; Aliases=@('Windows Spotlight','Windows Spotlight','Contenido destacado de Windows')}); foreach ($g in $groupList) { $found = $null; foreach ($alias in $g.Aliases) { $rules = Get-NetFirewallRule -Group $alias -ErrorAction SilentlyContinue; if (-not $rules) { $rules = Get-NetFirewallRule -ErrorAction SilentlyContinue | Where-Object { $_.DisplayGroup -eq $alias } } if ($rules) { $found = $rules; break } } if (-not $found) { Write-Host \"[SKIP] $($g.Primary) - no matching rules on this system\"; continue } $enabled = @($found | Where-Object { $_.Enabled -eq 'True' -or $_.Enabled -eq $true }); if ($enabled.Count -eq 0) { Write-Host \"[OK] $($g.Primary) - already disabled ($($found.Count) rule(s))\"; continue } try { $enabled | Disable-NetFirewallRule -ErrorAction Stop; Write-Host \"[OK] $($g.Primary) - disabled $($enabled.Count) rule(s)\" } catch { Write-Host \"[ERR] $($g.Primary) - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [],
@@ -915,7 +911,7 @@
         },
         "impact": "high",
         "commands": [
-          "netsh advfirewall firewall add rule name=deny445 dir=in action=block protocol=TCP localport=445"
+          "$ErrorActionPreference='Continue'; $name = 'CodeWinOpt-Block-SMB-445'; $r = Get-NetFirewallRule -DisplayName $name -ErrorAction SilentlyContinue; if ($r) { Write-Host \"[OK] Rule '$name' already exists\" } else { try { New-NetFirewallRule -DisplayName $name -Direction Inbound -Action Block -Protocol TCP -LocalPort 445 -Profile Any -Description 'Block inbound SMB on port 445 (CodeWinOptimizer)' -ErrorAction Stop | Out-Null; Write-Host \"[OK] Created firewall rule '$name' blocking inbound TCP 445\" } catch { Write-Host \"[ERR] $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [
@@ -1074,7 +1070,7 @@
         },
         "impact": "medium",
         "commands": [
-          "netsh advfirewall firewall set rule group=\"File and Printer Sharing\" new enable=no"
+          "$ErrorActionPreference='Continue'; $groupList = @(@{Primary='File and Printer Sharing'; Aliases=@('File and Printer Sharing','File and Printer Sharing','Compartir archivos e impresoras','@FirewallAPI.dll,-28502')}); foreach ($g in $groupList) { $found = $null; foreach ($alias in $g.Aliases) { $rules = Get-NetFirewallRule -Group $alias -ErrorAction SilentlyContinue; if (-not $rules) { $rules = Get-NetFirewallRule -ErrorAction SilentlyContinue | Where-Object { $_.DisplayGroup -eq $alias } } if ($rules) { $found = $rules; break } } if (-not $found) { Write-Host \"[SKIP] $($g.Primary) - no matching rules on this system\"; continue } $enabled = @($found | Where-Object { $_.Enabled -eq 'True' -or $_.Enabled -eq $true }); if ($enabled.Count -eq 0) { Write-Host \"[OK] $($g.Primary) - already disabled ($($found.Count) rule(s))\"; continue } try { $enabled | Disable-NetFirewallRule -ErrorAction Stop; Write-Host \"[OK] $($g.Primary) - disabled $($enabled.Count) rule(s)\" } catch { Write-Host \"[ERR] $($g.Primary) - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [],
@@ -1185,7 +1181,7 @@
         },
         "impact": "low",
         "commands": [
-          "Get-NetAdapter | Select-Object Name, InterfaceGuid"
+          "$nics = @(Get-NetAdapter -ErrorAction SilentlyContinue); if ($nics.Count -eq 0) { Write-Host '[ERR] No network adapters found'; return } Write-Host 'Detected network adapters:'; $nics | ForEach-Object { $state = if ($_.Status -eq 'Up') { '[ACTIVE]' } else { \"[$($_.Status)]\" }; Write-Host \"  $state $($_.Name) - $($_.InterfaceGuid) - $($_.InterfaceDescription)\" }"
         ],
         "warnings": {
           "en": [],
@@ -1208,8 +1204,7 @@
         },
         "impact": "high",
         "commands": [
-          "$nicPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{NIC-GUID}\"",
-          "New-ItemProperty -Path $nicPath -Name \"TcpAckFrequency\" -PropertyType DWord -Value 1 -Force"
+          "$nics = @(Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Up' }); if ($nics.Count -eq 0) { Write-Host '[ERR] No active network adapters found'; return } foreach ($nic in $nics) { $nicPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($nic.InterfaceGuid)\"; if (-not (Test-Path $nicPath)) { Write-Host \"[SKIP] $($nic.Name) - registry path missing\"; continue } try { New-ItemProperty -Path $nicPath -Name \"TcpAckFrequency\" -PropertyType DWord -Value 1 -Force -ErrorAction Stop | Out-Null; Write-Host \"[OK] TcpAckFrequency=1 on $($nic.Name) ($($nic.InterfaceGuid))\" } catch { Write-Host \"[ERR] $($nic.Name) - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [
@@ -1236,8 +1231,7 @@
         },
         "impact": "high",
         "commands": [
-          "$nicPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{NIC-GUID}\"",
-          "New-ItemProperty -Path $nicPath -Name \"TCPNoDelay\" -PropertyType DWord -Value 1 -Force"
+          "$nics = @(Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Up' }); if ($nics.Count -eq 0) { Write-Host '[ERR] No active network adapters found'; return } foreach ($nic in $nics) { $nicPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($nic.InterfaceGuid)\"; if (-not (Test-Path $nicPath)) { Write-Host \"[SKIP] $($nic.Name) - registry path missing\"; continue } try { New-ItemProperty -Path $nicPath -Name \"TCPNoDelay\" -PropertyType DWord -Value 1 -Force -ErrorAction Stop | Out-Null; Write-Host \"[OK] TCPNoDelay=1 on $($nic.Name) ($($nic.InterfaceGuid))\" } catch { Write-Host \"[ERR] $($nic.Name) - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [],
@@ -1260,8 +1254,7 @@
         },
         "impact": "medium",
         "commands": [
-          "$nicPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{NIC-GUID}\"",
-          "New-ItemProperty -Path $nicPath -Name \"TcpDelAckTicks\" -PropertyType DWord -Value 0 -Force"
+          "$nics = @(Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Up' }); if ($nics.Count -eq 0) { Write-Host '[ERR] No active network adapters found'; return } foreach ($nic in $nics) { $nicPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($nic.InterfaceGuid)\"; if (-not (Test-Path $nicPath)) { Write-Host \"[SKIP] $($nic.Name) - registry path missing\"; continue } try { New-ItemProperty -Path $nicPath -Name \"TcpDelAckTicks\" -PropertyType DWord -Value 0 -Force -ErrorAction Stop | Out-Null; Write-Host \"[OK] TcpDelAckTicks=0 on $($nic.Name) ($($nic.InterfaceGuid))\" } catch { Write-Host \"[ERR] $($nic.Name) - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [],
@@ -1284,8 +1277,7 @@
         },
         "impact": "low",
         "commands": [
-          "$msmqPath = \"HKLM:\\SOFTWARE\\Microsoft\\MSMQ\\Parameters\"",
-          "New-ItemProperty -Path $msmqPath -Name \"TCPNoDelay\" -PropertyType DWord -Value 1 -Force"
+          "$msmqPath = 'HKLM:\\SOFTWARE\\Microsoft\\MSMQ\\Parameters'; if (-not (Test-Path $msmqPath)) { Write-Host '[SKIP] MSMQ is not installed on this system'; return } try { New-ItemProperty -Path $msmqPath -Name 'TCPNoDelay' -PropertyType DWord -Value 1 -Force -ErrorAction Stop | Out-Null; Write-Host '[OK] MSMQ TCPNoDelay=1' } catch { Write-Host \"[ERR] $($_.Exception.Message)\" }"
         ],
         "warnings": {
           "en": [],
@@ -1308,7 +1300,7 @@
         },
         "impact": "low",
         "commands": [
-          "Get-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{NIC-GUID}\" | Select-Object TcpAckFrequency, TCPNoDelay, TcpDelAckTicks"
+          "$nics = @(Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Up' }); if ($nics.Count -eq 0) { Write-Host '[ERR] No active network adapters found'; return } foreach ($nic in $nics) { $nicPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($nic.InterfaceGuid)\"; if (-not (Test-Path $nicPath)) { Write-Host \"[SKIP] $($nic.Name) - no registry entry\"; continue } $v = Get-ItemProperty -Path $nicPath -ErrorAction SilentlyContinue; $ack = if ($null -ne $v.TcpAckFrequency) { $v.TcpAckFrequency } else { '<unset>' }; $nodelay = if ($null -ne $v.TCPNoDelay) { $v.TCPNoDelay } else { '<unset>' }; $delack = if ($null -ne $v.TcpDelAckTicks) { $v.TcpDelAckTicks } else { '<unset>' }; Write-Host \"[$($nic.Name)] TcpAckFrequency=$ack  TCPNoDelay=$nodelay  TcpDelAckTicks=$delack\" }"
         ],
         "warnings": {
           "en": [],
@@ -1331,10 +1323,7 @@
         },
         "impact": "medium",
         "commands": [
-          "$nicPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{NIC-GUID}\"",
-          "Remove-ItemProperty -Path $nicPath -Name \"TcpAckFrequency\" -ErrorAction SilentlyContinue",
-          "Remove-ItemProperty -Path $nicPath -Name \"TCPNoDelay\" -ErrorAction SilentlyContinue",
-          "Remove-ItemProperty -Path $nicPath -Name \"TcpDelAckTicks\" -ErrorAction SilentlyContinue"
+          "$nics = @(Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Up' }); if ($nics.Count -eq 0) { Write-Host '[ERR] No active network adapters found'; return } foreach ($nic in $nics) { $nicPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($nic.InterfaceGuid)\"; if (-not (Test-Path $nicPath)) { Write-Host \"[SKIP] $($nic.Name) - no registry entry\"; continue } $removed = @(); foreach ($name in @('TcpAckFrequency','TCPNoDelay','TcpDelAckTicks')) { $p = Get-ItemProperty -Path $nicPath -Name $name -ErrorAction SilentlyContinue; if ($p) { Remove-ItemProperty -Path $nicPath -Name $name -ErrorAction SilentlyContinue; $removed += $name } } if ($removed.Count -gt 0) { Write-Host \"[OK] $($nic.Name) - removed: $($removed -join ', ')\" } else { Write-Host \"[OK] $($nic.Name) - nothing to revert\" } }"
         ],
         "warnings": {
           "en": [],
@@ -1658,7 +1647,7 @@
         "impact": "medium",
         "commands": [
           "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"GPU Priority\" -PropertyType DWord -Value 8 -Force"
         ],
         "warnings": {
@@ -1683,7 +1672,7 @@
         "impact": "medium",
         "commands": [
           "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"Scheduling Category\" -PropertyType String -Value \"High\" -Force"
         ],
         "warnings": {
@@ -1708,7 +1697,7 @@
         "impact": "medium",
         "commands": [
           "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"SFIO Priority\" -PropertyType String -Value \"High\" -Force"
         ],
         "warnings": {
@@ -1733,7 +1722,7 @@
         "impact": "medium",
         "commands": [
           "$path = \"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"Priority\" -PropertyType DWord -Value 6 -Force"
         ],
         "warnings": {
@@ -1874,9 +1863,9 @@
         },
         "impact": "high",
         "commands": [
-          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\KernelVelocity\"",
-          "New-Item -Path $path -Force | Out-Null",
-          "New-ItemProperty -Path $path -Name \"DisableDynamicTick\" -PropertyType DWord -Value 1 -Force"
+          "function Invoke-Bcd([string[]]$BcdArgs, [string]$Desc) { $bcd = (Join-Path $env:SystemRoot 'System32\\bcdedit.exe'); $out = & $bcd @BcdArgs 2>&1; $outStr = ($out | Out-String); if ($LASTEXITCODE -eq 0) { Write-Host \"[OK] $Desc\"; return } if ($outStr -match 'No se pudo abrir el almac|cannot open.*boot configuration|boot configuration data store') { Write-Host \"[ERR] $Desc - BCD store not accessible from this process. Apply manually from elevated PowerShell.\"; return } if ($outStr -match 'requested data element|elemento de datos solicitado') { Write-Host \"[OK] $Desc (already in target state)\"; return } Write-Host \"[ERR] $Desc - exit $LASTEXITCODE - $($out -join ' | ')\" }",
+          "Invoke-Bcd @('/set','{current}','disabledynamictick','yes') 'BCD disabledynamictick=yes'",
+          "$bogus='HKLM:\\SYSTEM\\CurrentControlSet\\Control\\KernelVelocity'; if (Test-Path $bogus) { Remove-Item -Path $bogus -Recurse -Force -ErrorAction SilentlyContinue; Write-Host '[OK] Cleaned up legacy KernelVelocity key (was not a real Windows setting)' }"
         ],
         "warnings": {
           "en": [
@@ -1904,7 +1893,7 @@
         "impact": "medium",
         "commands": [
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"DpcWatchdogProfileOffset\" -PropertyType DWord -Value 10000 -Force"
         ],
         "warnings": {
@@ -1928,8 +1917,9 @@
         },
         "impact": "high",
         "commands": [
-          "bcdedit /set disabledynamictick yes",
-          "bcdedit /set useplatformclock true"
+          "function Invoke-Bcd([string[]]$BcdArgs, [string]$Desc) { $bcd = (Join-Path $env:SystemRoot 'System32\\bcdedit.exe'); $out = & $bcd @BcdArgs 2>&1; $outStr = ($out | Out-String); if ($LASTEXITCODE -eq 0) { Write-Host \"[OK] $Desc\"; return } if ($outStr -match 'No se pudo abrir el almac|cannot open.*boot configuration|boot configuration data store') { Write-Host \"[ERR] $Desc - BCD store not accessible from this process. Apply manually from elevated PowerShell.\"; return } if ($outStr -match 'requested data element|elemento de datos solicitado') { Write-Host \"[OK] $Desc (already in target state)\"; return } Write-Host \"[ERR] $Desc - exit $LASTEXITCODE - $($out -join ' | ')\" }",
+          "Invoke-Bcd @('/set','{current}','disabledynamictick','yes') 'BCD disabledynamictick=yes'",
+          "Invoke-Bcd @('/set','{current}','useplatformclock','true') 'BCD useplatformclock=true'"
         ],
         "warnings": {
           "en": [
@@ -1977,8 +1967,10 @@
         },
         "impact": "high",
         "commands": [
-          "bcdedit /deletevalue useplatformclock",
-          "Get-PnpDevice | Where-Object {$_.FriendlyName -like \"*High Precision Event Timer*\"} | Disable-PnpDevice -Confirm:$false"
+          "function Invoke-Bcd([string[]]$BcdArgs, [string]$Desc) { $bcd = (Join-Path $env:SystemRoot 'System32\\bcdedit.exe'); $out = & $bcd @BcdArgs 2>&1; $outStr = ($out | Out-String); if ($LASTEXITCODE -eq 0) { Write-Host \"[OK] $Desc\"; return } if ($outStr -match 'No se pudo abrir el almac|cannot open.*boot configuration|boot configuration data store') { Write-Host \"[ERR] $Desc - BCD store not accessible from this process. Apply manually from elevated PowerShell.\"; return } if ($outStr -match 'requested data element|elemento de datos solicitado') { Write-Host \"[OK] $Desc (already in target state)\"; return } Write-Host \"[ERR] $Desc - exit $LASTEXITCODE - $($out -join ' | ')\" }",
+          "Invoke-Bcd @('/deletevalue','{current}','useplatformclock') 'BCD useplatformclock removed (HPET re-enabled at boot level)'",
+          "$hpet = @(Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -like '*High Precision Event Timer*' -or $_.FriendlyName -like '*Temporizador de eventos de alta precision*' })",
+          "if ($hpet.Count -eq 0) { Write-Host '[SKIP] HPET device not present in Device Manager' } else { foreach ($d in $hpet) { if ($d.Status -ne 'OK') { Write-Host \"[OK] HPET '$($d.FriendlyName)' - status $($d.Status)\"; continue } try { Disable-PnpDevice -InstanceId $d.InstanceId -Confirm:$false -ErrorAction Stop; Write-Host \"[OK] Disabled HPET device '$($d.FriendlyName)'\" } catch { Write-Host \"[ERR] HPET disable failed: $($_.Exception.Message)\" } } }"
         ],
         "warnings": {
           "en": [
@@ -2029,7 +2021,7 @@
         "impact": "medium",
         "commands": [
           "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\"",
-          "New-Item -Path $path -Force | Out-Null",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
           "New-ItemProperty -Path $path -Name \"IRQ8Priority\" -PropertyType DWord -Value 1 -Force",
           "New-ItemProperty -Path $path -Name \"IRQ16Priority\" -PropertyType DWord -Value 2 -Force"
         ],
@@ -2075,9 +2067,12 @@
         },
         "impact": "low",
         "commands": [
-          "Get-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\KernelVelocity\" -Name \"DisableDynamicTick\"",
-          "Get-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" -Name \"DpcWatchdogProfileOffset\"",
-          "bcdedit /enum | findstr /i timer"
+          "Write-Host '--- Registry latency settings ---'",
+          "$regs = @(@{Path='HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel'; Name='DpcWatchdogProfileOffset'}, @{Path='HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl'; Name='Win32PrioritySeparation'}, @{Path='HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl'; Name='IRQ8Priority'}, @{Path='HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl'; Name='IRQ16Priority'})",
+          "foreach ($r in $regs) { $v = Get-ItemProperty -Path $r.Path -Name $r.Name -ErrorAction SilentlyContinue; if ($v -and ($null -ne $v.$($r.Name))) { Write-Host \"  $($r.Name) = $($v.$($r.Name))\" } else { Write-Host \"  $($r.Name) = <unset>\" } }",
+          "Write-Host ''",
+          "Write-Host 'For BCD settings (disabledynamictick, useplatformclock), run manually from elevated PowerShell:'",
+          "Write-Host '  bcdedit /enum'"
         ],
         "warnings": {
           "en": [],
@@ -2100,25 +2095,19 @@
         },
         "impact": "high",
         "commands": [
-          "# Disable Dynamic Tick",
-          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\KernelVelocity\"",
-          "New-Item -Path $path -Force | Out-Null",
-          "New-ItemProperty -Path $path -Name \"DisableDynamicTick\" -PropertyType DWord -Value 1 -Force",
-          "# Configure DPC Watchdog",
-          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\"",
-          "New-Item -Path $path -Force | Out-Null",
-          "New-ItemProperty -Path $path -Name \"DpcWatchdogProfileOffset\" -PropertyType DWord -Value 10000 -Force",
-          "# Configure Win32PrioritySeparation for Gaming",
-          "New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" -Name \"Win32PrioritySeparation\" -PropertyType DWord -Value 38 -Force",
-          "# Configure IRQ Priorities",
-          "$path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\"",
-          "New-Item -Path $path -Force | Out-Null",
-          "New-ItemProperty -Path $path -Name \"IRQ8Priority\" -PropertyType DWord -Value 1 -Force",
-          "New-ItemProperty -Path $path -Name \"IRQ16Priority\" -PropertyType DWord -Value 2 -Force",
-          "# Set Timer Resolution via bcdedit",
-          "bcdedit /set disabledynamictick yes",
-          "bcdedit /set useplatformclock true",
-          "Write-Host \"All latency optimizations applied. Please restart Windows.\""
+          "function Invoke-Bcd([string[]]$BcdArgs, [string]$Desc) { $bcd = (Join-Path $env:SystemRoot 'System32\\bcdedit.exe'); $out = & $bcd @BcdArgs 2>&1; $outStr = ($out | Out-String); if ($LASTEXITCODE -eq 0) { Write-Host \"[OK] $Desc\"; return } if ($outStr -match 'No se pudo abrir el almac|cannot open.*boot configuration|boot configuration data store') { Write-Host \"[ERR] $Desc - BCD store not accessible from this process. Apply manually from elevated PowerShell.\"; return } if ($outStr -match 'requested data element|elemento de datos solicitado') { Write-Host \"[OK] $Desc (already in target state)\"; return } Write-Host \"[ERR] $Desc - exit $LASTEXITCODE - $($out -join ' | ')\" }",
+          "$path = 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel'",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
+          "New-ItemProperty -Path $path -Name 'DpcWatchdogProfileOffset' -PropertyType DWord -Value 10000 -Force | Out-Null; Write-Host '[OK] DpcWatchdogProfileOffset=10000'",
+          "$path = 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl'",
+          "if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }",
+          "New-ItemProperty -Path $path -Name 'Win32PrioritySeparation' -PropertyType DWord -Value 38 -Force | Out-Null; Write-Host '[OK] Win32PrioritySeparation=38'",
+          "New-ItemProperty -Path $path -Name 'IRQ8Priority'  -PropertyType DWord -Value 1 -Force | Out-Null; Write-Host '[OK] IRQ8Priority=1'",
+          "New-ItemProperty -Path $path -Name 'IRQ16Priority' -PropertyType DWord -Value 2 -Force | Out-Null; Write-Host '[OK] IRQ16Priority=2'",
+          "Invoke-Bcd @('/set','{current}','disabledynamictick','yes') 'BCD disabledynamictick=yes'",
+          "Invoke-Bcd @('/set','{current}','useplatformclock','true') 'BCD useplatformclock=true'",
+          "$bogus='HKLM:\\SYSTEM\\CurrentControlSet\\Control\\KernelVelocity'; if (Test-Path $bogus) { Remove-Item -Path $bogus -Recurse -Force -ErrorAction SilentlyContinue; Write-Host '[OK] Cleaned up legacy KernelVelocity key' }",
+          "Write-Host 'All latency optimizations applied. Please restart Windows.'"
         ],
         "warnings": {
           "en": [
@@ -2443,9 +2432,7 @@
         },
         "impact": "high",
         "commands": [
-          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GameDVR\" /v AppCaptureEnabled /t REG_DWORD /d 0 /f",
-          "reg add \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /t REG_DWORD /d 0 /f",
-          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR\" /v AllowGameDVR /t REG_DWORD /d 0 /f"
+          "$entries = @(; @{Path='HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GameDVR'; Name='AppCaptureEnabled'; Value=0; Type='DWord'; Label='Xbox Game Bar capture disabled'},@{Path='HKCU:\\System\\GameConfigStore'; Name='GameDVR_Enabled'; Value=0; Type='DWord'; Label='GameDVR disabled'},@{Path='HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR'; Name='AllowGameDVR'; Value=0; Type='DWord'; Label='GameDVR policy disabled'}; ); foreach ($e in $entries) { try { if (-not (Test-Path $e.Path)) { New-Item -Path $e.Path -Force -ErrorAction Stop | Out-Null } New-ItemProperty -Path $e.Path -Name $e.Name -PropertyType $e.Type -Value $e.Value -Force -ErrorAction Stop | Out-Null; Write-Host \"[OK] $($e.Label)\" } catch [System.UnauthorizedAccessException] { Write-Host \"[INFO] $($e.Label) - key locked by system (feature likely already removed)\" } catch { Write-Host \"[ERR] $($e.Label) - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [
@@ -2472,7 +2459,7 @@
         },
         "impact": "low",
         "commands": [
-          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Personalization\" /v NoLockScreen /t REG_DWORD /d 1 /f"
+          "$entries = @(; @{Path='HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Personalization'; Name='NoLockScreen'; Value=1; Type='DWord'; Label='Lock screen disabled'}; ); foreach ($e in $entries) { try { if (-not (Test-Path $e.Path)) { New-Item -Path $e.Path -Force -ErrorAction Stop | Out-Null } New-ItemProperty -Path $e.Path -Name $e.Name -PropertyType $e.Type -Value $e.Value -Force -ErrorAction Stop | Out-Null; Write-Host \"[OK] $($e.Label)\" } catch [System.UnauthorizedAccessException] { Write-Host \"[INFO] $($e.Label) - key locked by system (feature likely already removed)\" } catch { Write-Host \"[ERR] $($e.Label) - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [],
@@ -2495,8 +2482,7 @@
         },
         "impact": "low",
         "commands": [
-          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds\" /v EnableFeeds /t REG_DWORD /d 0 /f",
-          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Feeds\" /v ShellFeedsTaskbarViewMode /t REG_DWORD /d 2 /f"
+          "$entries = @(; @{Path='HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds'; Name='EnableFeeds'; Value=0; Type='DWord'; Label='News & Interests policy disabled'},@{Path='HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Feeds'; Name='ShellFeedsTaskbarViewMode'; Value=2; Type='DWord'; Label='Feeds taskbar mode = hidden'}; ); foreach ($e in $entries) { try { if (-not (Test-Path $e.Path)) { New-Item -Path $e.Path -Force -ErrorAction Stop | Out-Null } New-ItemProperty -Path $e.Path -Name $e.Name -PropertyType $e.Type -Value $e.Value -Force -ErrorAction Stop | Out-Null; Write-Host \"[OK] $($e.Label)\" } catch [System.UnauthorizedAccessException] { Write-Host \"[INFO] $($e.Label) - key locked by system (feature likely already removed)\" } catch { Write-Host \"[ERR] $($e.Label) - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [],
@@ -2519,8 +2505,7 @@
         },
         "impact": "low",
         "commands": [
-          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh\" /v AllowNewsAndInterests /t REG_DWORD /d 0 /f",
-          "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v TaskbarDa /t REG_DWORD /d 0 /f"
+          "$entries = @(; @{Path='HKLM:\\SOFTWARE\\Policies\\Microsoft\\Dsh'; Name='AllowNewsAndInterests'; Value=0; Type='DWord'; Label='Widgets policy disabled'},@{Path='HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced'; Name='TaskbarDa'; Value=0; Type='DWord'; Label='Widgets taskbar button hidden'}; ); foreach ($e in $entries) { try { if (-not (Test-Path $e.Path)) { New-Item -Path $e.Path -Force -ErrorAction Stop | Out-Null } New-ItemProperty -Path $e.Path -Name $e.Name -PropertyType $e.Type -Value $e.Value -Force -ErrorAction Stop | Out-Null; Write-Host \"[OK] $($e.Label)\" } catch [System.UnauthorizedAccessException] { Write-Host \"[INFO] $($e.Label) - key locked by system (feature likely already removed)\" } catch { Write-Host \"[ERR] $($e.Label) - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [],
@@ -2543,8 +2528,7 @@
         },
         "impact": "medium",
         "commands": [
-          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\OneDrive\" /v DisableFileSyncNGSC /t REG_DWORD /d 1 /f",
-          "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\OneDrive\" /v DisableFileSync /t REG_DWORD /d 1 /f"
+          "$entries = @(; @{Path='HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\OneDrive'; Name='DisableFileSyncNGSC'; Value=1; Type='DWord'; Label='OneDrive sync (NGSC) disabled'},@{Path='HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\OneDrive'; Name='DisableFileSync'; Value=1; Type='DWord'; Label='OneDrive sync (legacy) disabled'}; ); foreach ($e in $entries) { try { if (-not (Test-Path $e.Path)) { New-Item -Path $e.Path -Force -ErrorAction Stop | Out-Null } New-ItemProperty -Path $e.Path -Name $e.Name -PropertyType $e.Type -Value $e.Value -Force -ErrorAction Stop | Out-Null; Write-Host \"[OK] $($e.Label)\" } catch [System.UnauthorizedAccessException] { Write-Host \"[INFO] $($e.Label) - key locked by system (feature likely already removed)\" } catch { Write-Host \"[ERR] $($e.Label) - $($_.Exception.Message)\" } }"
         ],
         "warnings": {
           "en": [
@@ -2743,33 +2727,6 @@
         }
       },
       {
-        "id": "create-restore-point",
-        "name": {
-          "en": "💾 Restore Point - Create",
-          "es": "💾 Punto de Restauración - Crear"
-        },
-        "description": {
-          "en": "Creates a system restore point before applying other tweaks.",
-          "es": "Crea un punto de restauración del sistema antes de aplicar otros tweaks."
-        },
-        "benefit": {
-          "en": "Allows reverting changes if something goes wrong",
-          "es": "Permite revertir cambios si algo sale mal"
-        },
-        "impact": "low",
-        "commands": [
-          "Checkpoint-Computer -Description 'CodeWinOptimizer Essential Tweaks' -RestorePointType MODIFY_SETTINGS"
-        ],
-        "warnings": {
-          "en": [
-            "May fail if System Restore is disabled"
-          ],
-          "es": [
-            "Puede fallar si la Restauración del Sistema está desactivada"
-          ]
-        }
-      },
-      {
         "id": "set-services-manual",
         "name": {
           "en": "⚙️ Services - Set to Manual",
@@ -2900,7 +2857,7 @@
         },
         "impact": "low",
         "commands": [
-          "$hosts = '127.0.0.1 lmlicenses.wip4.adobe.com', '127.0.0.1 lmlicenses.wip4.adobe.com', '127.0.0.1 na1r.services.adobe.com', '127.0.0.1 hlrcv.stage.adobe.com', '127.0.0.1 practivate.adobe.com', '127.0.0.1 activate.adobe.com', '127.0.0.1 activate-sjc0.adobe.com', '127.0.0.1 activate.wip3.adobe.com'; $file = '$env:SystemRoot\\System32\\drivers\\etc\\hosts'; foreach ($line in $hosts) { if (-not (Select-String -Path $file -Pattern $line.Replace('127.0.0.1 ', '') -Quiet)) { Add-Content -Path $file -Value $line } }"
+          "$hosts = @('lmlicenses.wip4.adobe.com','na1r.services.adobe.com','hlrcv.stage.adobe.com','practivate.adobe.com','activate.adobe.com','activate-sjc0.adobe.com','activate.wip3.adobe.com'); $file = \"$env:SystemRoot\\System32\\drivers\\etc\\hosts\"; if (-not (Test-Path $file)) { Write-Host \"[ERR] hosts file not found at $file\"; return } try { $existing = Get-Content $file -ErrorAction Stop } catch { Write-Host \"[ERR] cannot read hosts: $($_.Exception.Message)\"; return } $toAdd = @(); $skipped = 0; foreach ($h in $hosts) { $has = $false; foreach ($line in $existing) { if ($line -like \"*$h*\") { $has = $true; break } } if ($has) { $skipped++ } else { $toAdd += \"127.0.0.1 $h\" } } if ($toAdd.Count -gt 0) { try { Add-Content -Path $file -Value $toAdd -ErrorAction Stop } catch [System.UnauthorizedAccessException] { Write-Host '[ERR] hosts file locked - close other apps editing hosts and retry'; return } catch { Write-Host \"[ERR] $($_.Exception.Message)\"; return } } Write-Host \"[OK] Adobe block list: $($toAdd.Count) added, $skipped already present (total $($hosts.Count) entries)\""
         ],
         "warnings": {
           "en": [
