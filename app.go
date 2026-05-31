@@ -57,7 +57,7 @@ type App struct {
 }
 
 const (
-	appVersion    = "1.1.0"
+	appVersion    = "1.2.0"
 	githubRepo    = "oscarcodedev/CodeWinOptimizer-App"
 	minOpInterval = 2 * time.Second
 )
@@ -1009,14 +1009,18 @@ func (a *App) GetHealthScore() string {
 	return string(b)
 }
 
+// Helper PS function injected into every cleanup script.
+// Sums file sizes safely (handles empty dirs) and removes them.
+const cleanupHelper = `function _CleanDir($path,[switch]$Recurse){if(-not(Test-Path -LiteralPath $path)){return 0};$gci=@{Path=$path;Force=$true;File=$true;ErrorAction='SilentlyContinue'};if($Recurse){$gci.Recurse=$true};$files=@(Get-ChildItem @gci);$bytes=0;if($files.Count -gt 0){$bytes=($files|Measure-Object -Property Length -Sum).Sum};Remove-Item -Recurse -Force -LiteralPath (Join-Path $path '*') -ErrorAction SilentlyContinue;return [int64]$bytes};`
+
 var cleanupScripts = map[string]string{
-	"temp":       "$c=0;try{$d=\"$env:TEMP\";if(Test-Path $d){$s=(Get-ChildItem -Recurse -Force $d -ErrorAction SilentlyContinue|Measure-Object -Property Length -Sum).Sum;$c+=$s;Remove-Item -Recurse -Force \"$d\\*\" -ErrorAction SilentlyContinue};$d=\"$env:WINDIR\\Temp\";if(Test-Path $d){$s=(Get-ChildItem -Recurse -Force $d -ErrorAction SilentlyContinue|Measure-Object -Property Length -Sum).Sum;$c+=$s;Remove-Item -Recurse -Force \"$d\\*\" -ErrorAction SilentlyContinue};Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
-	"recycle":    "try{Clear-RecycleBin -Force -ErrorAction Stop;Write-Host \"[OK] Recycle bin emptied\"}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
-	"prefetch":   "try{$d=\"$env:WINDIR\\Prefetch\";if(Test-Path $d){$s=(Get-ChildItem -Force $d -ErrorAction SilentlyContinue|Measure-Object -Property Length -Sum).Sum;Remove-Item -Force \"$d\\*\" -ErrorAction SilentlyContinue;Write-Host (\"[OK] \"+[math]::Round($s/1MB,1)+\" MB cleaned\")}else{Write-Host \"[WARN] Prefetch not found\"}}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
-	"winupdate":  "try{net stop wuauserv 2>$null;net stop bits 2>$null;$d=\"$env:WINDIR\\SoftwareDistribution\\Download\";$c=0;if(Test-Path $d){$s=(Get-ChildItem -Recurse -Force $d -ErrorAction SilentlyContinue|Measure-Object -Property Length -Sum).Sum;$c+=$s;Remove-Item -Recurse -Force \"$d\\*\" -ErrorAction SilentlyContinue};net start wuauserv 2>$null;net start bits 2>$null;Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
-	"thumbnails": "try{$c=0;$u=$env:LOCALAPPDATA;if($u){$d=\"$u\\Microsoft\\Windows\\Explorer\";if(Test-Path $d){$s=(Get-ChildItem -Recurse -Force \"$d\\thumbcache_*\" -ErrorAction SilentlyContinue|Measure-Object -Property Length -Sum).Sum;$c+=$s;Remove-Item -Force \"$d\\thumbcache_*\" -ErrorAction SilentlyContinue}};Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
+	"temp":       cleanupHelper + "try{$c=0;$c+=_CleanDir $env:TEMP -Recurse;$c+=_CleanDir \"$env:WINDIR\\Temp\" -Recurse;Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
+	"recycle":    "try{$drives=@(Get-PSDrive -PSProvider FileSystem|Where-Object{$_.Name.Length -eq 1}|Select-Object -ExpandProperty Name);$cleared=0;$errors=@();foreach($d in $drives){try{Clear-RecycleBin -DriveLetter $d -Force -ErrorAction Stop;$cleared++}catch{if($_.Exception.Message -notmatch 'empty|vac' -and $_.Exception.HResult -ne -2147418113){$errors+=$d+': '+$_.Exception.Message}}};if($errors.Count -gt 0){Write-Host (\"[WARN] Some drives skipped: \"+($errors -join '; '))};Write-Host (\"[OK] Recycle bin processed on \"+$cleared+\" drive(s)\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
+	"prefetch":   cleanupHelper + "try{$c=_CleanDir \"$env:WINDIR\\Prefetch\";Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
+	"winupdate":  cleanupHelper + "try{Stop-Service -Name wuauserv,bits -Force -ErrorAction SilentlyContinue;$c=_CleanDir \"$env:WINDIR\\SoftwareDistribution\\Download\" -Recurse;Start-Service -Name wuauserv,bits -ErrorAction SilentlyContinue;Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
+	"thumbnails": "try{$c=0;$u=$env:LOCALAPPDATA;if($u){$d=\"$u\\Microsoft\\Windows\\Explorer\";if(Test-Path -LiteralPath $d){$files=@(Get-ChildItem -Force -Path \"$d\\thumbcache_*\" -ErrorAction SilentlyContinue);if($files.Count -gt 0){$c=($files|Measure-Object -Property Length -Sum).Sum};Remove-Item -Force -Path \"$d\\thumbcache_*\" -ErrorAction SilentlyContinue}};Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
 	"dnscache":   "try{ipconfig /flushdns 2>$null|Out-Null;Write-Host \"[OK] DNS cache flushed\"}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
-	"memorydump": "try{$d=\"$env:WINDIR\\MEMORY.DMP\";$c=0;if(Test-Path $d){$s=(Get-Item $d).Length;$c+=$s;Remove-Item -Force $d -ErrorAction SilentlyContinue};$d2=\"$env:WINDIR\\Minidump\";if(Test-Path $d2){$s=(Get-ChildItem -Force $d2 -ErrorAction SilentlyContinue|Measure-Object -Property Length -Sum).Sum;$c+=$s;Remove-Item -Force \"$d2\\*\" -ErrorAction SilentlyContinue};Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
+	"memorydump": cleanupHelper + "try{$c=0;$dmp=\"$env:WINDIR\\MEMORY.DMP\";if(Test-Path -LiteralPath $dmp){$c+=(Get-Item -LiteralPath $dmp).Length;Remove-Item -Force -LiteralPath $dmp -ErrorAction SilentlyContinue};$c+=_CleanDir \"$env:WINDIR\\Minidump\";Write-Host (\"[OK] \"+[math]::Round($c/1MB,1)+\" MB cleaned\")}catch{Write-Host (\"[ERR] \"+$_.Exception.Message)}",
 }
 var cleanupNamesES = map[string]string{"temp": "Archivos temporales", "recycle": "Papelera", "prefetch": "Archivos Prefetch", "winupdate": "Cache Windows Update", "thumbnails": "Cache miniaturas", "dnscache": "Cache DNS", "memorydump": "Volcados de memoria"}
 
