@@ -676,6 +676,9 @@ async function boot() {
   document
     .getElementById("btn-tweaks-clear")
     ?.addEventListener("click", clearTweaksSelection);
+  document
+    .getElementById("btn-tweaks-select-all")
+    ?.addEventListener("click", selectAllTweaks);
   document.querySelectorAll(".profile-quick-btn").forEach((btn) => {
     btn.addEventListener("click", function () {
       doLoadProfile(this.dataset.profile);
@@ -709,12 +712,15 @@ async function boot() {
     });
 
   initTheme();
+  initLayoutSplit();
+  initTerminalResize();
   document.getElementById("btn-clear").addEventListener("click", clearTerm);
   document.getElementById("btn-copy").addEventListener("click", copyTerm);
   document
     .querySelector(".term-header")
     .addEventListener("click", function (e) {
       if (e.target.closest("button")) return;
+      if (e.target.closest(".term-resize")) return;
       document.getElementById("terminal").classList.toggle("collapsed");
     });
   document.querySelectorAll(".pkg-btn").forEach((b) =>
@@ -1203,13 +1209,19 @@ function drawTweaks() {
 function catCard(c, ci) {
   const n = LO(c.name);
   const w = c.tweaks.filter((t) => t.commands && t.commands.length > 0);
+  const sel = w.filter((t) => pickedT.has(t.id)).length;
+  const allSel = sel > 0 && sel === w.length;
   return h("div", { className: "cat-card", "data-ci": String(ci) },
     h("div", { className: "cat-head" },
       h("div", { className: "cat-head-left" },
         h("span", { className: "cat-name", textContent: n }),
       ),
       h("div", { style: "display:flex;align-items:center;gap:10px" },
-        h("span", { className: "cat-badge", textContent: String(w.length) }),
+        h("span", {
+          className: "cat-badge" + (allSel ? " cat-badge-full" : sel > 0 ? " cat-badge-partial" : ""),
+          "data-ci": String(ci),
+          textContent: `${sel} / ${w.length}`,
+        }),
         h("span", { className: "cat-arrow", textContent: "▼" }),
       ),
     ),
@@ -1270,7 +1282,13 @@ function bindTweakEv() {
       document
         .querySelectorAll(".cat-card")
         .forEach((c) => c.classList.remove("expanded"));
-      if (!w) card.classList.add("expanded");
+      if (!w) {
+        card.classList.add("expanded");
+        setTimeout(
+          () => card.scrollIntoView({ behavior: "smooth", block: "start" }),
+          50,
+        );
+      }
     });
   });
   document.querySelectorAll(".cat-sel-all").forEach((el) => {
@@ -1294,6 +1312,8 @@ function bindTweakEv() {
         const id = this.dataset.tid;
         if (this.checked) pickedT.add(id);
         else pickedT.delete(id);
+        const card = this.closest(".cat-card");
+        if (card) updateCatBadge(parseInt(card.dataset.ci));
         refreshUI();
       });
     });
@@ -1338,6 +1358,21 @@ function syncTweakCb(ci) {
     if (cb.disabled) return;
     cb.checked = pickedT.has(cb.dataset.tid);
   });
+  updateCatBadge(ci);
+}
+
+function updateCatBadge(ci) {
+  const card = document.querySelector(`.cat-card[data-ci="${ci}"]`);
+  if (!card) return;
+  const cat = catData[ci];
+  if (!cat) return;
+  const tw = cat.tweaks.filter((t) => t.commands && t.commands.length > 0);
+  const sel = tw.filter((t) => pickedT.has(t.id)).length;
+  const badge = card.querySelector(".cat-badge");
+  if (!badge) return;
+  badge.textContent = `${sel} / ${tw.length}`;
+  badge.classList.toggle("cat-badge-full", sel > 0 && sel === tw.length);
+  badge.classList.toggle("cat-badge-partial", sel > 0 && sel < tw.length);
 }
 
 async function doApply() {
@@ -1530,9 +1565,11 @@ function drawProfileMenu() {
   const btnLoad = document.getElementById("btn-profile-load-text");
   const btnSave = document.getElementById("btn-profile-save-text");
   const btnClear = document.getElementById("btn-tweaks-clear-text");
+  const btnSelAll = document.getElementById("btn-tweaks-select-all-text");
   if (btnLoad) btnLoad.textContent = T("profileLoad");
   if (btnSave) btnSave.textContent = T("profileSave");
   if (btnClear) btnClear.textContent = T("tweaksClear");
+  if (btnSelAll) btnSelAll.textContent = T("tweaksSelectAllGlobal");
 }
 
 async function toggleProfileMenu() {
@@ -1709,6 +1746,93 @@ function clearTweaksSelection() {
   drawTweaks();
   refreshUI();
   appendLog(`[OK] Cleared ${count} selected tweak(s)`);
+}
+
+function selectAllTweaks() {
+  let added = 0;
+  catData.forEach((c) => {
+    c.tweaks.forEach((t) => {
+      if (t.commands && t.commands.length > 0 && !pickedT.has(t.id)) {
+        pickedT.add(t.id);
+        added++;
+      }
+    });
+  });
+  if (added === 0) return;
+  drawTweaks();
+  refreshUI();
+  appendLog(`[OK] Selected ${added} additional tweak(s) (total: ${pickedT.size})`);
+}
+
+/* ========= LAYOUT: HORIZONTAL SPLIT + RESIZABLE TERMINAL ========= */
+function initLayoutSplit() {
+  const app = document.getElementById("app");
+  if (!app) return;
+  if (app.querySelector(".main-split")) return;
+  const nav = app.querySelector("nav.tabs");
+  const terminal = document.getElementById("terminal");
+  if (!nav || !terminal) return;
+  const split = document.createElement("div");
+  split.className = "main-split";
+  const tabArea = document.createElement("div");
+  tabArea.className = "tab-area";
+  app.querySelectorAll(".tab-content").forEach((tc) => tabArea.appendChild(tc));
+  split.appendChild(tabArea);
+  split.appendChild(terminal);
+  nav.insertAdjacentElement("afterend", split);
+}
+
+function initTerminalResize() {
+  const term = document.getElementById("terminal");
+  if (!term) return;
+  if (term.querySelector(".term-resize")) return;
+  const handle = document.createElement("div");
+  handle.className = "term-resize";
+  handle.title = "Drag to resize terminal";
+  term.insertBefore(handle, term.firstChild);
+  try {
+    const saved = parseInt(localStorage.getItem("cwo-term-width"), 10);
+    if (saved && saved >= 280 && saved <= window.innerWidth * 0.7) {
+      term.style.setProperty("--term-width", saved + "px");
+    }
+  } catch (e) {}
+  let dragging = false;
+  let startX = 0;
+  let startW = 0;
+  handle.addEventListener("mousedown", function (e) {
+    if (term.classList.contains("collapsed")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    dragging = true;
+    startX = e.clientX;
+    startW = term.getBoundingClientRect().width;
+    handle.classList.add("dragging");
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "ew-resize";
+  });
+  document.addEventListener("mousemove", function (e) {
+    if (!dragging) return;
+    const dx = startX - e.clientX;
+    const newW = Math.max(
+      280,
+      Math.min(Math.floor(window.innerWidth * 0.7), startW + dx),
+    );
+    term.style.setProperty("--term-width", newW + "px");
+  });
+  document.addEventListener("mouseup", function () {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove("dragging");
+    document.body.style.userSelect = "";
+    document.body.style.cursor = "";
+    try {
+      const w = parseInt(
+        term.style.getPropertyValue("--term-width") || "380",
+        10,
+      );
+      if (w) localStorage.setItem("cwo-term-width", String(w));
+    } catch (e) {}
+  });
 }
 
 document.addEventListener("DOMContentLoaded", boot);

@@ -429,6 +429,11 @@ header h1 {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+}
+/* Prevent horizontal scrollbars in tab content when terminal squeezes width */
+.tab-area > .tab-content.active {
+  overflow-x: hidden;
 }
 
 /* PACKAGE MANAGER TOGGLE */
@@ -796,11 +801,26 @@ header h1 {
 }
 .cat-badge {
   font-size: 0.68em;
-  background: var(--gn2);
-  color: var(--gn);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--tx2);
   padding: 3px 10px;
   border-radius: 12px;
   font-weight: 700;
+  border: 1px solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  min-width: 44px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.cat-badge-partial {
+  background: rgba(245, 185, 66, 0.12);
+  color: #f5b942;
+  border-color: rgba(245, 185, 66, 0.3);
+}
+.cat-badge-full {
+  background: var(--gn2);
+  color: var(--gn);
+  border-color: rgba(57, 255, 20, 0.3);
 }
 .cat-arrow {
   color: var(--tx2);
@@ -1082,22 +1102,125 @@ header h1 {
 }
 
 /* TERMINAL */
+/* HORIZONTAL SPLIT: tab area on left, terminal on right */
+.main-split {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+  overflow: hidden;
+}
+.tab-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
+.tab-area > .tab-content.active {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* TERMINAL: docked to the right, resizable */
 #terminal {
-  margin: 0 28px 0 28px;
-  border: 1px solid #1a1a1a;
-  border-radius: 10px 10px 0 0;
+  margin: 0;
+  border: none;
+  border-left: 1px solid #1a1a1a;
+  border-radius: 0;
   overflow: hidden;
   background: #080808;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  position: relative;
+  flex: 0 0 var(--term-width, 500px);
+  min-width: 280px;
+  max-width: 70vw;
 }
 #terminal.collapsed {
-  min-height: 42px;
+  flex: 0 0 36px !important;
+  min-width: 36px;
 }
-#terminal:not(.collapsed) {
-  min-height: 200px;
-  flex: 0 0 280px;
+/* Make header content shrink gracefully */
+#terminal:not(.collapsed) .term-brand,
+#terminal:not(.collapsed) #term-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+#terminal:not(.collapsed) .term-brand {
+  flex-shrink: 1;
+}
+#terminal.collapsed .term-header {
+  flex-direction: column;
+  padding: 10px 0;
+  height: 100%;
+  gap: 10px;
+  justify-content: flex-start;
+  border-bottom: none;
+}
+#terminal.collapsed .term-brand,
+#terminal.collapsed #term-title,
+#terminal.collapsed .term-actions {
+  display: none;
+}
+#terminal.collapsed .term-toggle {
+  transform: rotate(90deg);
+}
+#terminal.collapsed::after {
+  content: "TERMINAL";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  transform-origin: center;
+  font-size: 0.62em;
+  letter-spacing: 3px;
+  color: var(--tx3);
+  white-space: nowrap;
+  pointer-events: none;
+  font-weight: 600;
+}
+
+/* Resize handle on the left edge of terminal */
+.term-resize {
+  position: absolute;
+  left: -3px;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 20;
+  background: transparent;
+  transition: background 0.15s;
+}
+.term-resize:hover,
+.term-resize.dragging {
+  background: rgba(57, 255, 20, 0.45);
+}
+#terminal.collapsed .term-resize {
+  display: none;
+}
+
+/* Sticky toolbar in Tweaks tab */
+#tab-tweaks {
+  padding-top: 0;
+}
+#tab-tweaks .actions-bar {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 5;
+  padding: 16px 0 12px;
+  margin: 0 0 12px 0;
+  border-bottom: 1px solid #1a1a1a;
+}
+.cat-card {
+  scroll-margin-top: 100px;
 }
 .term-header {
   cursor: pointer;
